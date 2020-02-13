@@ -11,10 +11,11 @@ INTRANTS:
 from fonctions_echantillonnage import *
 import os
 import pandas as pd
+import shutil
 
 path_metrique = r'D:\DATA\TPI_WB\31H02\RelTPI_WB_31H02SE.tif'
 path_couche_depots = r'D:\DATA\shapefile\Depots_31H\zone_depots_glaciolacustre_31H02SE_MTM8.shp'
-path_sauvegarde_csv = r'D:\DATA\echantillons_metriques'
+path_sauvegarde_csv = r'D:\DATA\Echantillons_metrique2'
 path_sauvegarde_figures = r'D:\DATA\Figures'
 temp = r'D:\DATA\temp'
 
@@ -59,9 +60,19 @@ print()
 
 # Suppression des fichiers du répertoire temporaire
 
-print('Suppression des fichiers temporaires...')
+path_shp_echan = os.path.join(os.path.dirname(temp), 'Shapefile_echantillons')
+if not os.path.exists(path_shp_echan):
+    os.makedirs(path_shp_echan)
+print('Copie des fichiers de points avec les valeurs dans {} et suppression des fichiers temporaires'.format(path_shp_echan))
 for file in os.listdir(temp):
-    os.remove(os.path.join(temp, file))
+    if 'random_values' in file and (file.endswith('.prj') or file.endswith('.shp') or file.endswith('dbf') or file.endswith('.shx')):
+        extension = file[-4:]
+        in_out = file.split('.')[0].split('_')[-1]
+        new_file = os.path.join(path_shp_echan, '{}_{}_{}{}'.format(pseudo, feuillet,in_out, extension))
+        os.rename(os.path.join(temp,file), new_file)
+        #shutil.move(os.path.join(temp, new_file), path_shp_echan)
+    else:
+        os.remove(os.path.join(temp, file))
 print('Terminé')
 print()
 
