@@ -7,7 +7,6 @@ import os
 import math
 import numpy as np
 
-
 def enregistrement_masque(masque_ext_array, masque_zone_array, out_meta, out_transform_ext, out_transform_zones,
                           dossier_output):
     # Liste des array des masques avec leur out_transform correspondant
