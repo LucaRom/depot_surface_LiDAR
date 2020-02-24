@@ -76,16 +76,36 @@ disp = plot_confusion_matrix(clf, test_metriques, test_y,
 # Importances des valeurs explicatives (métriques) dans le modèles
 
 # Pour impression dans la console
-for feature in zip(X_metriques, clf.feature_importances_):
-    print(feature)
+# for feature in zip(X_metriques, clf.feature_importances_):
+#     print(feature)
 
 # Pour impression graphique
 importances = clf.feature_importances_
 indices = np.argsort(importances) # Tri en orde décroissant
 
 # plot them with a horizontal bar chart
+plt.figure() # Crée une nouvelle instance de graphique
 plt.title('Importances des métriques')
 plt.barh(range(len(indices)), importances[indices], color='b', align='center')
 plt.yticks(range(len(indices)), [metriques[i] for i in indices])
 plt.xlabel('Importance relative (%)')
 plt.show()
+
+# Export des résultats en .shp pour visualisation
+# Creer une nouvelle colonne dans le shapefile
+liste_des_resultats = list(zip(test_y, y_pred))
+df = pd.DataFrame({'id': test_y.index, 'prediction': y_pred})
+
+# # On ajoute les prédictions au futur shapefile
+# for i, j in new_shp.iterrows():
+#      for k in df.iterrows():
+#          print(k)
+#         if i == l['id']:
+#             new_shp.loc[i, 'prediction'] = l['prediction']
+
+to_export = new_shp.merge(df, on = 'id')
+
+# # On crée le shapefile avec les prédictions
+to_export.to_file("result_prediction.shp") # Vérifier fiona
+
+print("fait une correlation entre les metriques")
