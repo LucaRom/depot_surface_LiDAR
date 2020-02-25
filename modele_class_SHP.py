@@ -8,10 +8,11 @@ Created on Wed Jan 2020
 # Necessite aussi plusieurs dépendances...
 
 import geopandas as gpd # Plusieurs dépendances ...
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 import pandas as pd
-import matplotlib.pyplot as plt
+import seaborn as sns
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -109,3 +110,6 @@ to_export = new_shp.merge(df, on = 'id')
 to_export.to_file("result_prediction.shp") # Vérifier fiona
 
 print("fait une correlation entre les metriques")
+
+# Pairplot seaborn
+sns.pairplot(new_shp, hue='zone', vars = ["DwnSloInd", "Pente", "SphStDevNo", "CirVarAsp", "TWI"])
