@@ -112,4 +112,4 @@ to_export.to_file("result_prediction.shp") # Vérifier fiona
 print("fait une correlation entre les metriques")
 
 # Pairplot seaborn
-sns.pairplot(new_shp, hue='zone', vars = ["DwnSloInd", "Pente", "SphStDevNo", "CirVarAsp", "TWI"])
+sns.pairplot(new_shp, hue='zone', corner = True, vars = ["DwnSloInd", "Pente", "SphStDevNo", "CirVarAsp", "TWI"])
