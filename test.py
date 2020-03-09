@@ -1,25 +1,199 @@
-import rasterio
+# import rasterio
 import fiona
-import rasterio.mask
-import matplotlib.pyplot as plt
-import random
+# import rasterio.mask
+# import matplotlib.pyplot as plt
+# import random
 import whitebox
 import os
-import numpy as np
-import math
-import pandas as pd
-from scipy import stats
-import statistics as s
-from rasterio import features
-import pprint
-import sys
-from osgeo import gdal
-from osgeo import ogr
+# import numpy as np
+# import math
+# import pandas as pd
+# from scipy import stats
+# import statistics as s
+# from rasterio import features
+# import pprint
+# import sys
+# from osgeo import gdal
+# from osgeo import ogr
+import geopandas as gpd
+import glob
 
-path_mask = r'D:\test_mask_binaire.tif'
-path_qgis = r'C:\ProgramData\Anaconda3\envs\GDAL_test\Library\python\qgis'
-path_mnt = r'D:\DATA\MNT\31H02\MNT_31H02NE.tif'
-# path_mnt = r'D:\DATA\MNT_5x5_corr\31H02\MNT_5x5_corr_31H02NE.tif'
+
+wbt = whitebox.WhiteboxTools()
+wbt.verbose = False
+
+path_metr = r'D:\DATA\Metriques\22G14\22G14NE'
+couche_point = r'D:\DATA\shapefile\points_21G14NE.shp'
+couche_test = r'D:\DATA\shapefile\point_alea.shp'
+path_mnt = r'D:\DATA\MNT_5x5_cor\22G14\MNT_5x5_cor_22G14NE.tif'
+
+# print('Production des points...')
+# wbt.raster_to_vector_points(path_mnt, couche_point)
+# print('Terminé')
+#
+#
+def extract_value_metrique(path_couche_point, path_metrique):
+
+    print('lecture des métriques...')
+    ls = glob.glob(path_metrique + os.sep + '*.tif')
+    dic_metrique = {'AvrNorVecAngDev': 'ANVAD', 'CirVarAsp': 'CVA', 'DownslopeInd': 'DI', 'EdgeDens': 'EdgeDens', 'Pente':
+            'Pente', 'PlanCur': 'PlanCur', 'ProfCur': 'ProfCur', 'RelTPI': 'TPI', 'SphStdDevNor': 'SSDN', 'tanCur': 'tanCur',
+            'TWI': 'TWI'}
+
+    dic_ordre = {}
+
+    print('préparation de la chaine de métriques...')
+    chaine_metrique=''
+    for i in range(len(ls)):
+        metrique = ls[i]
+        nom_basename = os.path.basename(metrique).split('_')[0]
+        name = dic_metrique[nom_basename]
+        dic_ordre.update({str(i+1):name})
+
+        if chaine_metrique == '':
+            chaine_metrique = metrique
+        else:
+            chaine_metrique = chaine_metrique + ';' + metrique
+
+    print(dic_ordre)
+    print()
+
+    print('Extraction des valeurs...')
+    wbt.extract_raster_values_at_points(chaine_metrique, points=path_couche_point)
+    print('Terminé')
+
+    print('Ouverture du SHP...')
+    shp = gpd.read_file(path_couche_point)
+    del shp['VALUE']
+    print('termine')
+
+    print('Création des nouvelles colonnes...')
+    for col in shp.columns:
+        if col == 'id' or col == 'geometry':
+            pass
+        elif col[0:5] == 'VALUE':
+            num = col[5:]
+            nom_colonne = dic_ordre[num]
+            shp[nom_colonne] = shp[col].round(4)
+    print('Terminé')
+
+    print('Suppression des anciennes colonnes...')
+    for col in shp.columns:
+        if col[0:5] == 'VALUE':
+            del shp[col]
+    print('Terminé')
+
+    print('Sauvegarde...')
+    shp.to_file(path_couche_point)
+    print('Terminé')
+
+
+#extract_value_metrique(couche_point, path_metr)
+
+ech = r'D:\DATA\Segmentations\OneDrive_4_08-03-2020\MNT_5x5_cor_31H02NE_SE_Watershed_Merge_stats.shp'
+
+dic_metrique = {'AvNoVeAnDe': 'ANVAD', 'CirVarAsp': 'CVA', 'DwnSloInd': 'DI', 'EdgeDens': 'EdgeDens', 'Pente':
+    'Pente', 'PlanCurv': 'PlanCur', 'ProfCurv': 'ProfCur', 'TPI': 'TPI', 'SphStDevNo': 'SSDN', 'TanCurv': 'tanCur',
+                'TWI': 'TWI'}
+
+print('Lecture...')
+shp = gpd.read_file(ech)
+print('Traitement')
+for col in shp.columns:
+    if col == 'ID' or col == 'geometry' or col == 'zone' or col == 'path' or col == 'layer':
+        pass
+    else:
+        nom_metrique = col.split('_')[0]
+        reste = col.split('_')[1]
+        #nom = dic_metrique[col]
+        if nom_metrique == 'TanCur':
+            nom = 'tanCur_{}'.format(reste)
+            shp[nom] = shp[col]
+            del shp[col]
+        elif nom_metrique == 'ED':
+            nom = 'EdgeDens_{}'.format(reste)
+            shp[nom] = shp[col]
+            del shp[col]
+
+print('sauvegarde')
+shp.to_file(ech)
+for col in shp.columns:
+    print(col)
+
+
+
+
+
+#     liste_metrique = glob.glob(path_metrique + os.sep + '*.tif')
+#     dic_metrique = {'AvrNorVecAngDev': 'ANVAD', 'CirVarAsp': 'CVA', 'DownslopeInd': 'DI', 'EdgeDens': 'EdgeDens', 'Pente':
+#         'Pente', 'PlanCur': 'PlanCur', 'ProfCur': 'ProfCur', 'RelTPI': 'TPI', 'SphStdDevNor': 'SSDN', 'tanCur': 'tanCur',
+#         'TWI': 'TWI'}
+#
+#     print('Ouverture de la couche de points...')
+#     shp = gpd.read_file(path_couche_point)
+#     print('Terminé')
+#     for metrique in liste_metrique:
+#         nom_basename = os.path.basename(metrique).split('_')[0]
+#         print('Métrique: {}'.format(nom_basename))
+#         name = dic_metrique[nom_basename]
+#
+#         print('Extraction des valeurs...')
+#         wbt.extract_raster_values_at_points(metrique, path_couche_point)
+#         print('Terminé')
+#
+#         print('Réouverture du SHP...')
+#         shp1 = gpd.read_file(path_couche_point)
+#         print('Terminé')
+#
+#         print('Création de la nouvelle colonne...')
+#         shp[name] = shp1['VALUE1'].round(4)
+#         print('Terminé')
+#
+#         # print("Suppression de l'ancienne colonne...")
+#         # del shp['VALUE1']
+#         # print('Terminé')
+#
+#     print('Sauvegarde de la couche...')
+#     shp.to_file(path_couche_point)
+#     print('Terminé')
+#
+#     print(shp)
+#
+#
+# extract_value_metrique(couche_point, path_metr)
+
+
+
+
+# Suppression des colonnes créées
+# shp = gpd.read_file(couche_test)
+#
+# for col in shp.columns:
+#     if col == 'id' or col == 'geometry':
+#         pass
+#     else:
+#         del shp[col]
+# shp.to_file(couche_test)
+# print(shp)
+
+
+
+
+# import sys
+# import os
+#
+# sys.path.append(r'C:\OSGeo4W64\apps\qgis-ltr\python')
+# os.environ['PATH'] += r'C:\OSGeo4W64\apps\qgis-ltr\bin'
+# os.environ['PATH'] += r'C:\OSGeo4W64\apps\Qt5\bin'
+#
+# print(os.environ)
+#
+# from qgis.core import *
+# print('done')
+# path_mask = r'D:\test_mask_binaire.tif'
+# path_qgis = r'C:\ProgramData\Anaconda3\envs\GDAL_test\Library\python\qgis'
+# path_mnt = r'D:\DATA\MNT\31H02\MNT_31H02NE.tif'
+# # path_mnt = r'D:\DATA\MNT_5x5_corr\31H02\MNT_5x5_corr_31H02NE.tif'
 
 
 
