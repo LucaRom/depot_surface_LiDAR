@@ -13,30 +13,30 @@ temp = os.path.join(main_dir, 'temp')
 
 # Resampling et correction hydrologique
 # Parcours les MNT 1x1 dans le dossier_MNT
-# for parent, dossier, fichier in os.walk(dossier_MNT):
-#     for mnts in fichier:
-#
-#     # Path du MNT en cours
-#         mnt = os.path.join(parent, mnts)
-#
-#     # Création des répertoire de sortie
-#         mnt_5x5 = os.path.join(temp, 'MNT_5x5_{}.tif'.format(mnts[4:11]))
-#         mnt_cor = os.path.join(main_dir, 'MNT_5x5_cor', '{}'.format(mnts[4:9]), 'MNT_5x5_cor_{}.tif'.format(mnts[4:11]))
-#
-#
-#     # Resampling en 5x5 cubic spline
-#         resampling_cubic_spline(mnt, mnt_5x5, 5)
-#
-#     # Filtrage du MNT 5x5 FPDEMS
-#         fpdems(mnt_5x5, mnt_cor)
-#         #gdal_translate_32to64(fpdems32, mnt_cor)
-#
-#     # Suppresion des éléments du répertoire temporaire
-#         for file in os.listdir(temp):
-#             os.remove(os.path.join(temp,file))
-#
-# else:
-#     print('Tous les fichiers ont été reéchantillonnés')
+for parent, dossier, fichier in os.walk(dossier_MNT):
+    for mnts in fichier:
+
+    # Path du MNT en cours
+        mnt = os.path.join(parent, mnts)
+
+    # Création des répertoire de sortie
+    #     mnt_5x5 = os.path.join(temp, 'MNT_5x5_{}.tif'.format(mnts[4:11]))
+        mnt_5x5 = os.path.join(main_dir, 'MNT_5x5_cor', '{}'.format(mnts[4:9]), 'MNT_5x5_cor_{}.tif'.format(mnts[4:11]))
+
+
+    # Resampling en 5x5 cubic spline
+        resampling_cubic_spline(mnt, mnt_5x5, 5)
+    #
+    # # Filtrage du MNT 5x5 FPDEMS
+    #     fpdems(mnt_5x5, mnt_cor)
+    #     #gdal_translate_32to64(fpdems32, mnt_cor)
+    #
+    # # Suppresion des éléments du répertoire temporaire
+    #     for file in os.listdir(temp):
+    #         os.remove(os.path.join(temp,file))
+
+else:
+    print('Tous les fichiers ont été reéchantillonnés')
 
 
 # Creation des métriques
