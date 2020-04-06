@@ -5,7 +5,7 @@ from osgeo import gdal
 from osgeo import ogr
 
 
-dossier_MNT = r'D:\DATA\MNT'
+dossier_MNT = r'C:\Users\home\Documents\Documents\APP2\mnt'
 
 # Répertoire racine
 main_dir = os.path.dirname(dossier_MNT)
