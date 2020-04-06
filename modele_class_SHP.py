@@ -43,7 +43,8 @@ new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
 y_depots = new_shp.zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
-metriques = ['AvNoVeAnDe', 'CirVarAsp', 'DwnSloInd', 'EdgeDens', 'Pente', 'PlanCurv', 'ProfCurv', 'TPI', 'SphStDevNo', 'TWI', 'TanCurv']
+# metriques = ['AvNoVeAnDe', 'CirVarAsp', 'DwnSloInd', 'EdgeDens', 'Pente', 'PlanCurv', 'ProfCurv', 'TPI', 'SphStDevNo', 'TWI', 'TanCurv']
+metriques = ['ANVAD', 'CVA', 'DI', 'EdgeDens', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
 X_metriques = new_shp[metriques]
 
 # X_metriques = csv_metrique.valeur_tpi
@@ -111,5 +112,45 @@ to_export.to_file("result_prediction.shp") # Vérifier fiona
 
 print("fait une correlation entre les metriques")
 
-# Pairplot seaborn
-sns.pairplot(new_shp, hue='zone', corner = True, vars = ["DwnSloInd", "Pente", "SphStDevNo", "CirVarAsp", "TWI"])
+# Test shp full raster
+full_raster = gpd.read_file(r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\raster_input\full_raster_mars2020\points_21G14NE.shp')
+full_metriques = full_raster[metriques]
+
+full_pred = clf.predict(full_metriques)
+
+#df2 = pd.DataFrame({'prediction': full_pred})
+
+#new_full_raster = pd.concat([full_raster, pd.DataFrame(full_pred)], axis=0, ignore_index=True)
+full_raster['predict'] = full_pred
+
+full_raster.to_file("full_raster.shp")
+
+
+# # Export des résultats en .shp pour visualisation
+# # Creer une nouvelle colonne dans le shapefile
+# liste_des_resultats = list(zip(test_y, y_pred))
+# df = pd.DataFrame({'id': test_y.index, 'prediction': y_pred})
+#
+# # # On ajoute les prédictions au futur shapefile
+# to_export = new_shp.merge(df, on = 'id')
+
+# # On crée le shapefile avec les prédictions
+# to_export.to_file("result_prediction.shp") # Vérifier fiona
+
+
+# # Pairplot seaborn
+# allo = sns.pairplot(new_shp, hue='zone', vars=["DwnSloInd", "Pente", "SphStDevNo", "CirVarAsp", "TWI"])
+#
+# # Correlation
+# corr = new_shp[metriques].corr()
+# fig = plt.figure()
+# ax = fig.add_subplot(111)
+# cax = ax.matshow(corr,cmap='coolwarm', vmin=-1, vmax=1)
+# fig.colorbar(cax)
+# ticks = np.arange(0,len(new_shp[metriques].columns),1)
+# ax.set_xticks(ticks)
+# plt.xticks(rotation=90)
+# ax.set_yticks(ticks)
+# ax.set_xticklabels(new_shp[metriques].columns)
+# ax.set_yticklabels(new_shp[metriques].columns)
+# plt.show()
