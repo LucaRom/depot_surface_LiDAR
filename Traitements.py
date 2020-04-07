@@ -25,7 +25,7 @@ for parent, dossier, fichier in os.walk(dossier_MNT):
 
 
     # Resampling en 5x5 cubic spline
-        resampling_cubic_spline(mnt, mnt_5x5, 5)
+        resampling_cubic_spline(mnt, mnt_5x5, 50)
     #
     # # Filtrage du MNT 5x5 FPDEMS
     #     fpdems(mnt_5x5, mnt_cor)
