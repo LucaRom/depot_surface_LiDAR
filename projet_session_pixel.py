@@ -39,7 +39,6 @@ new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
 y_depots = new_shp.zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
-# metriques = ['AvNoVeAnDe', 'CirVarAsp', 'DwnSloInd', 'EdgeDens', 'Pente', 'PlanCurv', 'ProfCurv', 'TPI', 'SphStDevNo', 'TWI', 'TanCurv']
 metriques = ['ANVAD', 'CVA', 'DI', 'EdgeDens', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
 X_metriques = new_shp[metriques]
 
@@ -114,8 +113,6 @@ def fonctionDeMet(a):
     print(metriques_stack)
     return clf.predict(metriques_stack)
 
-
-
 resultat = np.apply_along_axis(fonctionDeMet, 0, met_stack)
 
 print(resultat)
@@ -126,18 +123,22 @@ gdal.AllRegister()
 driver = gdal.GetDriverByName("GTiff")
 
 # taille de mon image (ce sera la taille de la matrice)
-rows, cols = resultat.shape
+rows = resultat.shape[1]
+cols = resultat.shape[2]
 
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 
-image = driver.Create("../classi.tiff", cols,rows, 1, GDT_Byte)
+image = driver.Create("../classi01.tiff", cols, rows, 1, GDT_Byte)
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
 
+# Je remets la matrice en 2 dimension
+result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
+
 # j'écris la matrice dans la bande
-band.WriteArray(resultat, 0, 0)
+band.WriteArray(result1, 0, 0)
 
 # je vide la cache
 band.FlushCache()
@@ -147,33 +148,6 @@ del resultat
 del band
 del image
 
-
-#fonctionDeMet(met)
-
-    # metriques = ['ANVAD', 'CVA', 'DI', 'EdgeDens', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
-    # for i in metriques:
-    #     #metrique = met_stack[metriques.index(i),:,:]
-    #     met_array.append[]
-    # return matrice
-
-# On extrait les dimensions des images
-# n_rows = shapeimg1[0]
-# m_cols = shapeimg1[1]
-
-# On itere les valeurs des images pour chaque pixel
-#for i in range(m_cols - 1):
-# for i in range(800, 810):
-#     dict_pixel = dict()
-#     #for j in range(n_rows - 1):
-#     for j in range(800, 810):
-#         dict_pixel['metric1'] = metric1[i][j]
-#         dict_pixel['metric2'] = metric2[i][j]
-#         dict_pixel['metric3'] = metric3[i][j]
-#         dict_pixel['metric4'] = metric4[i][j]
-#         dict_pixel['metric5'] = metric5[i][j]
-#         dict_pixel['metric6'] = metric6[i][j]
-#         dict_pixel['metric7'] = metric7[i][j]
-#     print(dict_pixel)
 
 
 
