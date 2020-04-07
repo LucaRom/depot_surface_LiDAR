@@ -13,6 +13,7 @@ import numpy as np
 import os
 import pandas as pd
 import seaborn as sns
+import gdal
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
@@ -115,6 +116,34 @@ def fonctionDeMet(a):
 resultat = np.apply_along_axis(fonctionDeMet, 0, met_stack)
 
 print(resultat)
+
+# je déclare tous les drivers
+gdal.AllRegister()
+# le driver que je veux utiliser GEOTIFF
+driver = gdal.GetDriverByName("GTiff")
+
+# taille de mon image (ce sera la taille de la matrice)
+rows, cols = resultat.shape
+
+# je déclare mon image
+# il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
+
+image = driver.Create("../classi.tiff", cols,rows, 1, GDT_Byte)
+
+# je cherche la bande 1
+band = image.GetRasterBand(1)
+
+# j'écris la matrice dans la bande
+band.WriteArray(resultat, 0, 0)
+
+# je vide la cache
+band.FlushCache()
+band.SetNoDataValue(-99)
+# j'efface ma matrice
+del resultat
+del band
+del image
+
 
 #fonctionDeMet(met)
 
