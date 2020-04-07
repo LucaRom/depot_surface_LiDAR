@@ -21,11 +21,11 @@ for parent, dossier, fichier in os.walk(dossier_MNT):
 
     # Création des répertoire de sortie
     #     mnt_5x5 = os.path.join(temp, 'MNT_5x5_{}.tif'.format(mnts[4:11]))
-        mnt_5x5 = os.path.join(main_dir, 'MNT_5x5_cor', '{}'.format(mnts[4:9]), 'MNT_5x5_cor_{}.tif'.format(mnts[4:11]))
+        mnt_5x5 = os.path.join(main_dir, 'MNT_5x5_cor', '{}'.format(mnts.split('_')[0]), 'MNT_5x5_cor_{}.tif'.format(mnts.split('_')[1][:-4]))
 
 
     # Resampling en 5x5 cubic spline
-        resampling_cubic_spline(mnt, mnt_5x5, 50)
+        resampling_cubic_spline(mnt, mnt_5x5, 5)
     #
     # # Filtrage du MNT 5x5 FPDEMS
     #     fpdems(mnt_5x5, mnt_cor)
@@ -48,58 +48,58 @@ for parent, dossier, fichier in os.walk(os.path.join(os.path.join(main_dir, 'MNT
         mnt55 = os.path.join(parent, image)
 
     # Repertoire de sortie des metrique
-        dir_metrique = os.path.join(main_dir, 'Metriques', '{}'.format(image[12:17]), '{}'.format(image[12:19]))
+        dir_metrique = os.path.join(main_dir, 'Metriques', '{}'.format(image.split('_')[3].split('.')[0][:-2]), '{}'.format(image.split('_')[3].split('.')[0]))
 
     # Création du TPI relatif avec un kernel de 200
-        TPI = os.path.join(dir_metrique, 'RelTPI_WB_{}'.format(image[12:19]))
-        relative_TPI(mnt55, TPI, 40)
+        TPI = os.path.join(dir_metrique, 'RelTPI_WB_{}.tif'.format(image.split('_')[3][:-4]))
+        relative_TPI(mnt55, TPI, 5)
 
     # Correction hydrologique, breach depressions pour le calcul du SCA
-        MNTBreachDepression = os.path.join(temp, 'MNT_BD_{}.tif'.format(image[12:19]))
+        MNTBreachDepression = os.path.join(temp, 'MNT_BD_{}.tif'.format(image.split('_')[3][:-4]))
         breachDepression(mnt55, MNTBreachDepression)
 
     # Création du SCA
-        sca = os.path.join(temp, 'SCA_{}.tif'.format(image[12:19]))
+        sca = os.path.join(temp, 'SCA_{}.tif'.format(image.split('_')[3][:-4]))
         SCA(MNTBreachDepression, sca)
 
     # Création de la pente
-        pente = os.path.join(dir_metrique, 'Pente_WB_{}.tif'.format(image[12:19]))
+        pente = os.path.join(dir_metrique, 'Pente_WB_{}.tif'.format(image.split('_')[3][:-4]))
         slope(mnt55, pente)
 
     # Creation du TWI
-        twi = os.path.join(dir_metrique, 'TWI_WB_{}.tif'.format(image[12:19]))
+        twi = os.path.join(dir_metrique, 'TWI_WB_{}.tif'.format(image.split('_')[3][:-4]))
         TWI(pente, sca, twi)
 
     # Creation du plan Curvature
-        planCur = os.path.join(dir_metrique, 'PlanCur_WB_{}.tif'.format(image[12:19]))
+        planCur = os.path.join(dir_metrique, 'PlanCur_WB_{}.tif'.format(image.split('_')[3][:-4]))
         plan_curvature(mnt55, planCur)
 
     # Creation du profile Curvature
-        profCur = os.path.join(dir_metrique, 'ProfCur_WB_{}.tif'.format(image[12:19]))
+        profCur = os.path.join(dir_metrique, 'ProfCur_WB_{}.tif'.format(image.split('_')[3][:-4]))
         profile_curvature(mnt55, profCur)
 
     # Creation du tangential Curvature
-        tanCur = os.path.join(dir_metrique, 'tanCur_WB_{}.tif'.format(image[12:19]))
+        tanCur = os.path.join(dir_metrique, 'tanCur_WB_{}.tif'.format(image.split('_')[3][:-4]))
         tan_curvature(mnt55, tanCur)
 
     # Creation du Circular Variance of Aspect
-        cirVar = os.path.join(dir_metrique, 'CirVarAsp_WB_{}.tif'.format(image[12:19]))
+        cirVar = os.path.join(dir_metrique, 'CirVarAsp_WB_{}.tif'.format(image.split('_')[3][:-4]))
         CircularVarofAspect(mnt55, cirVar)
 
     # Création du Spherical Std Deviation of Normals
-        sphStd = os.path.join(dir_metrique, 'SphStdDevNor_WB_{}.tif'.format(image[12:19]))
+        sphStd = os.path.join(dir_metrique, 'SphStdDevNor_WB_{}.tif'.format(image.split('_')[3][:-4]))
         sphericalStdDevNormals(mnt55,sphStd)
 
     # Création du Edge Density
-        edgeDensity = os.path.join(dir_metrique, 'EdgeDens_WB_{}.tif'.format(image[12:19]))
+        edgeDensity = os.path.join(dir_metrique, 'EdgeDens_WB_{}.tif'.format(image.split('_')[3][:-4]))
         EdgeDensity(mnt55, edgeDensity)
 
     # Création du Downslope Index
-        DownslopeInd = os.path.join(dir_metrique, 'DownslopeInd_WB_{}.tif'.format(image[12:19]))
+        DownslopeInd = os.path.join(dir_metrique, 'DownslopeInd_WB_{}.tif'.format(image.split('_')[3][:-4]))
         Downslope_Ind(MNTBreachDepression, DownslopeInd)
 
     # Création du Average Normal Vector Angular Deviation
-        avrNor = os.path.join(dir_metrique, 'AvrNorVecAngDev_WB_{}.tif'.format(image[12:19]))
+        avrNor = os.path.join(dir_metrique, 'AvrNorVecAngDev_WB_{}.tif'.format(image.split('_')[3][:-4]))
         AverNormVectAngDev(mnt55, avrNor)
 
 
