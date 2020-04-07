@@ -76,17 +76,17 @@ filename = os.path.join(root_dir, 'path/where/to/go')
 
 # Import des images en matrices numpy
 tiffs_path = os.path.join(root_dir, 'inputs/tiffs/') # Définition du chemin pour les images
-met1 = imread(os.path.join(tiffs_path, 'AvrNorVecAngDev_WB_31H02NE.tif'))
-met2 = imread(os.path.join(tiffs_path, 'CirVarAsp_WB_31H02NE.tif'))
-met3 = imread(os.path.join(tiffs_path, 'DownslopeInd_WB_31H02NE.tif'))
-met4 = imread(os.path.join(tiffs_path, 'EdgeDens_WB_31H02NE.tif'))
-met5 = imread(os.path.join(tiffs_path, 'Pente_WB_31H02NE.tif'))
-met6 = imread(os.path.join(tiffs_path, 'PlanCur_WB_31H02NE.tif'))
-met7 = imread(os.path.join(tiffs_path, 'ProfCur_WB_31H02NE.tif'))
-met8 = imread(os.path.join(tiffs_path, 'RelTPI_WB_31H02NE.tif'))
-met9 = imread(os.path.join(tiffs_path, 'SphStdDevNor_WB_31H02NE.tif'))
-met10 = imread(os.path.join(tiffs_path, 'TWI_WB_31H02NE.tif'))
-met11 = imread(os.path.join(tiffs_path, 'tanCur_WB_31H02NE.tif'))
+met1 = imread(os.path.join(tiffs_path, 'AvrNorVecAngDev_WB_zoneTest.tif'))
+met2 = imread(os.path.join(tiffs_path, 'CirVarAsp_WB_zoneTest.tif'))
+met3 = imread(os.path.join(tiffs_path, 'DownslopeInd_WB_zoneTest.tif'))
+met4 = imread(os.path.join(tiffs_path, 'EdgeDens_WB_zoneTest.tif'))
+met5 = imread(os.path.join(tiffs_path, 'Pente_WB_zoneTest.tif'))
+met6 = imread(os.path.join(tiffs_path, 'PlanCur_WB_zoneTest.tif'))
+met7 = imread(os.path.join(tiffs_path, 'ProfCur_WB_zoneTest.tif'))
+met8 = imread(os.path.join(tiffs_path, 'RelTPI_WB_zoneTest.tif'))
+met9 = imread(os.path.join(tiffs_path, 'SphStdDevNor_WB_zoneTest.tif'))
+met10 = imread(os.path.join(tiffs_path, 'TWI_WB_zoneTest.tif'))
+met11 = imread(os.path.join(tiffs_path, 'tanCur_WB_zoneTest.tif'))
 
 
 # On crée la liste des metrics pour les itérer
