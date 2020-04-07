@@ -62,6 +62,11 @@ print("Accuracy:", metrics.accuracy_score(test_y, y_pred))
 import numpy as np
 import os
 from tifffile import imread
+import numpy as np
+
+from osgeo import gdal
+from gdalconst import *
+
 
 # On importe le modèle de classification fait auparavant
 ''' À Compléter'''
@@ -103,10 +108,6 @@ for i in image_list:
 met_stack = np.stack((met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11))
 
 def fonctionDeMet(a):
-    # met_array = []
-    # for i in range(10):
-    #     met_array.append(met_stack[i,:,:])
-
     metriques = [
                 [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]]
                 ]
