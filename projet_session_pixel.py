@@ -86,8 +86,8 @@ met6 = imread(os.path.join(tiffs_path, 'PlanCur_WB_31H02NE.tif'))
 met7 = imread(os.path.join(tiffs_path, 'ProfCur_WB_31H02NE.tif'))
 met8 = imread(os.path.join(tiffs_path, 'RelTPI_WB_31H02NE.tif'))
 met9 = imread(os.path.join(tiffs_path, 'SphStdDevNor_WB_31H02NE.tif'))
-met10 = imread(os.path.join(tiffs_path, 'tanCur_WB_31H02NE.tif'))
-met11 = imread(os.path.join(tiffs_path, 'TWI_WB_31H02NE.tif'))
+met10 = imread(os.path.join(tiffs_path, 'TWI_WB_31H02NE.tif'))
+met11 = imread(os.path.join(tiffs_path, 'tanCur_WB_31H02NE.tif'))
 
 
 # On crée la liste des metrics pour les itérer
@@ -108,10 +108,12 @@ for i in image_list:
 met_stack = np.stack((met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11))
 
 def fonctionDeMet(a):
-    metriques = [
+    metriques_stack = [
                 [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10]]
                 ]
-    clf.predict(metriques)
+    print(metriques_stack)
+    return clf.predict(metriques_stack)
+
 
 
 resultat = np.apply_along_axis(fonctionDeMet, 0, met_stack)
