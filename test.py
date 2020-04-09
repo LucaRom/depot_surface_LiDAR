@@ -22,10 +22,10 @@ import glob
 wbt = whitebox.WhiteboxTools()
 wbt.verbose = False
 
-path_metr = r'D:\DATA\Metriques\22G14\22G14NE'
-couche_point = r'D:\DATA\shapefile\points_21G14NE.shp'
-couche_test = r'D:\DATA\shapefile\point_alea.shp'
-path_mnt = r'D:\DATA\MNT_5x5_cor\22G14\MNT_5x5_cor_22G14NE.tif'
+path_metr = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'
+couche_point = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\Ech_31H02SE.shp'
+# couche_test = r'D:\DATA\shapefile\point_alea.shp'
+# path_mnt = r'D:\DATA\MNT_5x5_cor\22G14\MNT_5x5_cor_22G14NE.tif'
 
 # print('Production des points...')
 # wbt.raster_to_vector_points(path_mnt, couche_point)
@@ -64,7 +64,7 @@ def extract_value_metrique(path_couche_point, path_metrique):
 
     print('Ouverture du SHP...')
     shp = gpd.read_file(path_couche_point)
-    del shp['VALUE']
+    # del shp['VALUE']
     print('termine')
 
     print('Création des nouvelles colonnes...')
@@ -88,37 +88,37 @@ def extract_value_metrique(path_couche_point, path_metrique):
     print('Terminé')
 
 
-#extract_value_metrique(couche_point, path_metr)
+extract_value_metrique(couche_point, path_metr)
 
-ech = r'D:\DATA\Segmentations\OneDrive_4_08-03-2020\MNT_5x5_cor_31H02NE_SE_Watershed_Merge_stats.shp'
-
-dic_metrique = {'AvNoVeAnDe': 'ANVAD', 'CirVarAsp': 'CVA', 'DwnSloInd': 'DI', 'EdgeDens': 'EdgeDens', 'Pente':
-    'Pente', 'PlanCurv': 'PlanCur', 'ProfCurv': 'ProfCur', 'TPI': 'TPI', 'SphStDevNo': 'SSDN', 'TanCurv': 'tanCur',
-                'TWI': 'TWI'}
-
-print('Lecture...')
-shp = gpd.read_file(ech)
-print('Traitement')
-for col in shp.columns:
-    if col == 'ID' or col == 'geometry' or col == 'zone' or col == 'path' or col == 'layer':
-        pass
-    else:
-        nom_metrique = col.split('_')[0]
-        reste = col.split('_')[1]
-        #nom = dic_metrique[col]
-        if nom_metrique == 'TanCur':
-            nom = 'tanCur_{}'.format(reste)
-            shp[nom] = shp[col]
-            del shp[col]
-        elif nom_metrique == 'ED':
-            nom = 'EdgeDens_{}'.format(reste)
-            shp[nom] = shp[col]
-            del shp[col]
-
-print('sauvegarde')
-shp.to_file(ech)
-for col in shp.columns:
-    print(col)
+# ech = r'D:\DATA\Segmentations\OneDrive_4_08-03-2020\MNT_5x5_cor_31H02NE_SE_Watershed_Merge_stats.shp'
+#
+# dic_metrique = {'AvNoVeAnDe': 'ANVAD', 'CirVarAsp': 'CVA', 'DwnSloInd': 'DI', 'EdgeDens': 'EdgeDens', 'Pente':
+#     'Pente', 'PlanCurv': 'PlanCur', 'ProfCurv': 'ProfCur', 'TPI': 'TPI', 'SphStDevNo': 'SSDN', 'TanCurv': 'tanCur',
+#                 'TWI': 'TWI'}
+#
+# print('Lecture...')
+# shp = gpd.read_file(ech)
+# print('Traitement')
+# for col in shp.columns:
+#     if col == 'ID' or col == 'geometry' or col == 'zone' or col == 'path' or col == 'layer':
+#         pass
+#     else:
+#         nom_metrique = col.split('_')[0]
+#         reste = col.split('_')[1]
+#         #nom = dic_metrique[col]
+#         if nom_metrique == 'TanCur':
+#             nom = 'tanCur_{}'.format(reste)
+#             shp[nom] = shp[col]
+#             del shp[col]
+#         elif nom_metrique == 'ED':
+#             nom = 'EdgeDens_{}'.format(reste)
+#             shp[nom] = shp[col]
+#             del shp[col]
+#
+# print('sauvegarde')
+# shp.to_file(ech)
+# for col in shp.columns:
+#     print(col)
 
 
 
@@ -395,5 +395,18 @@ for col in shp.columns:
 #
 # print(liste_choix)
 # #
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
