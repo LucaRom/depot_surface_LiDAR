@@ -5,38 +5,39 @@ Created on Wed Jan 2020
 @author: Luca Romanini
 
 """
-# Necessite aussi plusieurs dépendances...
 
-import geopandas as gpd # Plusieurs dépendances ...
-import matplotlib.pyplot as plt
+# Import des librairies
+import geopandas as gpd
+from tifffile import imread
 import numpy as np
 import os
+from osgeo import gdal
+from gdalconst import *
 import pandas as pd
-import seaborn as sns
-import gdal
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import plot_confusion_matrix
-from sklearn.feature_selection import SelectFromModel
+
+#### Entraînement du modèle de classification ####
+
+# On définit le dossier parent pour le réutiliser dans l'import d'intrants
+root_dir  = os.path.dirname("__file__")
 
 # Pour importer un shapefile
 # Chemin vers le dossier avec les shapefiles
-folder_path = r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\raster_input\21_fev_2020'
+folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
 
-# On crée la liste des shapefiles
+# # On crée la liste des shapefiles
 files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
 shp_list = [os.path.join(folder_path, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
-                                                                               # .shp seulement
-
+                                                                                # .shp seulement
 # On join les fichiers .shp de la liste
 new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
-                                     ignore_index = True), crs = gpd.read_file(shp_list[0]).crs)
+                                      ignore_index = True), crs = gpd.read_file(shp_list[0]).crs)
 
 # On choisi la colonne de que l'on veut prédire (ici le type de dépots)
-y_depots = new_shp.zone
+y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
 metriques = ['ANVAD', 'CVA', 'DI', 'EdgeDens', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
@@ -56,23 +57,19 @@ y_pred = clf.predict(test_metriques)
 # Impression de précision
 print("Accuracy:", metrics.accuracy_score(test_y, y_pred))
 
-################################
+#### Prediction des pixels avec les matrices de métriques ####
 
-import numpy as np
-import os
-from tifffile import imread
-import numpy as np
+# import os
+# from tifffile import imread
+# import numpy as np
+#
+# from osgeo import gdal
+# from gdalconst import *
 
-from osgeo import gdal
-from gdalconst import *
-
+# Temporairement transposé en haut de page (ou permanent?)
 
 # On importe le modèle de classification fait auparavant
 ''' À Compléter'''
-
-# On définit le dossier parent pour le réutiliser dans l'import d'intrants
-root_dir  = os.path.dirname("__file__")
-filename = os.path.join(root_dir, 'path/where/to/go')
 
 # Import des images en matrices numpy
 tiffs_path = os.path.join(root_dir, 'inputs/tiffs/') # Définition du chemin pour les images
@@ -129,7 +126,7 @@ cols = resultat.shape[2]
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 
-image = driver.Create("../classi01.tiff", cols, rows, 1, GDT_Byte)
+image = driver.Create("../classi_15_20_01.tiff", cols, rows, 1, GDT_Byte)
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
