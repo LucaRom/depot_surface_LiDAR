@@ -15,10 +15,11 @@ def resampling_cubic_spline(input, output, size):
     print('Ouverture {}'.format(input))
     dataset = gdal.Open(input, gdal.GA_ReadOnly)
     largeur, hauteur = (dataset.RasterXSize, dataset.RasterYSize)
+    proj = dataset.GetProjection()
 
     # Resampling
     print('Resampling...')
-    warp_object = gdal.WarpOptions(width=largeur / size, height=hauteur / size, resampleAlg=3)
+    warp_object = gdal.WarpOptions(width=largeur / size, height=hauteur / size, resampleAlg=3, srcSRS=proj, dstSRS=proj)
     gdal.Warp(destNameOrDestDS=output, srcDSOrSrcDSTab=input, options=warp_object)
     print('Terminé')
     print()

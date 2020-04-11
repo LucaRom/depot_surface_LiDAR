@@ -22,8 +22,8 @@ import glob
 wbt = whitebox.WhiteboxTools()
 wbt.verbose = False
 
-path_metr = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'
-couche_point = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\Ech_31H02SE.shp'
+path_metr = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02NE'
+couche_point = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\inputs_modele_avril2020\Ech_31H02NE.shp'
 # couche_test = r'D:\DATA\shapefile\point_alea.shp'
 # path_mnt = r'D:\DATA\MNT_5x5_cor\22G14\MNT_5x5_cor_22G14NE.tif'
 
@@ -38,7 +38,7 @@ def extract_value_metrique(path_couche_point, path_metrique):
     ls = glob.glob(path_metrique + os.sep + '*.tif')
     dic_metrique = {'AvrNorVecAngDev': 'ANVAD', 'CirVarAsp': 'CVA', 'DownslopeInd': 'DI', 'EdgeDens': 'EdgeDens', 'Pente':
             'Pente', 'PlanCur': 'PlanCur', 'ProfCur': 'ProfCur', 'RelTPI': 'TPI', 'SphStdDevNor': 'SSDN', 'tanCur': 'tanCur',
-            'TWI': 'TWI'}
+            'TWI': 'TWI', 'Contrast':'ContHar', 'Mean':'MeanHar'}
 
     dic_ordre = {}
 
@@ -395,18 +395,3 @@ extract_value_metrique(couche_point, path_metr)
 #
 # print(liste_choix)
 # #
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
