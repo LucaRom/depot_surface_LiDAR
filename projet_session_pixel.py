@@ -41,7 +41,8 @@ new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
 y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
-metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
+#metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
+metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
 X_metriques = new_shp[metriques]
 
 # Séparation des données en données d'entrainement et données de tests
@@ -85,26 +86,26 @@ plt.show()
 ''' À Compléter'''
 
 # Import des images en matrices numpy
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/') # Définition du chemin pour les images
-met1 = imread(os.path.join(tiffs_path, 'AvrNorVecAngDev_WB_zoneTest.tif'))
-met2 = imread(os.path.join(tiffs_path, 'CirVarAsp_WB_zoneTest.tif'))
-met3 = imread(os.path.join(tiffs_path, 'Contrast_GLCM_zoneTest.tif'))
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test/') # Définition du chemin pour les images
+#met1 = imread(os.path.join(tiffs_path, 'AvrNorVecAngDev_WB_zoneTest.tif'))
+#met2 = imread(os.path.join(tiffs_path, 'CirVarAsp_WB_zoneTest.tif'))
+#met3 = imread(os.path.join(tiffs_path, 'Contrast_GLCM_zoneTest.tif'))
 met4 = imread(os.path.join(tiffs_path, 'DownslopeInd_WB_zoneTest.tif'))
-met5 = imread(os.path.join(tiffs_path, 'EdgeDens_WB_zoneTest.tif'))
+#met5 = imread(os.path.join(tiffs_path, 'EdgeDens_WB_zoneTest.tif'))
 met6 = imread(os.path.join(tiffs_path, 'Mean_GLCM_zoneTest.tif'))
 met7 = imread(os.path.join(tiffs_path, 'Pente_WB_zoneTest.tif'))
-met8 = imread(os.path.join(tiffs_path, 'PlanCur_WB_zoneTest.tif'))
-met9 = imread(os.path.join(tiffs_path, 'ProfCur_WB_zoneTest.tif'))
+#met8 = imread(os.path.join(tiffs_path, 'PlanCur_WB_zoneTest.tif'))
+#met9 = imread(os.path.join(tiffs_path, 'ProfCur_WB_zoneTest.tif'))
 met10 = imread(os.path.join(tiffs_path, 'RelTPI_WB_zoneTest.tif'))
-met11 = imread(os.path.join(tiffs_path, 'SphStdDevNor_WB_zoneTest.tif'))
-met12 = imread(os.path.join(tiffs_path, 'TWI_WB_zoneTest.tif'))
-met13 = imread(os.path.join(tiffs_path, 'tanCur_WB_zoneTest.tif'))
+#met11 = imread(os.path.join(tiffs_path, 'SphStdDevNor_WB_zoneTest.tif'))
+#met12 = imread(os.path.join(tiffs_path, 'TWI_WB_zoneTest.tif'))
+#met13 = imread(os.path.join(tiffs_path, 'tanCur_WB_zoneTest.tif'))
 
 # On crée la liste des metrics pour les itérer
-image_list = [met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11, met12, met13]
+image_list = [met4, met6, met7, met10]
 
 # Vérifier si les images sont tous de la même forme (shape)
-shapeimg1 = met1.shape
+shapeimg1 = met4.shape
 for i in image_list:
     if i.shape != shapeimg1:
         print("Les images ne sont pas de la même taille")
@@ -115,11 +116,11 @@ for i in image_list:
 
 #print(metric1, metric2, metric3)
 
-met_stack = np.stack((met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11, met12, met13))
+met_stack = np.stack((met4, met6, met7, met10))
 
 def fonctionDeMet(a):
     metriques_stack = [
-                [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12]]
+                [a[0], a[1], a[2], a[3]]
                 ]
     print(metriques_stack)
     return clf.predict(metriques_stack)
