@@ -9,6 +9,7 @@ Created on Wed Jan 2020
 # Import des librairies
 import geopandas as gpd
 from tifffile import imread
+import matplotlib.pyplot as plt
 import numpy as np
 import os
 from osgeo import gdal
@@ -40,7 +41,7 @@ new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
 y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
-metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur', 'ContHar', 'MeanHar']
+metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
 X_metriques = new_shp[metriques]
 
 # Séparation des données en données d'entrainement et données de tests
@@ -56,8 +57,6 @@ y_pred = clf.predict(test_metriques)
 
 # Impression de précision
 print("Accuracy:", metrics.accuracy_score(test_y, y_pred))
-
-import matplotlib.pyplot as plt
 
 # Pour impression graphique
 importances = clf.feature_importances_
@@ -100,11 +99,9 @@ met10 = imread(os.path.join(tiffs_path, 'RelTPI_WB_zoneTest.tif'))
 met11 = imread(os.path.join(tiffs_path, 'SphStdDevNor_WB_zoneTest.tif'))
 met12 = imread(os.path.join(tiffs_path, 'TWI_WB_zoneTest.tif'))
 met13 = imread(os.path.join(tiffs_path, 'tanCur_WB_zoneTest.tif'))
-met14 = imread(os.path.join(tiffs_path, 'Mean_GLCM_zoneTest.tif'))
-met15 = imread(os.path.join(tiffs_path, 'Contrast_GLCM_zoneTest.tif'))
 
 # On crée la liste des metrics pour les itérer
-image_list = [met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11, met12, met13, met14, met15]
+image_list = [met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11, met12, met13]
 
 # Vérifier si les images sont tous de la même forme (shape)
 shapeimg1 = met1.shape
@@ -118,11 +115,11 @@ for i in image_list:
 
 #print(metric1, metric2, metric3)
 
-met_stack = np.stack((met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11, met12, met13, met14, met15))
+met_stack = np.stack((met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11, met12, met13))
 
 def fonctionDeMet(a):
     metriques_stack = [
-                [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12], a[13], a[14]]
+                [a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], a[9], a[10], a[11], a[12]]
                 ]
     print(metriques_stack)
     return clf.predict(metriques_stack)
