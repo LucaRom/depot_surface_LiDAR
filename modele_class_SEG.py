@@ -14,6 +14,7 @@ import os
 import pandas as pd
 import seaborn as sns
 
+from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
@@ -22,9 +23,12 @@ from sklearn.metrics import plot_confusion_matrix
 from sklearn.feature_selection import SelectFromModel
 from sklearn.utils import resample
 
+# On définit le dossier parent pour le réutiliser dans l'import d'intrants
+root_dir  = os.path.dirname("__file__")
+
 # Pour importer un shapefile
 # Chemin vers le dossier avec les shapefiles
-folder_path = r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\Atelier_10_mars\segmentation\ecognition\OneDrive_1_3-8-2020'
+folder_path = os.path.join(root_dir, 'inputs/segmentations')
 
 # On crée la liste des shapefiles
 files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
@@ -35,14 +39,26 @@ shp_list = [os.path.join(folder_path, i) for i in files if i.endswith('.shp')] #
 new_shp_temp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
                                      ignore_index = True), crs = gpd.read_file(shp_list[0]).crs)
 
+# On enleve la colonne 'label' et on enleve les rangées 'nulles'
+del new_shp_temp['label']
+new_shp_temp = new_shp_temp.dropna()
+
+# Pour tester temporaire... peut être effacé
+#new_shp_temp.to_file(os.path.join(root_dir, 'outputs/Segmentations/test_seg_concat01.shp'))
+
+
 # for i, row in new_shp_temp.iterrows():
 #     new_shp_temp[row] = i
 
 # new_shp.plot()
 # plt.show()
 
-df_majority = new_shp_temp[new_shp_temp.zone==0]
-df_minority = new_shp_temp[new_shp_temp.zone==1]
+df_majority = new_shp_temp[new_shp_temp.Zone==0]
+df_minority = new_shp_temp[new_shp_temp.Zone==1]
+
+# On enlève les valeur Null (majoritairement issue des métriques de textures)
+# df_majority = df_majority.dropna()
+# df_minority = df_minority.dropna()
 
 # Downsample majority class
 df_majority_downsampled = resample(df_majority,
@@ -56,28 +72,21 @@ new_shp = pd.concat([df_majority_downsampled, df_minority])
 #print(new_shp.columns) # Montrer le nom des colonnes
 
 # On choisi la colonne de que l'on veut prédire (ici le type de dépots)
-y_depots = new_shp.zone
+y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
 # metriques = ['AvNoVeAnDe', 'CirVarAsp', 'DwnSloInd', 'EdgeDens', 'Pente', 'PlanCurv', 'ProfCurv', 'TPI', 'SphStDevNo', 'TWI', 'TanCurv']
-metriques = list(new_shp.iloc[:,1:102])
-metriques.remove('layer')
-metriques.remove('path')
-metriques.remove('ANVAD_coun')
-metriques.remove('CVA_count')
-metriques.remove('DI_count')
-metriques.remove('Pente_coun')
-metriques.remove('PlanCur_co')
-metriques.remove('ProfCur_co')
-metriques.remove('TPI_count')
-metriques.remove('SSDN_count')
-metriques.remove('TWI_count')
-metriques.remove('EdgeDens_c')
-metriques.remove('tanCur_cou')
+metriques = list(new_shp.iloc[:,4:75])
+#metriques.remove('label')
+# metriques.remove('path')
+# metriques.remove('cat')
+# metriques.remove('cat')
 
 X_metriques = new_shp[metriques]
+#X_metriques = X_metriques.dropna()
 
-
+#np.any(np.isnan(X_metriques))      #Test NaN ou Infinit
+#np.all(np.isfinite(X_metriques))
 
 # Séparation des données en données d'entrainement et données de tests
 train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size = 0.30, random_state = 42)
@@ -122,18 +131,37 @@ disp = plot_confusion_matrix(clf, test_metriques, test_y,
 # plt.xlabel('Importance relative (%)')
 # plt.show()
 
+
+# Prediction complète
+metriques_zone_complete = new_shp_temp[metriques] # On repart avec tous les polygones
+full_pred = clf.predict(metriques_zone_complete)
+full_pred = pd.DataFrame(full_pred)
+#full_pred.colums = ['prediction']
+
+new_shp_temp['prediction'] = full_pred[:]
+#to_export_2 = new_shp
+
+##### ATTENTION POTENTIELLEMENT PAS BON, LAISSEZ POUR AUTRE CHOSE #####
+
 # Export des résultats en .shp pour visualisation
 # Creer une nouvelle colonne dans le shapefile
-liste_des_resultats = list(zip(test_y, y_pred))
-df = pd.DataFrame({'ID': test_y.index, 'prediction': y_pred})
+# liste_des_resultats = list(zip(test_y, y_pred))
+# df = pd.DataFrame({'ID': test_y.index, 'prediction': y_pred})
 #
-to_export_2 = new_shp_temp.merge(df, on = 'ID')
+# #to_export_2 = new_shp_temp.merge(df, on = 'ID')
+# to_export_2 = new_shp_temp.merge(df, how = 'left', left_index = True, right_index = True)
+
+#### FIN ####
+
 
 # #new_full_raster = pd.concat([full_raster, pd.DataFrame(full_pred)], axis=0, ignore_index=True)
 # new_shp['predict'] = y_pred
 
-# # On crée le shapefile avec les prédictions
-to_export_2.to_file("result_prediction_SEG.shp") # Vérifier fiona
+# On crée le shapefile avec les prédictions
+date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) #On ajoute la date au fichier pour suivre nos tests
+nom_fichier = 'result_prediction_SEG' + date_classi + '.shp'
+new_shp_temp.to_file(os.path.join(root_dir, 'outputs/Segmentations', nom_fichier))
+#new_shp_temp.to_file(os.path.join(root_dir, 'outputs/Segmentations', nom_fichier))
 
 print("fait une correlation entre les metriques")
 
