@@ -31,16 +31,17 @@ date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 
 #### PARAMETRES A CHANGER ####
 # Chemin des images pour faire à classer
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02SE_50m/') # Définition du chemin pour les images
-# tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_petite/') # Définition du chemin pour les images
+# tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02SE_50m/') # Définition du chemin pour les images
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_petite/') # Définition du chemin pour les images
 
 
 # Chemin vers le dossier Output
-out_tiffs = 'outputs/pixel_50m'
-# out_tiffs = 'outputs/zone_test'
+# out_tiffs = 'outputs/pixel_50m'
+out_tiffs = 'outputs/zone_test'
 
 # Structure du nom du fichier sortant
-nom_fichier = '31H02SE_50m_12mets' + date_classi + '.tiff'
+# nom_fichier = '31H02SE_50m_12mets' + date_classi + '.tiff'
+nom_fichier = 'test' + date_classi + '.tiff'
 
 #### Entraînement du modèle de classification ####
 
@@ -193,14 +194,15 @@ data = gdal.Open(os.path.join(tiffs_path, tiff_path_list[0]))
 # data = None # Pas sur
 
 geoTransform = data.GetGeoTransform()
-minx = geoTransform[0]
-maxy = geoTransform[3]
-# maxx = minx + geoTransform[1] * data.RasterXSize
-miny = maxy + geoTransform[5] * data.RasterYSize
-data = None # Pas sur
+# minx = geoTransform[0]
+# maxy = geoTransform[3]
+# # maxx = minx + geoTransform[1] * data.RasterXSize
+# miny = maxy + geoTransform[5] * data.RasterYSize
+# data = None # Pas sur
 
 # Définir le extent
-image.SetGeoTransform((minx, 5, 0, miny, 0, 5))
+#image.SetGeoTransform((minx, 5, 0, miny, 0, 5))
+image.SetGeoTransform(geoTransform)
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
