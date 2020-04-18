@@ -12,7 +12,7 @@ from tifffile import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from osgeo import gdal
+from osgeo import gdal, osr
 from gdalconst import *
 import pandas as pd
 
@@ -24,7 +24,7 @@ from sklearn import metrics
 #### Entraînement du modèle de classification ####
 
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
-root_dir  = os.path.dirname("__file__")
+root_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Pour importer un shapefile
 # Chemin vers le dossier avec les shapefiles
@@ -156,6 +156,12 @@ result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
 
 # j'écris la matrice dans la bande
 band.WriteArray(result1, 0, 0)
+
+# Je définis la projection
+outRasterSRS = osr.SpatialReference()
+outRasterSRS.ImportFromEPSG(2950)
+
+image.SetProjection(outRasterSRS.ExportToWkt())
 
 # je vide la cache
 band.FlushCache()

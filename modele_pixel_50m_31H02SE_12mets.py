@@ -12,7 +12,7 @@ from tifffile import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from osgeo import gdal
+from osgeo import gdal, osr
 from gdalconst import *
 import pandas as pd
 
@@ -23,7 +23,8 @@ from sklearn import metrics
 
 #### PARAMETRE INITIAUX ####
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
-root_dir  = os.path.dirname("__file__")
+root_dir = os.path.abspath(os.path.dirname(__file__))
+#print(root_dir)
 
 # On ajoute la date au fichier sortant pour suivre nos tests
 date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
@@ -78,12 +79,12 @@ importances = clf.feature_importances_
 indices = np.argsort(importances)
 
 # plot them with a horizontal bar chart
-plt.figure() # Crée une nouvelle instance de graphique
-plt.title('Importances des métriques')
-plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-plt.yticks(range(len(indices)), [metriques[i] for i in indices])
-plt.xlabel('Importance relative (%)')
-plt.show()
+# plt.figure() # Crée une nouvelle instance de graphique
+# plt.title('Importances des métriques')
+# plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+# plt.yticks(range(len(indices)), [metriques[i] for i in indices])
+# plt.xlabel('Importance relative (%)')
+# plt.show()
 
 #### Prediction des pixels avec les matrices de métriques ####
 
@@ -181,6 +182,13 @@ cols = resultat.shape[2]
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 image = driver.Create((os.path.join(root_dir, out_tiffs, nom_fichier)), cols, rows, 1, GDT_Byte)
 
+# J'extrais les paramètres d'une métriques pour le positionnement
+data = gdal.Open(os.path.join(tiffs_path, tiff_path_list[0]))
+geoTransform = data.GetGeoTransform()
+minx = geoTransform[0]
+miny = geoTransform[3]
+data = None # Pas sur
+
 # je cherche la bande 1
 band = image.GetRasterBand(1)
 
@@ -189,6 +197,12 @@ result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
 
 # j'écris la matrice dans la bande
 band.WriteArray(result1, 0, 0)
+
+# Je définis la projection
+outRasterSRS = osr.SpatialReference()
+outRasterSRS.ImportFromEPSG(2950)
+
+image.SetProjection(outRasterSRS.ExportToWkt())
 
 # je vide la cache
 band.FlushCache()

@@ -11,7 +11,7 @@ import geopandas as gpd
 from tifffile import imread
 import matplotlib.pyplot as plt
 import numpy as np
-import os
+import os, osr
 from osgeo import gdal
 from gdalconst import *
 import pandas as pd
@@ -23,7 +23,7 @@ from sklearn import metrics
 #### Entraînement du modèle de classification ####
 
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
-root_dir  = os.path.dirname("__file__")
+root_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Pour importer un shapefile
 # Chemin vers le dossier avec les shapefiles
@@ -87,7 +87,7 @@ plt.show()
 ''' À Compléter'''
 
 # Import des images en matrices numpy
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test/') # Définition du chemin pour les images
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_petite/') # Définition du chemin pour les images
 #met1 = imread(os.path.join(tiffs_path, 'AvrNorVecAngDev_WB_zoneTest.tif'))
 #met2 = imread(os.path.join(tiffs_path, 'CirVarAsp_WB_zoneTest.tif'))
 #met3 = imread(os.path.join(tiffs_path, 'Contrast_GLCM_zoneTest.tif'))
@@ -142,7 +142,17 @@ cols = resultat.shape[2]
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 
-image = driver.Create("../classi_10_04_2020.tiff", cols, rows, 1, GDT_Byte)
+image = driver.Create("../classi_testnumero30.tiff", cols, rows, 1, GDT_Byte)
+
+# J'extrais les paramètres d'une métriques pour le positionnement
+data = gdal.Open((os.path.join(tiffs_path, 'DownslopeInd_WB_zoneTest.tif')))
+geoTransform = data.GetGeoTransform()
+minx = geoTransform[0]
+miny = geoTransform[3]
+data = None # Pas sur
+
+# On donne la coordonnée d'origine de l'image raster tiré d'une des métriques
+image.SetGeoTransform((minx, cols, 0, miny, 0, rows))
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
@@ -152,6 +162,12 @@ result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
 
 # j'écris la matrice dans la bande
 band.WriteArray(result1, 0, 0)
+
+# Je définis la projection
+outRasterSRS = osr.SpatialReference()
+outRasterSRS.ImportFromEPSG(2950)
+
+image.SetProjection(outRasterSRS.ExportToWkt())
 
 # je vide la cache
 band.FlushCache()
