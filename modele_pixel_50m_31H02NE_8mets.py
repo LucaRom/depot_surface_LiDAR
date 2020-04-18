@@ -90,12 +90,12 @@ importances = clf.feature_importances_
 indices = np.argsort(importances)
 
 # plot them with a horizontal bar chart
-plt.figure() # Crée une nouvelle instance de graphique
-plt.title('Importances des métriques')
-plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-plt.yticks(range(len(indices)), [metriques[i] for i in indices])
-plt.xlabel('Importance relative (%)')
-plt.show()
+# plt.figure() # Crée une nouvelle instance de graphique
+# plt.title('Importances des métriques')
+# plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+# plt.yticks(range(len(indices)), [metriques[i] for i in indices])
+# plt.xlabel('Importance relative (%)')
+# plt.show()
 
 #### Prediction des pixels avec les matrices de métriques ####
 
