@@ -42,8 +42,9 @@ y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
 #metriques = ['ANVAD', 'CVA', 'ProfCur', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'TPI', 'SSDN', 'TWI', 'CorHar']
-metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'MeanHar', 'Pente', 'TPI', 'SSDN']
-#metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+#metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'MeanHar', 'Pente', 'TPI', 'SSDN']
+metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+#metriques = ['DI']
 X_metriques = new_shp[metriques]
 
 # Séparation des données en données d'entrainement et données de tests
@@ -142,17 +143,31 @@ cols = resultat.shape[2]
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 
-image = driver.Create("../classi_testnumero30.tiff", cols, rows, 1, GDT_Byte)
+image = driver.Create("../classi_testnumero43.tiff", cols, rows, 1, GDT_Byte)
 
 # J'extrais les paramètres d'une métriques pour le positionnement
 data = gdal.Open((os.path.join(tiffs_path, 'DownslopeInd_WB_zoneTest.tif')))
+
 geoTransform = data.GetGeoTransform()
-minx = geoTransform[0]
-miny = geoTransform[3]
+# minx = geoTransform[0]
+# maxy = geoTransform[3]
+# maxx = minx + geoTransform[1] * data.RasterXSize
+# #miny = maxy + geoTransform[5] * data.RasterYSize
+# miny = maxy - geoTransform[5] * data.RasterYSize
+# pixelWidth = geoTransform[1]
+# pixelHeight = geoTransform[5]
 data = None # Pas sur
 
+# geoTransform = data.GetGeoTransform()
+# minx = geoTransform[0]
+# maxy = geoTransform[3]
+# pixelWidth = geoTransform[1]
+# pixelHeight = geoTransform[-5]
+# data = None # Pas sur
+
 # On donne la coordonnée d'origine de l'image raster tiré d'une des métriques
-image.SetGeoTransform((minx, cols, 0, miny, 0, rows))
+image.SetGeoTransform(geoTransform )
+#image.SetGeoTransform((minx, pixelWidth, 0, miny, 0, pixelWidth))
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
@@ -164,10 +179,10 @@ result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
 band.WriteArray(result1, 0, 0)
 
 # Je définis la projection
-outRasterSRS = osr.SpatialReference()
-outRasterSRS.ImportFromEPSG(2950)
-
-image.SetProjection(outRasterSRS.ExportToWkt())
+# outRasterSRS = osr.SpatialReference()
+# outRasterSRS.ImportFromEPSG(2950)
+#
+# image.SetProjection(outRasterSRS.ExportToWkt())
 
 # je vide la cache
 band.FlushCache()

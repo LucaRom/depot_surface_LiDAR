@@ -187,20 +187,11 @@ image = driver.Create((os.path.join(root_dir, out_tiffs, nom_fichier)), cols, ro
 
 # J'extrais les paramètres d'une métriques pour le positionnement
 data = gdal.Open(os.path.join(tiffs_path, tiff_path_list[0]))
-# geoTransform = data.GetGeoTransform()
-# minx = geoTransform[0]
-# miny = geoTransform[3]
-# data = None # Pas sur
-
 geoTransform = data.GetGeoTransform()
-minx = geoTransform[0]
-maxy = geoTransform[3]
-# maxx = minx + geoTransform[1] * data.RasterXSize
-miny = maxy + geoTransform[5] * data.RasterYSize
 data = None # Pas sur
 
-# Définir le extent
-image.SetGeoTransform((minx, 5, 0, miny, 0, 5))
+# J'applique les paramètres de positionnement à mon image
+image.SetGeoTransform(geoTransform)
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
