@@ -41,8 +41,9 @@ new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
 y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
-#metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'PlanCur', 'ProfCur', 'TPI', 'SSDN', 'TWI', 'tanCur']
-metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+#metriques = ['ANVAD', 'CVA', 'ProfCur', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'TPI', 'SSDN', 'TWI', 'CorHar']
+metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'MeanHar', 'Pente', 'TPI', 'SSDN']
+#metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
 X_metriques = new_shp[metriques]
 
 # Séparation des données en données d'entrainement et données de tests
