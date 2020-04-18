@@ -30,7 +30,7 @@ date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 
 #### PARAMETRES A CHANGER ####
 # Chemin des images pour faire à classer
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_31H02NE/') # Définition du chemin pour les images
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02NE_50m/') # Définition du chemin pour les images
 
 # Chemin vers le dossier Output
 out_tiffs = 'outputs/pixel_50m'
