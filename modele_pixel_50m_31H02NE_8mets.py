@@ -12,7 +12,7 @@ from tifffile import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from osgeo import gdal
+from osgeo import gdal, osr
 from gdalconst import *
 import pandas as pd
 
@@ -166,9 +166,6 @@ cols = resultat.shape[2]
 
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
-
-# je déclare mon image
-# il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 image = driver.Create((os.path.join(root_dir, out_tiffs, nom_fichier)), cols, rows, 1, GDT_Byte)
 
 # je cherche la bande 1
@@ -179,6 +176,12 @@ result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
 
 # j'écris la matrice dans la bande
 band.WriteArray(result1, 0, 0)
+
+# Je définis la projection
+outRasterSRS = osr.SpatialReference()
+outRasterSRS.ImportFromEPSG(2950)
+
+image.SetProjection(outRasterSRS.ExportToWkt())
 
 # je vide la cache
 band.FlushCache()
