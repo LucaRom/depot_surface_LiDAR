@@ -38,6 +38,9 @@ out_tiffs = 'outputs/pixel_50m'
 # Structure du nom du fichier sortant
 nom_fichier = '31H02NE_50m_8mets' + date_classi + '.tiff'
 
+# Liste des métriques
+metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'MeanHar', 'Pente', 'TPI', 'SSDN']
+
 # Liste des paramètres à conserver et à enlever(POUR RÉFÉRENCE)
 # Liste complète
 # ANVAD (0), CVA (1), ContHar (2), CorHar (3), DI (4), ED (5), MeanHar (6), Pente (7), ProfCur (8), TPI (9), SSDN (10), TWI (11)
@@ -66,7 +69,6 @@ new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
 y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
-metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN', 'TWI']
 X_metriques = new_shp[metriques]
 
 # Séparation des données en données d'entrainement et données de tests
