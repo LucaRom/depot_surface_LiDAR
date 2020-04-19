@@ -24,12 +24,12 @@ from sklearn.feature_selection import SelectFromModel
 from sklearn.utils import resample
 
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
-root_dir  = os.path.dirname("__file__")
+root_dir = os.path.abspath(os.path.dirname(__file__))
 
 #### ENTRAINEMENT DU MODELE ####
 
 # Pour importer un shapefile POUR LENTRAINEMENT
-folder_path = os.path.join(root_dir, 'inputs/segmentations/seg_entrainement_31H02NE_SE')
+folder_path = os.path.join(root_dir, 'inputs/segmentations/seg_entrainement_31H02_NE_SE')
 
 # On crée la liste des shapefiles
 files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
@@ -138,15 +138,15 @@ folder_path_predict = os.path.join(root_dir, 'inputs/segmentations/seg_zone_etud
 
 # On crée la liste des shapefiles
 files = os.listdir(folder_path_predict)  # Liste des fichiers dans le dossier "folder"
-shp_lis_pred = [os.path.join(folder_path_predict, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
+shp_list_pred = [os.path.join(folder_path_predict, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
                                                                                # .shp seulement
 
 # On join les fichiers .shp de la liste
 new_shp_pred = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list_pred],
-                                     ignore_index = True), crs = gpd.read_file(shp_list_pred[0]).crs)
+                                ignore_index = True), crs = gpd.read_file(shp_list_pred[0]).crs)
 
 # On enleve la colonne 'label' et on enleve les rangées 'nulles'
-del new_shp_pred['label']
+#del new_shp_pred['label']
 new_shp_pred = new_shp_pred.dropna()
 
 # Prediction complète
@@ -177,5 +177,5 @@ new_shp_pred['prediction'] = full_pred[:]
 # On crée le shapefile avec les prédictions
 date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S')) #On ajoute la date au fichier pour suivre nos tests
 nom_fichier = 'result_SEG_zoneEtude' + date_classi + '.shp'
-new_shp_pred.to_file(os.path.join(root_dir, 'outputs/Segmentations/zone_test_31H02SO', nom_fichier))
+new_shp_pred.to_file(os.path.join(root_dir, 'outputs/zone_test_31H02SO', nom_fichier))
 
