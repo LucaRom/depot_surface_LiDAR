@@ -15,10 +15,14 @@ import os, osr
 from osgeo import gdal
 from gdalconst import *
 import pandas as pd
+import time
 
+from sklearn import metrics
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn import metrics
+
+# Calcul du temps
+start = time.time()
 
 #### Entraînement du modèle de classification ####
 
@@ -192,6 +196,10 @@ del resultat
 del band
 del image
 
+# Impression du temps
+end = time.time()
+elapsed = end - start
+print("Elapsed time : %.2f s" % (elapsed))
 
 
 
