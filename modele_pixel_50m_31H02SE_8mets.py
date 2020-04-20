@@ -156,9 +156,6 @@ cols = resultat.shape[2]
 
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
-
-# je déclare mon image
-# il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 image = driver.Create((os.path.join(root_dir, out_tiffs, nom_fichier)), cols, rows, 1, GDT_Byte)
 
 # J'extrais les paramètres d'une métriques pour le positionnement

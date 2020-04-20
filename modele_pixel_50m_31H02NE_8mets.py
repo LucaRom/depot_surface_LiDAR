@@ -111,7 +111,6 @@ indices = np.argsort(importances)
 # On importe le modèle de classification fait auparavant
 ''' À Compléter'''
 
-metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN', 'TWI']
 # Import des images en matrices numpy
 tiff_path_list = os.listdir(tiffs_path)
 
@@ -119,9 +118,6 @@ tiff_path_list = os.listdir(tiffs_path)
 tiffs_list = []
 for i in tiff_path_list:
     tiffs_list.append(imread(os.path.join(tiffs_path, i)))
-
-# On crée la liste des metrics pour les itérer
-#image_list = [met1, met2, met3, met4, met5, met6, met7, met8, met9, met10, met11, met12]
 
 # Vérifier si les images sont tous de la même forme (shape)
 # shapeimg1 = met4.shape
@@ -135,14 +131,8 @@ for i in tiff_path_list:
 
 #print(metric1, metric2, metric3)
 
-# met_stack = np.stack((tiffs_list[0], tiffs_list[1], tiffs_list[2], tiffs_list[3], tiffs_list[4], tiffs_list[5],
-#                       tiffs_list[6], tiffs_list[7], tiffs_list[8], tiffs_list[9], tiffs_list[10], tiffs_list[11]))
-
+# On crée la stack de métrique
 met_stack = np.stack(tiffs_list)
-
-# Enlever (4)
-# CorHar (2), ED (5), ProfCur (8), TWI (11)
-
 
 def fonctionDeMet(a):
     metriques_stack = [
@@ -167,6 +157,14 @@ cols = resultat.shape[2]
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
 image = driver.Create((os.path.join(root_dir, out_tiffs, nom_fichier)), cols, rows, 1, GDT_Byte)
+
+# J'extrais les paramètres d'une métriques pour le positionnement
+data = gdal.Open(os.path.join(tiffs_path, tiff_path_list[0]))
+geoTransform = data.GetGeoTransform()
+data = None # Pas sur
+
+# J'applique les paramètres de positionnement à mon image
+image.SetGeoTransform(geoTransform)
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
