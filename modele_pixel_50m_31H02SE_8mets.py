@@ -12,14 +12,21 @@ from tifffile import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from osgeo import gdal, osr
+from osgeo import gdal
 from gdalconst import *
 import pandas as pd
+import seaborn as sns
 
 from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
+
+
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.feature_selection import SelectFromModel
+from sklearn.utils import resample
 
 #### PARAMETRE INITIAUX ####
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
@@ -78,24 +85,36 @@ train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques,
 clf = RandomForestClassifier(n_estimators = 500, verbose = 2, oob_score = True, random_state = 42)
 
 # Train the model using the training sets y_pred=clf.predict(X_test)
-clf.fit(train_metriques, train_y)
-
-y_pred = clf.predict(test_metriques)
+clf.fit(train_metriques, train_y)     # Model fit sur 70%
+y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
 # Impression de précision
 print("Accuracy:", metrics.accuracy_score(test_y, y_pred))
+
+# Matrice de confusion
+#pd.crosstab()
+c_matrice = confusion_matrix(test_y, y_pred)
+
+c_matrice = confusion_matrix(test_y, y_pred)
+
+disp = plot_confusion_matrix(clf, test_metriques, test_y,
+                             cmap = plt.cm.Blues,
+                             values_format='d')
+disp.ax_.set_title('Matrice de confusion à 8 métriques')
+plt.xlabel('Réel')
+plt.ylabel('Prédit')
 
 # Pour impression graphique
 importances = clf.feature_importances_
 indices = np.argsort(importances)
 
 # plot them with a horizontal bar chart
-# plt.figure() # Crée une nouvelle instance de graphique
-# plt.title('Importances des métriques')
-# plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-# plt.yticks(range(len(indices)), [metriques[i] for i in indices])
-# plt.xlabel('Importance relative (%)')
-# plt.show()
+plt.figure() # Crée une nouvelle instance de graphique
+plt.title('Importances des métriques')
+plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+plt.yticks(range(len(indices)), [metriques[i] for i in indices])
+plt.xlabel('Importance relative (%)')
+plt.show()
 
 #### Prediction des pixels avec les matrices de métriques ####
 
