@@ -7,26 +7,46 @@ Created on Wed Jan 2020
 """
 
 # Import des librairies
+from datetime import datetime
 import geopandas as gpd
 from tifffile import imread
-import matplotlib.pyplot as plt
 import numpy as np
 import os, osr
 from osgeo import gdal
 from gdalconst import *
 import pandas as pd
+import time
 
+# Pour modèle de classification
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
-from sklearn import metrics
 
-#### Entraînement du modèle de classification ####
+#### PARAMETRES INITIAUX ####
 
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
+# On ajoute la date au fichier sortant pour un meilleur suivi
+date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+
+#### PARAMETRES À FOURNIR ####
+
+# Chemin des images pour faire à classer
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_petite/') # Définition du chemin pour les images raster
+
+# Chemin vers le dossier Output
+out_tiffs = 'outputs/projet_geo_info'
+
+# Structure du nom du fichier sortant
+nom_fichier = 'modele_predit_pixel' + date_classi + '.tiff'
+
+# Liste des métriques pour l'analyse
+metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+
+#### Entraînement du modèle de classification ####
+
 # Pour importer un shapefile
-# Chemin vers le dossier avec les shapefiles
+# Chemin vers le dossier avec les shapefiles d'entrainement
 folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
 
 # # On crée la liste des shapefiles
@@ -41,10 +61,6 @@ new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
 y_depots = new_shp.Zone
 
 # On definit les métriques sur lesquels on veut faire l'analyse
-#metriques = ['ANVAD', 'CVA', 'ProfCur', 'ContHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'TPI', 'SSDN', 'TWI', 'CorHar']
-#metriques = ['ANVAD', 'CVA', 'ContHar', 'DI', 'MeanHar', 'Pente', 'TPI', 'SSDN']
-metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
-#metriques = ['DI']
 X_metriques = new_shp[metriques]
 
 # Séparation des données en données d'entrainement et données de tests
@@ -54,83 +70,51 @@ train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques,
 clf = RandomForestClassifier(n_estimators = 500, verbose = 2, oob_score = True, random_state = 42)
 
 # Train the model using the training sets y_pred=clf.predict(X_test)
-clf.fit(train_metriques, train_y)
+clf.fit(train_metriques, train_y)     # Model fit sur 70%
+y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
-y_pred = clf.predict(test_metriques)
+#### FIN ENTRAINEMENT MODELE ####
 
-# Impression de précision
-print("Accuracy:", metrics.accuracy_score(test_y, y_pred))
+#### Début projet GEOINFO ####
 
-# Pour impression graphique
-importances = clf.feature_importances_
-indices = np.argsort(importances)
-
-# plot them with a horizontal bar chart
-plt.figure() # Crée une nouvelle instance de graphique
-plt.title('Importances des métriques')
-plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-plt.yticks(range(len(indices)), [metriques[i] for i in indices])
-plt.xlabel('Importance relative (%)')
-plt.show()
-
-#### Prediction des pixels avec les matrices de métriques ####
-
-# import os
-# from tifffile import imread
-# import numpy as np
-#
-# from osgeo import gdal
-# from gdalconst import *
-
-# Temporairement transposé en haut de page (ou permanent?)
-
-# On importe le modèle de classification fait auparavant
-''' À Compléter'''
+# On démarre le compteur pour cette section
+# Calcul du temps
+start = time.time()
+print("Debut de la classification")
 
 # Import des images en matrices numpy
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_petite/') # Définition du chemin pour les images
-#met1 = imread(os.path.join(tiffs_path, 'AvrNorVecAngDev_WB_zoneTest.tif'))
-#met2 = imread(os.path.join(tiffs_path, 'CirVarAsp_WB_zoneTest.tif'))
-#met3 = imread(os.path.join(tiffs_path, 'Contrast_GLCM_zoneTest.tif'))
-met4 = imread(os.path.join(tiffs_path, 'DownslopeInd_WB_zoneTest.tif'))
-#met5 = imread(os.path.join(tiffs_path, 'EdgeDens_WB_zoneTest.tif'))
-met6 = imread(os.path.join(tiffs_path, 'Mean_GLCM_zoneTest.tif'))
-met7 = imread(os.path.join(tiffs_path, 'Pente_WB_zoneTest.tif'))
-#met8 = imread(os.path.join(tiffs_path, 'PlanCur_WB_zoneTest.tif'))
-#met9 = imread(os.path.join(tiffs_path, 'ProfCur_WB_zoneTest.tif'))
-met10 = imread(os.path.join(tiffs_path, 'RelTPI_WB_zoneTest.tif'))
-#met11 = imread(os.path.join(tiffs_path, 'SphStdDevNor_WB_zoneTest.tif'))
-#met12 = imread(os.path.join(tiffs_path, 'TWI_WB_zoneTest.tif'))
-#met13 = imread(os.path.join(tiffs_path, 'tanCur_WB_zoneTest.tif'))
+tiff_path_list = os.listdir(tiffs_path) # Liste des fichiers
 
-# On crée la liste des metrics pour les itérer
-image_list = [met4, met6, met7, met10]
+# On crée une liste avec toutes les images lues
+tiffs_list = []
+for i in tiff_path_list:
+    tiffs_list.append(imread(os.path.join(tiffs_path, i)))
 
-# Vérifier si les images sont tous de la même forme (shape)
-shapeimg1 = met4.shape
-for i in image_list:
-    if i.shape != shapeimg1:
-        print("Les images ne sont pas de la même taille")
-        print(i)
-        break
-    else:
-        print("Ok!")
+# shapeimg1 = met4.shape
+# for i in image_list:
+#     if i.shape != shapeimg1:
+#         print("Les images ne sont pas de la même taille")
+#         print(i)
+#         break
+#     else:
+#         print("Ok!")
 
-#print(metric1, metric2, metric3)
+# On crée la stack de métrique
+met_stack = np.stack(tiffs_list)
 
-met_stack = np.stack((met4, met6, met7, met10))
-
-def fonctionDeMet(a):
+# On définit notre fonction de classification qui va predire chaque pixel sur la stack
+def predict_pixel(a):
     metriques_stack = [
                 [a[0], a[1], a[2], a[3]]
                 ]
-    print(metriques_stack)
+    #print(metriques_stack)
     return clf.predict(metriques_stack)
 
-resultat = np.apply_along_axis(fonctionDeMet, 0, met_stack)
+resultat = np.apply_along_axis(predict_pixel, 0, met_stack)
 
 print(resultat)
 
+# On crée une image GEOTIFF en sortie
 # je déclare tous les drivers
 gdal.AllRegister()
 # le driver que je veux utiliser GEOTIFF
@@ -142,32 +126,17 @@ cols = resultat.shape[2]
 
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
+image = driver.Create((os.path.join(root_dir, out_tiffs, nom_fichier)), cols, rows, 1, GDT_Byte)
 
-image = driver.Create("../classi_testnumero43.tiff", cols, rows, 1, GDT_Byte)
+# J'extrais les paramètres d'une métriques pour le positionnement du fichier sortant
+data = gdal.Open(os.path.join(tiffs_path, tiff_path_list[0]))
 
-# J'extrais les paramètres d'une métriques pour le positionnement
-data = gdal.Open((os.path.join(tiffs_path, 'DownslopeInd_WB_zoneTest.tif')))
-
+# J'applique les paramètres de positionnement
 geoTransform = data.GetGeoTransform()
-# minx = geoTransform[0]
-# maxy = geoTransform[3]
-# maxx = minx + geoTransform[1] * data.RasterXSize
-# #miny = maxy + geoTransform[5] * data.RasterYSize
-# miny = maxy - geoTransform[5] * data.RasterYSize
-# pixelWidth = geoTransform[1]
-# pixelHeight = geoTransform[5]
-data = None # Pas sur
-
-# geoTransform = data.GetGeoTransform()
-# minx = geoTransform[0]
-# maxy = geoTransform[3]
-# pixelWidth = geoTransform[1]
-# pixelHeight = geoTransform[-5]
-# data = None # Pas sur
+data = None # On vide la mémoire
 
 # On donne la coordonnée d'origine de l'image raster tiré d'une des métriques
-image.SetGeoTransform(geoTransform )
-#image.SetGeoTransform((minx, pixelWidth, 0, miny, 0, pixelWidth))
+image.SetGeoTransform(geoTransform)
 
 # je cherche la bande 1
 band = image.GetRasterBand(1)
@@ -179,10 +148,10 @@ result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
 band.WriteArray(result1, 0, 0)
 
 # Je définis la projection
-# outRasterSRS = osr.SpatialReference()
-# outRasterSRS.ImportFromEPSG(2950)
-#
-# image.SetProjection(outRasterSRS.ExportToWkt())
+outRasterSRS = osr.SpatialReference()
+outRasterSRS.ImportFromEPSG(2950)
+
+image.SetProjection(outRasterSRS.ExportToWkt())
 
 # je vide la cache
 band.FlushCache()
@@ -192,7 +161,14 @@ del resultat
 del band
 del image
 
+print("Fin de la classification")
 
+# Impression du temps
+end = time.time()
+elapsed = end - start
+print("Elapsed time : %.2f s" % (elapsed))
+
+#### FIN SCRIPT ET PROJET GEOINFO ####
 
 
 

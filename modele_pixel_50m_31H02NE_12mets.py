@@ -15,11 +15,18 @@ import os
 from osgeo import gdal
 from gdalconst import *
 import pandas as pd
+import seaborn as sns
 
 from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
+
+
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.feature_selection import SelectFromModel
+from sklearn.utils import resample
 
 #### PARAMETRE INITIAUX ####
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
@@ -72,6 +79,19 @@ y_pred = clf.predict(test_metriques)
 
 # Impression de précision
 print("Accuracy:", metrics.accuracy_score(test_y, y_pred))
+
+# Matrice de confusion
+#pd.crosstab()
+c_matrice = confusion_matrix(test_y, y_pred)
+
+c_matrice = confusion_matrix(test_y, y_pred)
+
+disp = plot_confusion_matrix(clf, test_metriques, test_y,
+                             cmap = plt.cm.Blues,
+                             values_format='d')
+disp.ax_.set_title('Matrice de confusion à 12 métriques')
+plt.xlabel('Réel')
+plt.ylabel('Prédit')
 
 # Pour impression graphique
 importances = clf.feature_importances_

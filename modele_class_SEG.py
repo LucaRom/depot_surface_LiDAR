@@ -5,12 +5,15 @@ Created on Wed Jan 2020
 @author: Luca Romanini
 
 """
-# Necessite aussi plusieurs dépendances...
 
-import geopandas as gpd # Plusieurs dépendances ...
+# Import des librairies
+import geopandas as gpd
+from tifffile import imread
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+from osgeo import gdal
+from gdalconst import *
 import pandas as pd
 import seaborn as sns
 
@@ -18,6 +21,8 @@ from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn import metrics
+
+
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.feature_selection import SelectFromModel
@@ -28,7 +33,7 @@ root_dir  = os.path.dirname("__file__")
 
 # Pour importer un shapefile
 # Chemin vers le dossier avec les shapefiles
-folder_path = os.path.join(root_dir, 'inputs/segmentations')
+folder_path = os.path.join(root_dir, 'inputs/segmentations/seg_entrainement_31H02_NE_SE')
 
 # On crée la liste des shapefiles
 files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
@@ -62,9 +67,9 @@ df_minority = new_shp_temp[new_shp_temp.Zone==1]
 
 # Downsample majority class
 df_majority_downsampled = resample(df_majority,
-                                   replace=False,  # sample without replacement
-                                   n_samples=len(df_minority),  # to match minority class
-                                   random_state=123)  # reproducible results
+                                   replace = False,  # sample without replacement
+                                   n_samples = len(df_minority),  # to match minority class
+                                   random_state = 123)  # reproducible results
 
 # Combine minority class with downsampled majority class
 new_shp = pd.concat([df_majority_downsampled, df_minority])
@@ -102,6 +107,7 @@ y_pred = clf.predict(test_metriques)
 # Impression de précision
 print("Accuracy:", metrics.accuracy_score(test_y, y_pred))
 
+
 # Matrice de confusion
 #pd.crosstab()
 c_matrice = confusion_matrix(test_y, y_pred)
@@ -112,24 +118,22 @@ disp = plot_confusion_matrix(clf, test_metriques, test_y,
                              cmap = plt.cm.Blues,
                              values_format='d')
 
-# Importances des valeurs explicatives (métriques) dans le modèles
-
-# Pour impression dans la console
-# for feature in zip(X_metriques, clf.feature_importances_):
-#     print(feature)
+disp.ax_.set_title('Matrice de confusion - Statistiques Zonales')
+plt.xlabel('Réel')
+plt.ylabel('Prédit')
 
 # Pour impression graphique
-# importances = clf.feature_importances_
-# indices = np.argsort(importances) # Tri en orde décroissant
-# indices = indices[:10]
+importances = clf.feature_importances_
+indices = np.argsort(importances)
+indices = indices[:20]
 
 # plot them with a horizontal bar chart
-# plt.figure() # Crée une nouvelle instance de graphique
-# plt.title('Importances des métriques')
-# plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-# plt.yticks(range(len(indices)), [metriques[i] for i in indices])
-# plt.xlabel('Importance relative (%)')
-# plt.show()
+plt.figure() # Crée une nouvelle instance de graphique
+plt.title('Importances des métriques')
+plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+plt.yticks(range(len(indices)), [metriques[i] for i in indices])
+plt.xlabel('Importance relative (%)')
+plt.show()
 
 
 # Prediction complète
@@ -180,7 +184,7 @@ print("fait une correlation entre les metriques")
 # # Pairplot seaborn
 # allo = sns.pairplot(new_shp, hue='zone', vars=["DwnSloInd", "Pente", "SphStDevNo", "CirVarAsp", "TWI"])
 #
-# # Correlation
+# Correlation
 # corr = new_shp[metriques].corr()
 # fig = plt.figure()
 # ax = fig.add_subplot(111)
