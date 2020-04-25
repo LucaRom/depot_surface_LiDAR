@@ -140,18 +140,17 @@ def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_lis
 
 
 def main():
+    # Répertoire principal contenant les input et le dossier output pour l'option par défaut
     root_dir = os.path.abspath(os.path.dirname(__file__))
-    # Log
+
+    # Création d'un fichier de log
     config = configparser.ConfigParser()
     print(config.read(os.path.join(root_dir, 'config.ini')))
-
     logger = logging.getLogger(config.get("Log", "name"))
-
     # je définis le niveau de log
     logger.setLevel(config.get("Log", "levelfile"))
     # je définis le fichier de log
     fh = logging.FileHandler(config.get("Log", "path"))
-
     fh.setLevel(config.get("Log", "levelfile"))
     # je définis le log en console
     ch = logging.StreamHandler()
@@ -168,6 +167,7 @@ def main():
     erreur1 = "Il manque des arguments. Assurez vous de bien avoir fournie les trois arguments -e -m et -o"
     inputEch, inputMet, outputdir = "","",""   # Paramètres à fournir par l'utilisateur
 
+    # Définition et parcours des options
     opts = None
     try:
         opts, args = getopt.getopt(sys.argv[1:], "hde:m:o:", ["help", "defaultPaths", "inputEchant=","inputMetriques=", "output="])
@@ -179,7 +179,6 @@ def main():
         print("Pour l'aide, utiliser -h ou --help")
         sys.exit(2)
 
-    # Répertoires input/output
     if len(opts) == 0:                       # On teste d'abord s'il n'y a aucun argument
         print('erreur 1')
         logger.error(erreur1)
@@ -205,7 +204,6 @@ def main():
             elif o in ("-o", "--output"):
                 outputdir = a
         logger.info('\ninputEch: {}\n'.format(inputEch) + 'inputMet: {}\n'.format(inputMet) + 'outputdir: {}\n'.format(outputdir))
-        #print(inputEch, inputMet, outputdir)
 
     #### PARAMETRES INITIAUX ####
 
