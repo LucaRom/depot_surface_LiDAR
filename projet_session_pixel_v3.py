@@ -9,7 +9,6 @@ Created on Wed Jan 2020
 # Import des librairies
 from datetime import datetime
 import geopandas as gpd
-from tifffile import imread
 import numpy as np
 import os, osr
 from osgeo import gdal
@@ -174,7 +173,8 @@ if __name__ == "__main__":
     # On crée une liste avec toutes les images lues
     tiffs_list = []
     for i in tiff_path_list:
-        tiffs_list.append(imread(os.path.join(tiffs_path, i)))
+        ds = gdal.Open(os.path.join(tiffs_path, i))
+        tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
 
     # shapeimg1 = met4.shape
     # for i in image_list:
