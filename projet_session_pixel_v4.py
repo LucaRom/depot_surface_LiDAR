@@ -181,12 +181,16 @@ def main():
 
     # Répertoires input/output
     if len(opts) == 0:                       # On teste d'abord s'il n'y a aucun argument
-        print('erreur 1')
         logger.error(erreur1)
-        print(erreur1)
         sys.exit(2)
     elif opts[0][0] in ("-h", "--help"):     # On test si l'utilisateur demande l'aide
-        print("voici l'aide")
+        print("Cette application vous permet d'appliquer un modèle de prédiction sur un MNT\n"
+              "Il faut lui fournir le chemin vers vos dossiers d'entraînement, de métrique et de sortie\n"
+              "Listes des options disponibles en ligne de commande :\n"
+              "-d ou --defaultPaths     Fournie automatique les données nécessaires pour tester le programme\n"
+              "-e ou --inputEchant      Spécifier le chemin vers les données d'échantillonage\n"
+              "-m ou --inputMetriques   Spécifier le chemin vers les données des métriques\n"
+              "-o ou --output           Spécifier le chemin vers le dossier d'enregistrement")
         sys.exit(2)
     elif opts[0][0] in ("-d", "--defaultPaths"):     # On test si l'utilisateur veut les chemins par défauts
         inputEch  = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
@@ -194,7 +198,6 @@ def main():
         outputdir = os.path.join(root_dir, 'outputs/projet_geo_info')
     elif len(opts) < 3:             # Si l'utilisateur à moins de 3 arguments et n'a pas demandé d'aide
         logger.error(erreur1)
-        #print(erreur1)
         sys.exit(2)
     else:                                            # Si les trois inputs sont entrées, on part le script
         for o, a in opts:
@@ -214,8 +217,6 @@ def main():
 
     # On ajoute la date au fichier sortant pour un meilleur suivi
     date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-
-    #### PARAMETRES À FOURNIR ####
 
     # Structure du nom du fichier sortant
     nom_fichier = 'modele_predit_pixel' + date_classi + '.tiff'
