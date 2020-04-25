@@ -105,25 +105,13 @@ for i in tiff_path_list:
 # met_stack = np.stack(tiffs_list)
 met_stack = np.dstack(tiffs_list)
 
-# On met la stack en 2 dimension pour pouvoir faire le model dessus
+# On met la stack en 2 dimensions pour pouvoir faire le model dessus
 rows, cols, bands = met_stack.shape
 data2d = np.reshape(met_stack, (rows * cols, bands))
 
 # Prediction du modèle et on le reshape
 prediction = clf.predict(data2d)
 prediction = np.reshape(prediction, (rows, cols))
-
-# On définit notre fonction de classification qui va predire chaque pixel sur la stack
-# def predict_pixel(a):
-#     metriques_stack = [
-#                 [a[0], a[1], a[2], a[3]]
-#                 ]
-#     #print(metriques_stack)
-#     return clf.predict(metriques_stack)
-#
-# resultat = np.apply_along_axis(predict_pixel, 0, met_stack)
-#
-# print(resultat)
 
 # On crée une image GEOTIFF en sortie
 # je déclare tous les drivers
@@ -133,12 +121,6 @@ driver = gdal.GetDriverByName("GTiff")
 
 # taille de mon image (ce sera la taille de la matrice)
 rows, cols = prediction.shape
-# rows = prediction.shape[1]
-# cols = prediction.shape[2]
-
-# rows = resultat.shape[1]
-# cols = resultat.shape[2]
-
 
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
