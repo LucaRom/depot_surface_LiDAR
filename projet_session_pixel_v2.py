@@ -32,7 +32,7 @@ date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 #### PARAMETRES À FOURNIR ####
 
 # Chemin des images pour faire à classer
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_petite_temp/') # Définition du chemin pour les images raster
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02NE_5m') # Définition du chemin pour les images raster
 
 # Chemin vers le dossier Output
 out_tiffs = 'outputs/projet_geo_info'
@@ -41,7 +41,8 @@ out_tiffs = 'outputs/projet_geo_info'
 nom_fichier = 'modele_predit_pixel' + date_classi + '.tiff'
 
 # Liste des métriques pour l'analyse
-metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+#metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN', 'TWI']
 
 #### Entraînement du modèle de classification ####
 
@@ -71,7 +72,7 @@ clf = RandomForestClassifier(n_estimators = 500, verbose = 2, oob_score = True, 
 
 # Train the model using the training sets y_pred=clf.predict(X_test)
 clf.fit(train_metriques, train_y)     # Model fit sur 70%
-y_pred = clf.predict(test_metriques)  # Predicition sur 30%
+#y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
 #### FIN ENTRAINEMENT MODELE ####
 
@@ -81,6 +82,7 @@ y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 # Calcul du temps
 start = time.time()
 print("Debut de la classification")
+print("start")
 
 # Import des images en matrices numpy
 tiff_path_list = os.listdir(tiffs_path) # Liste des fichiers
@@ -99,22 +101,29 @@ for i in tiff_path_list:
 #     else:
 #         print("Ok!")
 
-
-
-
 # On crée la stack de métrique
-met_stack = np.stack(tiffs_list)
+# met_stack = np.stack(tiffs_list)
+met_stack = np.dstack(tiffs_list)
+
+# def stack_bands(filenames):
+#     """Returns a 3D array containing all band data from all files."""
+#     bands = []
+#     for fn in filenames:
+#         ds = gdal.Open(fn)
+#         for i in range(1, ds.RasterCount + 1):
+#             bands.append(ds.GetRasterBand(i).ReadAsArray())
+#     return np.dstack(bands)
 
 #cols, rows, z = 21, 16, 4 # Essayer d'extraire automatiquement
 
 #sample = met_stack[rows: cols, :]
 
-bands, rows, cols = met_stack.shape
-data2d = np.reshape(met_stack, (rows*cols, bands))
+#bands, rows, cols = met_stack.shape
+rows, cols, bands = met_stack.shape
+
+data2d = np.reshape(met_stack, (rows * cols, bands))
 prediction = clf.predict(data2d)
 prediction = np.reshape(prediction, (rows, cols))
-
-
 
 # On définit notre fonction de classification qui va predire chaque pixel sur la stack
 # def predict_pixel(a):
@@ -162,7 +171,7 @@ band = image.GetRasterBand(1)
 
 # Je remets la matrice en 2 dimension
 # result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
-#result1 = prediction.reshape(prediction.shape[1], prediction.shape[2])
+result1 = prediction.reshape(prediction.shape[0], prediction.shape[1])
 
 # j'écris la matrice dans la bande
 # band.WriteArray(result1, 0, 0)
