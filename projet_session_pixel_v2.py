@@ -2,14 +2,14 @@
 
 """
 Created on Wed Jan 2020
-@author: Luca Romanini
+@authors: David Ethier
+          Luca Romanini
 
 """
 
 # Import des librairies
 from datetime import datetime
 import geopandas as gpd
-from tifffile import imread
 import numpy as np
 import os, osr
 from osgeo import gdal
@@ -32,7 +32,7 @@ date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 #### PARAMETRES À FOURNIR ####
 
 # Chemin des images pour faire à classer
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02NE_5m') # Définition du chemin pour les images raster
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02NE_50m') # Définition du chemin pour les images raster
 
 # Chemin vers le dossier Output
 out_tiffs = 'outputs/projet_geo_info'
@@ -71,7 +71,7 @@ train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques,
 clf = RandomForestClassifier(n_estimators = 500, verbose = 2, oob_score = True, random_state = 42)
 
 # Train the model using the training sets y_pred=clf.predict(X_test)
-clf.fit(train_metriques, train_y)     # Model fit sur 70%
+clf.fit(train_metriques, train_y)      # Model fit sur 70%
 #y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
 #### FIN ENTRAINEMENT MODELE ####
@@ -90,7 +90,8 @@ tiff_path_list = os.listdir(tiffs_path) # Liste des fichiers
 # On crée une liste avec toutes les images lues
 tiffs_list = []
 for i in tiff_path_list:
-    tiffs_list.append(imread(os.path.join(tiffs_path, i)))
+    ds = gdal.Open(os.path.join(tiffs_path, i))
+    tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
 
 # shapeimg1 = met4.shape
 # for i in image_list:
