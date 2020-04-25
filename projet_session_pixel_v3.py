@@ -23,7 +23,7 @@ from sklearn.ensemble import RandomForestClassifier
 
 #### Entraînement du modèle de classification ####
 
-def entrainement (root_dir):
+def entrainement (root_dir, metriques):
     # Pour importer un shapefile
     # Chemin vers le dossier avec les shapefiles d'entrainement
     folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
@@ -57,7 +57,6 @@ def entrainement (root_dir):
     #### FIN ENTRAINEMENT MODELE ####
 
 
-
 def classification (clf, tiffs_list):
 
     # On crée la stack de métrique
@@ -75,7 +74,7 @@ def classification (clf, tiffs_list):
     return prediction
 
 
-def creation_output (prediction, root_dir, out_tiffs, nom_fichier):
+def creation_output (prediction, root_dir, out_tiffs, nom_fichier, tiffs_path, tiff_path_list, start):
     # On crée une image GEOTIFF en sortie
     # je déclare tous les drivers
     gdal.AllRegister()
@@ -134,7 +133,7 @@ def creation_output (prediction, root_dir, out_tiffs, nom_fichier):
     #### FIN SCRIPT ET PROJET GEOINFO ####
 
 
-if __name__ == "__main__":
+def main():
 
     #### PARAMETRES INITIAUX ####
 
@@ -160,7 +159,10 @@ if __name__ == "__main__":
     metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN',
                  'TWI']
 
+
+
     ## DÉBUT DES TRAITEMENTS####
+
     # On démarre le compteur pour cette section
     # Calcul du temps
     start = time.time()
@@ -186,12 +188,15 @@ if __name__ == "__main__":
     #         print("Ok!")
 
     # Entraînement du modèle
-    ent = entrainement(root_dir=root_dir)
+    ent = entrainement(root_dir=root_dir, metriques=metriques)
 
     # Classification selon les métriques
     classif = classification(clf=ent, tiffs_list=tiffs_list)
 
     # Création du fichier de sortie
-    creation_output(prediction=classif, root_dir=root_dir, out_tiffs=out_tiffs, nom_fichier=nom_fichier)
+    creation_output(prediction=classif, root_dir=root_dir, out_tiffs=out_tiffs, nom_fichier=nom_fichier,
+                    tiffs_path=tiffs_path, tiff_path_list=tiff_path_list, start=start)
 
 
+if __name__ == "__main__":
+    main()
