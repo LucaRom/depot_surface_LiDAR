@@ -24,9 +24,6 @@ import logging
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 
-
-#### Entraînement du modèle de classification ####
-
 def entrainement (inputEch, metriques):
     # Pour importer un shapefile
     # Chemin vers le dossier avec les shapefiles d'entrainement
@@ -210,9 +207,6 @@ def main():
 
     #### PARAMETRES INITIAUX ####
 
-    # On définit le dossier parent pour le réutiliser dans l'import d'intrants
-    root_dir = os.path.abspath(os.path.dirname(__file__))
-
     # On ajoute la date au fichier sortant pour un meilleur suivi
     date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 
@@ -264,6 +258,7 @@ def main():
         sys.exit()
 
     logger.info('Terminé')
-#
+
+
 if __name__ == "__main__":
     main()
