@@ -15,6 +15,8 @@ from osgeo import gdal
 from gdalconst import *
 import pandas as pd
 import time
+import getopt
+import sys
 
 # Pour modèle de classification
 from sklearn.model_selection import train_test_split
@@ -23,14 +25,14 @@ from sklearn.ensemble import RandomForestClassifier
 
 #### Entraînement du modèle de classification ####
 
-def entrainement (root_dir, metriques):
+def entrainement (inputEch, metriques):
     # Pour importer un shapefile
     # Chemin vers le dossier avec les shapefiles d'entrainement
-    folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
+    #folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
 
     # # On crée la liste des shapefiles
-    files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
-    shp_list = [os.path.join(folder_path, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
+    files = os.listdir(inputEch)  # Liste des fichiers dans le dossier "folder"
+    shp_list = [os.path.join(inputEch, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
                                                                                    # .shp seulement
     # On join les fichiers .shp de la liste
     new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
@@ -74,7 +76,7 @@ def classification (clf, tiffs_list):
     return prediction
 
 
-def creation_output (prediction, root_dir, out_tiffs, nom_fichier, tiffs_path, tiff_path_list, start):
+def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start):
     # On crée une image GEOTIFF en sortie
     # je déclare tous les drivers
     gdal.AllRegister()
@@ -86,10 +88,10 @@ def creation_output (prediction, root_dir, out_tiffs, nom_fichier, tiffs_path, t
 
     # je déclare mon image
     # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
-    image = driver.Create((os.path.join(root_dir, out_tiffs, nom_fichier)), cols, rows, 1, GDT_Byte)
+    image = driver.Create((os.path.join(outputdir, nom_fichier)), cols, rows, 1, GDT_Byte)
 
     # J'extrais les paramètres d'une métriques pour le positionnement du fichier sortant
-    data = gdal.Open(os.path.join(tiffs_path, tiff_path_list[0]))
+    data = gdal.Open(os.path.join(inputMet, tiff_path_list[0]))
 
     # J'applique les paramètres de positionnement
     geoTransform = data.GetGeoTransform()
@@ -133,8 +135,26 @@ def creation_output (prediction, root_dir, out_tiffs, nom_fichier, tiffs_path, t
     #### FIN SCRIPT ET PROJET GEOINFO ####
 
 
-def main():
+def main(argv):
 
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hp:o:", ["help", "input échant","input metriques", "output directory"])
+    except getopt.GetoptError as err:
+        print(err)
+        print("Pour l'aide, utiliser --help")
+
+    # Répertoires input/output
+    inputEch, inputMet, outputdir = "","",""
+    for o, a in opts:
+        if o in ("-h", "--help"):
+            print("voici l'aide")
+        elif o in ("-ie", "--input échant"):
+            inputEch = a
+        elif o in ("-im", "--input metriques"):
+            inputMet = a
+        elif o in ("-o", "--output"):
+            outputdir = a
+    print(inputEch, inputMet, outputdir)
     #### PARAMETRES INITIAUX ####
 
     # On définit le dossier parent pour le réutiliser dans l'import d'intrants
@@ -145,58 +165,51 @@ def main():
 
     #### PARAMETRES À FOURNIR ####
 
-    # Chemin des images pour faire à classer
-    tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02NE_50m')  # Définition du chemin pour les images raster
-
-    # Chemin vers le dossier Output
-    out_tiffs = 'outputs/projet_geo_info'
-
     # Structure du nom du fichier sortant
     nom_fichier = 'modele_predit_pixel' + date_classi + '.tiff'
 
-    # Liste des métriques pour l'analyse
-    # metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+    # # Liste des métriques pour l'analyse
+    # # metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
     metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN',
                  'TWI']
 
 
 
-    ## DÉBUT DES TRAITEMENTS####
-
-    # On démarre le compteur pour cette section
-    # Calcul du temps
-    start = time.time()
-    print("Debut de la classification")
-    print("start")
-
-    # Import des images en matrices numpy
-    tiff_path_list = os.listdir(tiffs_path)  # Liste des fichiers
-
-    # On crée une liste avec toutes les images lues
-    tiffs_list = []
-    for i in tiff_path_list:
-        ds = gdal.Open(os.path.join(tiffs_path, i))
-        tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
-
-    # shapeimg1 = met4.shape
-    # for i in image_list:
-    #     if i.shape != shapeimg1:
-    #         print("Les images ne sont pas de la même taille")
-    #         print(i)
-    #         break
-    #     else:
-    #         print("Ok!")
-
-    # Entraînement du modèle
-    ent = entrainement(root_dir=root_dir, metriques=metriques)
-
-    # Classification selon les métriques
-    classif = classification(clf=ent, tiffs_list=tiffs_list)
-
-    # Création du fichier de sortie
-    creation_output(prediction=classif, root_dir=root_dir, out_tiffs=out_tiffs, nom_fichier=nom_fichier,
-                    tiffs_path=tiffs_path, tiff_path_list=tiff_path_list, start=start)
+    # ## DÉBUT DES TRAITEMENTS####
+    # # On démarre le compteur pour cette section
+    # # Calcul du temps
+    # start = time.time()
+    # print("Debut de la classification")
+    # print("start")
+    #
+    # # Import des images en matrices numpy
+    # tiff_path_list = os.listdir(inputMet)  # Liste des fichiers
+    #
+    # # On crée une liste avec toutes les images lues
+    # tiffs_list = []
+    # for i in tiff_path_list:
+    #     ds = gdal.Open(os.path.join(inputMet, i))
+    #     tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
+    #
+    # # shapeimg1 = met4.shape
+    # # for i in image_list:
+    # #     if i.shape != shapeimg1:
+    # #         print("Les images ne sont pas de la même taille")
+    # #         print(i)
+    # #         break
+    # #     else:
+    # #         print("Ok!")
+    #
+    # # Entraînement du modèle
+    # ent = entrainement(inputEch=inputEch, metriques=metriques)
+    #
+    # # Classification selon les métriques
+    # classif = classification(clf=ent, tiffs_list=tiffs_list)
+    #
+    # # Création du fichier de sortie
+    # creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
+    #                 inputMet=inputMet, tiff_path_list=tiff_path_list, start=start)
 
 
 if __name__ == "__main__":
-    main()
+    main(sys.argv[1:])
