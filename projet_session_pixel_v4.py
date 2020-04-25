@@ -129,7 +129,7 @@ def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_lis
     del band
     del image
 
-    print("Fin de la classification")
+    #print("Fin de la classification")
 
     # Impression du temps
     end = time.time()
@@ -139,15 +139,7 @@ def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_lis
     #### FIN SCRIPT ET PROJET GEOINFO ####
 
 
-def verif_shape(tiffs_list):
-    s = tiffs_list[0].shape
-    for i in tiffs_list:
-        if i.shape == s:
-            return True
-        return False
-
-
-def main(argv):
+def main():
     root_dir = os.path.abspath(os.path.dirname(__file__))
     # Log
     config = configparser.ConfigParser()
@@ -248,36 +240,31 @@ def main(argv):
         ds = gdal.Open(os.path.join(inputMet, i))
         tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
 
-    if verif_shape(tiffs_list):
+    # Entraînement du modèle
+    try:
+        logger.info('Entrainement...')
+        ent = entrainement(inputEch=inputEch, metriques=metriques)
+    except Exception as e:
+        logger.error("Erreur dans l'entrainement du modèle: \n{}".format(e))
+        sys.exit()
 
-        # Entraînement du modèle
-        try:
-            logger.info('Entrainement...')
-            ent = entrainement(inputEch=inputEch, metriques=metriques)
-        except Exception as e:
-            logger.error("Erreur dans l'entrainement du modèle: \n{}".format(e))
-            sys.exit()
+    # Classification selon les métriques
+    try:
+        logger.info('Classification...')
+        classif = classification(clf=ent, tiffs_list=tiffs_list)
+    except Exception as e:
+        logger.error("Erreur dans la classification: \n{}".format(e))
+        sys.exit()
 
-        # Classification selon les métriques
-        try:
-            logger.info('Classification...')
-            classif = classification(clf=ent, tiffs_list=tiffs_list)
-        except Exception as e:
-            logger.error("Erreur dans la classification: \n{}".format(e))
-            sys.exit()
-
-        # Création du fichier de sortie
-        try:
-            creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
-                            inputMet=inputMet, tiff_path_list=tiff_path_list, start=start, logger=logger)
-        except Exception as e:
-            logger.error("Erreur dans la création du fichier de sortie: \n{}".format(e))
-            sys.exit()
-
-    else:
-        logger.error("Les images n'ont pas toute la même dimension")
+    # Création du fichier de sortie
+    try:
+        creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
+                        inputMet=inputMet, tiff_path_list=tiff_path_list, start=start, logger=logger)
+    except Exception as e:
+        logger.error("Erreur dans la création du fichier de sortie: \n{}".format(e))
+        sys.exit()
 
     logger.info('Terminé')
 #
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    main()
