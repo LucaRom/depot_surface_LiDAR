@@ -32,7 +32,7 @@ date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 #### PARAMETRES À FOURNIR ####
 
 # Chemin des images pour faire à classer
-tiffs_path = os.path.join(root_dir, 'inputs/tiffs/zone_test_petite_temp/') # Définition du chemin pour les images raster
+tiffs_path = os.path.join(root_dir, 'inputs/tiffs/31H02NE_5m') # Définition du chemin pour les images raster
 
 # Chemin vers le dossier Output
 out_tiffs = 'outputs/projet_geo_info'
@@ -41,7 +41,8 @@ out_tiffs = 'outputs/projet_geo_info'
 nom_fichier = 'modele_predit_pixel' + date_classi + '.tiff'
 
 # Liste des métriques pour l'analyse
-metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+#metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN', 'TWI']
 
 #### Entraînement du modèle de classification ####
 
@@ -52,7 +53,7 @@ folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
 # # On crée la liste des shapefiles
 files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
 shp_list = [os.path.join(folder_path, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
-                                                                                # .shp seulement
+                                                                               # .shp seulement
 # On join les fichiers .shp de la liste
 new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
                                       ignore_index = True), crs = gpd.read_file(shp_list[0]).crs)
@@ -71,7 +72,7 @@ clf = RandomForestClassifier(n_estimators = 500, verbose = 2, oob_score = True, 
 
 # Train the model using the training sets y_pred=clf.predict(X_test)
 clf.fit(train_metriques, train_y)     # Model fit sur 70%
-y_pred = clf.predict(test_metriques)  # Predicition sur 30%
+#y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
 #### FIN ENTRAINEMENT MODELE ####
 
@@ -81,6 +82,7 @@ y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 # Calcul du temps
 start = time.time()
 print("Debut de la classification")
+print("start")
 
 # Import des images en matrices numpy
 tiff_path_list = os.listdir(tiffs_path) # Liste des fichiers
@@ -99,34 +101,17 @@ for i in tiff_path_list:
 #     else:
 #         print("Ok!")
 
-
-
-
 # On crée la stack de métrique
-met_stack = np.stack(tiffs_list)
+# met_stack = np.stack(tiffs_list)
+met_stack = np.dstack(tiffs_list)
 
-#cols, rows, z = 21, 16, 4 # Essayer d'extraire automatiquement
+# On met la stack en 2 dimensions pour pouvoir faire le model dessus
+rows, cols, bands = met_stack.shape
+data2d = np.reshape(met_stack, (rows * cols, bands))
 
-#sample = met_stack[rows: cols, :]
-
-bands, rows, cols = met_stack.shape
-data2d = np.reshape(met_stack, (rows*cols, bands))
+# Prediction du modèle et on le reshape
 prediction = clf.predict(data2d)
 prediction = np.reshape(prediction, (rows, cols))
-
-
-
-# On définit notre fonction de classification qui va predire chaque pixel sur la stack
-# def predict_pixel(a):
-#     metriques_stack = [
-#                 [a[0], a[1], a[2], a[3]]
-#                 ]
-#     #print(metriques_stack)
-#     return clf.predict(metriques_stack)
-#
-# resultat = np.apply_along_axis(predict_pixel, 0, met_stack)
-#
-# print(resultat)
 
 # On crée une image GEOTIFF en sortie
 # je déclare tous les drivers
@@ -136,12 +121,6 @@ driver = gdal.GetDriverByName("GTiff")
 
 # taille de mon image (ce sera la taille de la matrice)
 rows, cols = prediction.shape
-# rows = prediction.shape[1]
-# cols = prediction.shape[2]
-
-# rows = resultat.shape[1]
-# cols = resultat.shape[2]
-
 
 # je déclare mon image
 # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
@@ -162,7 +141,7 @@ band = image.GetRasterBand(1)
 
 # Je remets la matrice en 2 dimension
 # result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
-#result1 = prediction.reshape(prediction.shape[1], prediction.shape[2])
+result1 = prediction.reshape(prediction.shape[0], prediction.shape[1])
 
 # j'écris la matrice dans la bande
 # band.WriteArray(result1, 0, 0)
