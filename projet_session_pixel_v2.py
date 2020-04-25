@@ -53,7 +53,7 @@ folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
 # # On crée la liste des shapefiles
 files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
 shp_list = [os.path.join(folder_path, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
-                                                                                # .shp seulement
+                                                                               # .shp seulement
 # On join les fichiers .shp de la liste
 new_shp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
                                       ignore_index = True), crs = gpd.read_file(shp_list[0]).crs)
@@ -105,23 +105,11 @@ for i in tiff_path_list:
 # met_stack = np.stack(tiffs_list)
 met_stack = np.dstack(tiffs_list)
 
-# def stack_bands(filenames):
-#     """Returns a 3D array containing all band data from all files."""
-#     bands = []
-#     for fn in filenames:
-#         ds = gdal.Open(fn)
-#         for i in range(1, ds.RasterCount + 1):
-#             bands.append(ds.GetRasterBand(i).ReadAsArray())
-#     return np.dstack(bands)
-
-#cols, rows, z = 21, 16, 4 # Essayer d'extraire automatiquement
-
-#sample = met_stack[rows: cols, :]
-
-#bands, rows, cols = met_stack.shape
+# On met la stack en 2 dimension pour pouvoir faire le model dessus
 rows, cols, bands = met_stack.shape
-
 data2d = np.reshape(met_stack, (rows * cols, bands))
+
+# Prediction du modèle et on le reshape
 prediction = clf.predict(data2d)
 prediction = np.reshape(prediction, (rows, cols))
 
