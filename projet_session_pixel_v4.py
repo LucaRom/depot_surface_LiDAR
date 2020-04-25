@@ -137,6 +137,14 @@ def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_lis
     #### FIN SCRIPT ET PROJET GEOINFO ####
 
 
+def verif_shape(tiffs_list):
+    s = tiffs_list[0].shape
+    for i in tiffs_list:
+        if i.shape == s:
+            return True
+        return False
+
+
 def main(argv):
     root_dir = os.path.abspath(os.path.dirname(__file__))
     # Log
@@ -146,13 +154,10 @@ def main(argv):
     logger = logging.getLogger(config.get("Log", "name"))
 
     # je définis le niveau de log
-
     logger.setLevel(config.get("Log", "levelfile"))
     # je définis le fichier de log
-    # dir = config.get("Log", "path")
-    # if not os.path.exists(dir):
-    #     os.mkdir(dir, 0o755)
     fh = logging.FileHandler(config.get("Log", "path"))
+
     fh.setLevel(config.get("Log", "levelfile"))
     # je définis le log en console
     ch = logging.StreamHandler()
@@ -165,97 +170,120 @@ def main(argv):
     logger.addHandler(fh)
     logger.addHandler(ch)
 
-#     erreur1 = "Il manque des arguments. Assurez vous de bien avoir fournie les trois arguments -e -m et -o"
-#
-#     inputEch, inputMet, outputdir = "","",""   # Paramètres à fournir par l'utilisateur
-#
-#     opts = None
-#     try:
-#         opts, args = getopt.getopt(sys.argv[1:], "hde:m:o:", ["help", "defaultPaths", "inputEchant=","inputMetriques=", "output="])
-#         # print(args)
-#         # print(opts)
-#     except getopt.GetoptError as err:
-#         print(err)
-#         print("Pour l'aide, utiliser -h ou --help")
-#         sys.exit(2)
-#
-#     # Répertoires input/output
-#     if len(opts) == 0:                       # On teste d'abord s'il n'y a aucun argument
-#         print(erreur1)
-#         sys.exit(2)
-#     elif opts[0][0] in ("-h", "--help"):     # On test si l'utilisateur demande l'aide
-#         print("voici l'aide")
-#         sys.exit(2)
-#     elif opts[0][0] in ("-d", "--defaultPaths"):     # On test si l'utilisateur veut les chemins par défauts
-#         inputEch  = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
-#         inputMet  = os.path.join(root_dir, 'inputs/tiffs/31H02NE_50m')
-#         outputdir = os.path.join(root_dir, 'outputs/projet_geo_info')
-#     elif len(opts) < 3 or len(args) < 3:             # Si l'utilisateur à moins de 3 arguments et n'a pas demandé d'aide
-#         print(erreur1)
-#         sys.exit(2)
-#     else:                                            # Si les trois inputs sont entrées, on part le script
-#         for o, a in opts:
-#             if o in ("-e", "--inputEchant"):
-#                 inputEch = a
-#             elif o in ("-m", "--inputMetriques"):
-#                 inputMet = a
-#             elif o in ("-o", "--output"):
-#                 outputdir = a
-#         print(inputEch, inputMet, outputdir)
-#
-#     #### PARAMETRES INITIAUX ####
-#
-#     # On définit le dossier parent pour le réutiliser dans l'import d'intrants
-#     root_dir = os.path.abspath(os.path.dirname(__file__))
-#
-#     # On ajoute la date au fichier sortant pour un meilleur suivi
-#     date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-#
-#     #### PARAMETRES À FOURNIR ####
-#
-#     # Structure du nom du fichier sortant
-#     nom_fichier = 'modele_predit_pixel' + date_classi + '.tiff'
-#
-#     # # Liste des métriques pour l'analyse
-#     # # metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
-#     metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN',
-#                  'TWI']
-#
-#     ## DÉBUT DES TRAITEMENTS####
-#     # On démarre le compteur pour cette section
-#     # Calcul du temps
-#     start = time.time()
-#     print("Debut de la classification")
-#     print("start")
-#
-#     # Import des images en matrices numpy
-#     tiff_path_list = os.listdir(inputMet)  # Liste des fichiers
-#
-#     # On crée une liste avec toutes les images lues
-#     tiffs_list = []
-#     for i in tiff_path_list:
-#         ds = gdal.Open(os.path.join(inputMet, i))
-#         tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
-#
-#     # shapeimg1 = met4.shape
-#     # for i in image_list:
-#     #     if i.shape != shapeimg1:
-#     #         print("Les images ne sont pas de la même taille")
-#     #         print(i)
-#     #         break
-#     #     else:
-#     #         print("Ok!")
-#
-#     # Entraînement du modèle
-#     ent = entrainement(inputEch=inputEch, metriques=metriques)
-#
-#     # Classification selon les métriques
-#     classif = classification(clf=ent, tiffs_list=tiffs_list)
-#
-#     # Création du fichier de sortie
-#     creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
-#                     inputMet=inputMet, tiff_path_list=tiff_path_list, start=start)
-#
+    logger.info('Début')
+    erreur1 = "Il manque des arguments. Assurez vous de bien avoir fournie les trois arguments -e -m et -o"
+    inputEch, inputMet, outputdir = "","",""   # Paramètres à fournir par l'utilisateur
+
+    opts = None
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], "hde:m:o:", ["help", "defaultPaths", "inputEchant=","inputMetriques=", "output="])
+        # print(args)
+        # print(opts)
+    except getopt.GetoptError as err:
+        logger.error(erreur1)
+        print(err)
+        print("Pour l'aide, utiliser -h ou --help")
+        sys.exit(2)
+
+    # Répertoires input/output
+    if len(opts) == 0:                       # On teste d'abord s'il n'y a aucun argument
+        print('erreur 1')
+        logger.error(erreur1)
+        print(erreur1)
+        sys.exit(2)
+    elif opts[0][0] in ("-h", "--help"):     # On test si l'utilisateur demande l'aide
+        print("voici l'aide")
+        sys.exit(2)
+    elif opts[0][0] in ("-d", "--defaultPaths"):     # On test si l'utilisateur veut les chemins par défauts
+        inputEch  = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
+        inputMet  = os.path.join(root_dir, 'inputs/tiffs/31H02NE_50m')
+        outputdir = os.path.join(root_dir, 'outputs/projet_geo_info')
+    elif len(opts) < 3:             # Si l'utilisateur à moins de 3 arguments et n'a pas demandé d'aide
+        logger.error(erreur1)
+        #print(erreur1)
+        sys.exit(2)
+    else:                                            # Si les trois inputs sont entrées, on part le script
+        for o, a in opts:
+            if o in ("-e", "--inputEchant"):
+                inputEch = a
+            elif o in ("-m", "--inputMetriques"):
+                inputMet = a
+            elif o in ("-o", "--output"):
+                outputdir = a
+        logger.info('\ninputEch: {}\n'.format(inputEch) + 'inputMet: {}\n'.format(inputMet) + 'outputdir: {}\n'.format(outputdir))
+        #print(inputEch, inputMet, outputdir)
+
+    #### PARAMETRES INITIAUX ####
+
+    # On définit le dossier parent pour le réutiliser dans l'import d'intrants
+    root_dir = os.path.abspath(os.path.dirname(__file__))
+
+    # On ajoute la date au fichier sortant pour un meilleur suivi
+    date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
+
+    #### PARAMETRES À FOURNIR ####
+
+    # Structure du nom du fichier sortant
+    nom_fichier = 'modele_predit_pixel' + date_classi + '.tiff'
+
+    # # Liste des métriques pour l'analyse
+    # # metriques = ['DI', 'MeanHar', 'Pente', 'TPI']
+    metriques = ['ANVAD', 'CVA', 'ContHar', 'CorHar', 'DI', 'EdgeDens', 'MeanHar', 'Pente', 'ProfCur', 'TPI', 'SSDN',
+                 'TWI']
+
+    ## DÉBUT DES TRAITEMENTS####
+    # On démarre le compteur pour cette section
+    # Calcul du temps
+    start = time.time()
+    logger.info('Metriques choisies: {}'.format(metriques))
+
+    # Import des images en matrices numpy
+    tiff_path_list = os.listdir(inputMet)  # Liste des fichiers
+
+    # On crée une liste avec toutes les images lues
+    tiffs_list = []
+    for i in tiff_path_list:
+        ds = gdal.Open(os.path.join(inputMet, i))
+        tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
+
+    def verif_shape(tiffs_list):
+        s = tiffs_list[0].shape
+        for i in tiffs_list:
+            if i.shape == s:
+                return True
+            return False
+
+    if verif_shape(tiffs_list):
+
+        # Entraînement du modèle
+        try:
+            logger.info('Entrainement...')
+            ent = entrainement(inputEch=inputEch, metriques=metriques)
+        except Exception as e:
+            logger.error("Erreur dans l'entrainement du modèle: \n{}".format(e))
+            sys.exit()
+
+        # Classification selon les métriques
+        try:
+            logger.info('Classification...')
+            classif = classification(clf=ent, tiffs_list=tiffs_list)
+        except Exception as e:
+            logger.error("Erreur dans la classification: \n{}".format(e))
+            sys.exit()
+
+        # Création du fichier de sortie
+        try:
+            logger.info('Création du fichier de sortie...')
+            creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
+                            inputMet=inputMet, tiff_path_list=tiff_path_list, start=start)
+        except Exception as e:
+            logger.error("Erreur dans la création du fichier de sortie: \n{}".format(e))
+            sys.exit()
+
+    else:
+        logger.error("Les images n'ont pas toute la même dimension")
+
+    logger.info('Terminé')
 #
 if __name__ == "__main__":
     main(sys.argv[1:])
