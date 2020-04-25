@@ -137,8 +137,9 @@ def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_lis
 
 def main(argv):
 
+    opts = None
     try:
-        opts, args = getopt.getopt(sys.argv[1:], "hp:o:", ["help", "input échant","input metriques", "output directory"])
+        opts, args = getopt.getopt(sys.argv[1:], "he:m:o:o:", ["help", "input échant","input metriques", "output directory"])
     except getopt.GetoptError as err:
         print(err)
         print("Pour l'aide, utiliser --help")
@@ -148,9 +149,9 @@ def main(argv):
     for o, a in opts:
         if o in ("-h", "--help"):
             print("voici l'aide")
-        elif o in ("-ie", "--input échant"):
+        elif o in ("-e", "--input_echant"):
             inputEch = a
-        elif o in ("-im", "--input metriques"):
+        elif o in ("-m", "--input_metriques"):
             inputMet = a
         elif o in ("-o", "--output"):
             outputdir = a
@@ -175,40 +176,40 @@ def main(argv):
 
 
 
-    # ## DÉBUT DES TRAITEMENTS####
-    # # On démarre le compteur pour cette section
-    # # Calcul du temps
-    # start = time.time()
-    # print("Debut de la classification")
-    # print("start")
-    #
-    # # Import des images en matrices numpy
-    # tiff_path_list = os.listdir(inputMet)  # Liste des fichiers
-    #
-    # # On crée une liste avec toutes les images lues
-    # tiffs_list = []
-    # for i in tiff_path_list:
-    #     ds = gdal.Open(os.path.join(inputMet, i))
-    #     tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
-    #
-    # # shapeimg1 = met4.shape
-    # # for i in image_list:
-    # #     if i.shape != shapeimg1:
-    # #         print("Les images ne sont pas de la même taille")
-    # #         print(i)
-    # #         break
-    # #     else:
-    # #         print("Ok!")
-    #
-    # # Entraînement du modèle
-    # ent = entrainement(inputEch=inputEch, metriques=metriques)
-    #
-    # # Classification selon les métriques
-    # classif = classification(clf=ent, tiffs_list=tiffs_list)
-    #
-    # # Création du fichier de sortie
-    # creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
-    #                 inputMet=inputMet, tiff_path_list=tiff_path_list, start=start)
+    ## DÉBUT DES TRAITEMENTS####
+    # On démarre le compteur pour cette section
+    # Calcul du temps
+    start = time.time()
+    print("Debut de la classification")
+    print("start")
+
+    # Import des images en matrices numpy
+    tiff_path_list = os.listdir(inputMet)  # Liste des fichiers
+
+    # On crée une liste avec toutes les images lues
+    tiffs_list = []
+    for i in tiff_path_list:
+        ds = gdal.Open(os.path.join(inputMet, i))
+        tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
+
+    # shapeimg1 = met4.shape
+    # for i in image_list:
+    #     if i.shape != shapeimg1:
+    #         print("Les images ne sont pas de la même taille")
+    #         print(i)
+    #         break
+    #     else:
+    #         print("Ok!")
+
+    # Entraînement du modèle
+    ent = entrainement(inputEch=inputEch, metriques=metriques)
+
+    # Classification selon les métriques
+    classif = classification(clf=ent, tiffs_list=tiffs_list)
+
+    # Création du fichier de sortie
+    creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
+                    inputMet=inputMet, tiff_path_list=tiff_path_list, start=start)
 
 
 if __name__ == "__main__":
