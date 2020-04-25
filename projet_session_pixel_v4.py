@@ -78,8 +78,10 @@ def classification (clf, tiffs_list):
     return prediction
 
 
-def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start):
+def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start, logger):
     # On crée une image GEOTIFF en sortie
+    logger.info('Création du fichier de sortie {}'.format(os.path.join(outputdir, nom_fichier)))
+
     # je déclare tous les drivers
     gdal.AllRegister()
     # le driver que je veux utiliser GEOTIFF
@@ -246,13 +248,6 @@ def main(argv):
         ds = gdal.Open(os.path.join(inputMet, i))
         tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
 
-    def verif_shape(tiffs_list):
-        s = tiffs_list[0].shape
-        for i in tiffs_list:
-            if i.shape == s:
-                return True
-            return False
-
     if verif_shape(tiffs_list):
 
         # Entraînement du modèle
@@ -273,9 +268,8 @@ def main(argv):
 
         # Création du fichier de sortie
         try:
-            logger.info('Création du fichier de sortie...')
             creation_output(prediction=classif, outputdir=outputdir , nom_fichier=nom_fichier,
-                            inputMet=inputMet, tiff_path_list=tiff_path_list, start=start)
+                            inputMet=inputMet, tiff_path_list=tiff_path_list, start=start, logger=logger)
         except Exception as e:
             logger.error("Erreur dans la création du fichier de sortie: \n{}".format(e))
             sys.exit()
