@@ -230,8 +230,9 @@ def main():
     # On crée une liste avec toutes les images lues
     tiffs_list = []
     for i in tiff_path_list:
-        ds = gdal.Open(os.path.join(inputMet, i))
-        tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
+        if i.endswith('.tif'):
+            ds = gdal.Open(os.path.join(inputMet, i))
+            tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
 
     # Entraînement du modèle
     try:
