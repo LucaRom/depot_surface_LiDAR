@@ -27,24 +27,27 @@ poly['Zone'] = within.astype(int)
 
 # STATISTIQUES ZONALES
 
-path_met = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02NE\Pente_WB_31H02NE.tif'
-prefixe = os.path.basename(path_met).split('_')[0]
-print(prefixe)
-stats = zonal_stats(path_poly, path_met, stats=['min', 'max', 'median', 'mean', 'std', 'count'])
-col = {'min': [], 'max': [], 'median': [], 'mean': [], 'std': [], 'count': []}
-for i in stats:
-    col['min'].append(i['min'])
-    col['max'].append(i['max'])
-    col['median'].append(i['median'])
-    col['mean'].append(i['mean'])
-    col['std'].append(i['std'])
-    col['count'].append(i['count'])
+path_met = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02NE'
 
-for c in col.keys():
-    name = '{}_{}'.format(prefixe, c)
-    poly[name] = col[c]
+for met in os.listdir(path_met):
+    path = os.path.join(path_met, met)
+    prefixe = met.split('_')[0]
+    stats = zonal_stats(path_poly, path, stats=['min', 'max', 'median', 'mean', 'std', 'count'])
+    col = {'min': [], 'max': [], 'median': [], 'mean': [], 'std': [], 'count': []}
+    for i in stats:
+        col['min'].append(i['min'])
+        col['max'].append(i['max'])
+        col['median'].append(i['median'])
+        col['mean'].append(i['mean'])
+        col['std'].append(i['std'])
+        col['count'].append(i['count'])
 
-print(poly.columns)
+    for c in col.keys():
+        name = '{}_{}'.format(prefixe, c)
+        poly[name] = col[c]
+
+poly.to_file(path_poly)
+
 
 
 
