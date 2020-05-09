@@ -11,9 +11,6 @@ minDistance = 500
 
 
 def check_min_distance(point, distance, points):
-    """Check if distance from given point to all other points is greater
-    than given value.
-    """
     if distance == 0:
         return True
 
