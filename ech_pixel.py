@@ -35,9 +35,8 @@ total = 100.0 / len(poly) if len(poly) else 0
 for ind, row in poly.iterrows():
     geom = row['geometry']
     bbox = shape(geom).bounds
-    # if minDistance:
-    #     index = sample.sindex
-    # points = dict()
+    index = sample.sindex
+    #points = dict()
     nPoints = 0
     nIterations = 0
     maxIterations = value * 50
@@ -55,9 +54,9 @@ for ind, row in poly.iterrows():
         p = Point(rx, ry)
         # geom = QgsGeometry.fromPointXY(p)
         if p.within(geom) and \
-                (not minDistance or check_min_distance(p, minDistance, sample)):
-            sample.loc[nPoints, 'geometry'] = p
-            sample.loc[nPoints, 'id'] = pointId
+                (not minDistance or check_min_distance(p, minDistance, index)):
+            index.loc[nPoints, 'geometry'] = p
+            index.loc[nPoints, 'id'] = pointId
             print(sample)
 
             # f = QgsFeature(nPoints)
