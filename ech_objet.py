@@ -1,11 +1,13 @@
 import geopandas as gpd
 from rasterstats import zonal_stats
+from datetime import datetime
 import os
 
 #### DÉFINITION DES FONCTIONS ####
 # Import de tous les shapefiles d'un dossier et on les regroupe dans un seul fichier
 def set_root_chm():
     # On définit le dossier parent pour le réutiliser dans l'import d'intrants
+    global root_dir
     root_dir = os.path.abspath(os.path.dirname(__file__))
 
     return root_dir
@@ -25,6 +27,12 @@ def set_root_chm():
 #     return new_shp_temp # Retourne le shapefile
 
 def set_chemins():
+
+    global path_segmentation
+    global path_depot
+    global path_met
+    global output
+
     # On ajoute la date au fichier sortant pour suivre nos tests
     date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 
@@ -102,6 +110,7 @@ def main():
     print('Sauvegarde...')
     seg_stats_ech.to_file(output)
     print('Terminé')
+
 
 #### INITIATION DU SCRIPT ####
 if __name__ == "__main__":
