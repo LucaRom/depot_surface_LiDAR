@@ -33,7 +33,7 @@ root_dir  = os.path.dirname("__file__")
 
 # Pour importer un shapefile
 # Chemin vers le dossier avec les shapefiles
-folder_path = os.path.join(root_dir, 'inputs/seg_avec_stats/sickit_31H02NE_SE')
+folder_path = os.path.join(root_dir, 'inputs/seg_avec_stats/ecognition_31H02NE_SE')
 
 # On crée la liste des shapefiles
 files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"

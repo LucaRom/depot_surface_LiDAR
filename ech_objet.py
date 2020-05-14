@@ -36,16 +36,22 @@ def set_chemins():
     # On ajoute la date au fichier sortant pour suivre nos tests
     date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
 
-    # Chemins de la couche de segmentation et de la couche de dépôts
-    path_segmentation = os.path.join(root_dir, 'inputs/segmentations/seg_Scikit_mai2020_31H02_NE_SE/')
+    #Chemins de la couche de segmentation et de la couche de dépôts
+    path_segmentation = os.path.join(root_dir, 'inputs/segmentations/seg_ecognition_31h02NE_SE/Test2_NE_Clip.shp')
     path_depot = os.path.join(root_dir, 'inputs/depots/31H02NE/zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp')
 
     # Chemin du répertoire contenant les métriques
     path_met = os.path.join(root_dir, 'inputs/tiffs/31H02NE_5m/')
 
+    # path_segmentation = os.path.join(root_dir, 'inputs/segmentations/seg_ecognition_31h02NE_SE/Test2_SE_Clip.shp')
+    # path_depot = os.path.join(root_dir, 'inputs/depots/31H02SE/zones_depots_glaciolacustres_31H02SE_MTM8.shp')
+    #
+    # # Chemin du répertoire contenant les métriques
+    # path_met = os.path.join(root_dir, 'inputs/tiffs/31H02SE_5m/')
+
     # chemin de la couche de sortie
-    nom_fichier = 'result_prediction_SEG_sickit' + date_classi + '.shp'
-    output = os.path.join(root_dir, 'outputs/Segmentations/31H02NE_5m', nom_fichier)
+    nom_fichier = 'result_prediction_SEG_ecognition_NE' + date_classi + '.shp'
+    output = os.path.join(root_dir, 'outputs/Segmentations', nom_fichier)
 
 def stats_zonales(path_metriques, path_segmentation):
 
