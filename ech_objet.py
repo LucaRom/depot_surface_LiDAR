@@ -4,6 +4,17 @@ from datetime import datetime
 import os
 
 #### DÉFINITION DES FONCTIONS ####
+
+# Regrouper les polygones d'une couche en 1 multipolygone
+def dissolve(geodataframe):
+    if len(geodataframe) > 1:
+        diss = geodataframe.unary_union
+        shpDiss = gpd.GeoDataFrame(columns=['geometry'])
+        shpDiss.loc[0, 'geometry'] = diss
+        return shpDiss
+    return geodataframe
+
+
 # Import de tous les shapefiles d'un dossier et on les regroupe dans un seul fichier
 def set_root_chm():
     # On définit le dossier parent pour le réutiliser dans l'import d'intrants
@@ -89,13 +100,16 @@ def echantillon_objet(path_depot, segmentation):
     # on crée les geodataframe pour la couche de dépôts
     depot = gpd.read_file(path_depot)
 
+    # On regroupe les polygones de la couche de dépôts
+    depot_reg = dissolve(depot)
+
     # On peut appeler les méthodes des GeoSeries sur le geodataframe.
     # Pour within, on doit sépcifier avec quel objet de la serie on veut une comparaison.
     # Le iloc retourne une série Pandas standard, il faut donc spécifier la colonne geometry pour avoir une GeoSerie
     # https://github.com/geopandas/geopandas/issues/317
 
     # On crée la série booléenne pour vérifier quelles polygones sont contenus dans la zone de dépôts
-    within = segmentation.within(depot['geometry'].iloc[0])
+    within = segmentation.within(depot_reg['geometry'].iloc[0])
 
     # On ajoute la série sous forme d'entier dans le geodataframe
     segmentation['Zone'] = within.astype(int)
