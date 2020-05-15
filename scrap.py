@@ -141,19 +141,14 @@ def dissolve(geodataframe):
 
 ## RASTER CALCULATION ##
 
-import rasterio
-import numpy as np
+def raster_calculation(path_raster):
+    mnt = gdal.Open(path_raster)
+    b1 = mnt.GetRasterBand(1)
+    arr = b1.ReadAsArray()
+    arr[(arr >= 0)] = 0
+    return arr
 
-path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
-# raster = rasterio.open(path_mnt, nodata=-3.4028235e+38)
-# mnt = raster.read(1)
-# mask = raster.read_masks(1)
-# print (mnt * 0)
-
-
-
-
-def creation_raster (inputArray, mask, inputMet):
+def creation_raster (inputArray,inputMet):
     # On crée une image GEOTIFF en sortie
     # je déclare tous les drivers
     gdal.AllRegister()
@@ -165,7 +160,7 @@ def creation_raster (inputArray, mask, inputMet):
 
     # je déclare mon image
     # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
-    image = driver.Create('MEM',cols, rows, 2, GDT_Float64)
+    image = driver.Create('MEM',cols, rows, 1, GDT_Float64)
 
     # J'extrais les paramètres d'une métriques pour le positionnement du fichier sortant
     data = gdal.Open(inputMet)
@@ -180,16 +175,13 @@ def creation_raster (inputArray, mask, inputMet):
     # je cherche la bande 1
     band = image.GetRasterBand(1)
 
-    band2 = image.GetRasterBand(2)
-
     # Je remets la matrice en 2 dimension
     # result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
-    result1 = inputArray.reshape(inputArray.shape[0], inputArray.shape[1])
+    #result1 = inputArray.reshape(inputArray.shape[0], inputArray.shape[1])
 
     # j'écris la matrice dans la bande
     # band.WriteArray(result1, 0, 0)
     band.WriteArray(inputArray, 0, 0)
-    band2.WriteArray(mask, 0, 0)
 
     # Je définis la projection
     outRasterSRS = osr.SpatialReference()
@@ -200,8 +192,6 @@ def creation_raster (inputArray, mask, inputMet):
     # je vide la cache
     band.FlushCache()
     band.SetNoDataValue(-99)
-    band2.FlushCache()
-    band2.SetNoDataValue(-99)
 
     return image
 
@@ -223,48 +213,46 @@ def conversion_polygone (dataset, output):
     srcband = dataset.GetRasterBand(1)
     maskband = dataset.GetRasterBand(2)
     prj = dataset.GetProjection()
-    dst_layername = output
-    drv = ogr.GetDriverByName("ESRI Shapefile")
+    dst_layername = os.path.join("/vsimem/" + output + '.shp')
+    drv = ogr.GetDriverByName('ESRI Shapefile')
     dst_ds = drv.CreateDataSource(dst_layername)
     srs = ogr.osr.SpatialReference(wkt=prj)
     dst_layer = dst_ds.CreateLayer(dst_layername, srs=srs)
     raster_field = ogr.FieldDefn('id', type_mapping[srcband.DataType])
-    a = gdal.Polygonize(srcBand=srcband, maskBand=maskband, outLayer=dst_layer,
-                        iPixValField=-1)
-
-    # srcband = dataset.GetRasterBand(1)
-    # prj = dataset.GetProjection()
-    # outdriver = ogr.GetDriverByName('MEMORY')
-    # source = outdriver.CreateDataSource('memData')
-    # tmp = outdriver.Open('memData', 1)
-    # pipes_mem = source.CopyLayer(srcband.GetLayer('pipes'), 'pipes', ['OVERWRITE=YES'])
-
-    # layer = source.GetLayer('pipes')
-    # for feature in layer:
-    #     print(feature)
+    gdal.Polygonize(srcband, None, dst_layer, -1, [], callback=None)
+    return dst_layer
 
 
+def delete_border(path_shp):
+    df = gpd.read_file(path_shp)
+    df['area'] = [i.area for i in df['geometry']]
+    df = df[df['area'] != df['area'].min()]
+    df.to_file(polyg0)
+    return df
 
 
 from osgeo import ogr, gdal, osr
 from osgeo.gdalnumeric import *
 from osgeo.gdalconst import *
+import os
 
+path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
 path_mnt0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0.tif'
 polyg0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0_poly.shp'
 
-mnt = gdal.Open(path_mnt)
-b1 = mnt.GetRasterBand(1)
-max = b1.GetMaximum()
-nodata = b1.GetNoDataValue()
-arr = b1.ReadAsArray()
-arr[(arr >= 0)] = 0
-mask = np.copy(arr)
-mask[(mask == nodata)] = 1
-mask[(mask == 0)] = nodata
 
-raster = creation_raster(arr, mask, path_mnt)
-p = conversion_polygone(dataset=raster, output=polyg0)
+
+raster = creation_raster(arr, path_mnt)
+pol = conversion_polygone(dataset=raster, output='mnt0')
+
+
+
+
+
+
+
+
+
 
 
 #output = r'C:\Users\home\Documents\Documents\APP3\test_polygon.shp'
