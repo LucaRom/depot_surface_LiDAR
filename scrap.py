@@ -8,7 +8,6 @@ import descartes
 
 
 path = r'C:\Users\home\Documents\Documents\APP2\polygon_test.shp'
-#path = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp'
 value = 2000
 minDistance = 500
 
@@ -131,13 +130,72 @@ minDistance = 500
 # point_candidates = destin.loc[intersect]
 # print(point_candidates)
 
-## DISSOLVE ##
 
-def dissolve(geodataframe):
-    diss = geodataframe.unary_union
-    shpDiss = gpd.GeoDataFrame(columns=['geometry'])
-    shpDiss.loc[0, 'geometry'] = diss
-    return shpDiss
+def check_min_distance(point, distance, points):
+
+    if distance == 0:
+        return True
+    if len(points) > 0:
+        uni = points.unary_union
+        nearest = nearest_points(point, uni)
+        if len(nearest) == 0:
+            return True
+        if nearest[1].distance(point) < distance:
+            return False
+    return True
+
+
+#@profile
+def echantillon_pixel(poly, minDistance, value, epsg, zone):
+
+    #poly = gpd.read_file(input)
+    sample = gpd.GeoDataFrame(columns=['geometry', 'id', 'Zone'])
+    sample.crs = from_epsg(epsg)
+
+    for ind, row in poly.iterrows():
+        geom = row['geometry']
+        bbox = geom.bounds
+        index = sample.sindex
+        nPoints = 0
+        nIterations = 0
+        maxIterations = value * 5
+
+        random.seed()
+        pointId = 0
+        while nIterations < maxIterations and nPoints < value:
+
+            height = bbox[3] - bbox[1]
+            width = bbox[2] - bbox[0]
+            rx = bbox[0] + width * random.random()
+            ry = bbox[1] + height * random.random()
+
+            p = Point(rx, ry)
+
+            if p.within(geom) and (not minDistance or check_min_distance(p, minDistance, sample)):
+                    sample.loc[nPoints, 'geometry'] = p
+                    sample.loc[nPoints, 'id'] = pointId
+                    sample.loc[nPoints, 'Zone'] = zone
+                    nPoints += 1
+                    pointId += 1
+            nIterations += 1
+            if nIterations % 1000 == 0:
+                print(nIterations)
+
+        if nPoints < value:
+            print(sample)
+            print('Could not generate requested number of random points. Maximum number of attempts exceeded.')
+
+    return sample
+
+
+def dissolve(geodataframe, epsg):
+    if len(geodataframe) > 1:
+        diss = geodataframe.unary_union
+        shpDiss = gpd.GeoDataFrame(columns=['geometry'])
+        shpDiss.loc[0, 'geometry'] = diss
+        shpDiss.crs = from_epsg(epsg)
+        return shpDiss
+    return geodataframe
 
 ## RASTER CALCULATION ##
 
@@ -211,24 +269,46 @@ def conversion_polygone (dataset, output):
                     gdal.GDT_CFloat64: ogr.OFTReal}
 
     srcband = dataset.GetRasterBand(1)
-    maskband = dataset.GetRasterBand(2)
     prj = dataset.GetProjection()
-    dst_layername = os.path.join("/vsimem/" + output + '.shp')
+    dst_layername = os.path.join(output)
     drv = ogr.GetDriverByName('ESRI Shapefile')
     dst_ds = drv.CreateDataSource(dst_layername)
     srs = ogr.osr.SpatialReference(wkt=prj)
     dst_layer = dst_ds.CreateLayer(dst_layername, srs=srs)
     raster_field = ogr.FieldDefn('id', type_mapping[srcband.DataType])
     gdal.Polygonize(srcband, None, dst_layer, -1, [], callback=None)
-    return dst_layer
 
 
 def delete_border(path_shp):
     df = gpd.read_file(path_shp)
     df['area'] = [i.area for i in df['geometry']]
     df = df[df['area'] != df['area'].min()]
-    df.to_file(polyg0)
     return df
+
+
+def creation_buffer(geodataframe, distance, epsg):
+    buff = gpd.GeoDataFrame(columns=['geometry'])
+    buff.crs = from_epsg(epsg)
+    buff.loc[0, 'geometry'] = geodataframe.loc[0,'geometry'].buffer(distance, 16)
+    return buff
+
+
+def difference(input, mask, epsg):
+    source = input.loc[0, 'geometry']
+    masque = mask.loc[0, 'geometry']
+    diff = gpd.GeoDataFrame(columns=['geometry'])
+    diff.loc[0, 'geometry'] = source.difference(masque)
+    diff.crs = from_epsg(epsg)
+    return diff
+
+
+def comparaison_area(gdf1, gdf2):
+    area1 = gdf1.loc[0, 'geometry'].area
+    area2 = gdf2.loc[0, 'geometry'].area
+    if area1 < area2:
+        return True
+    else:
+        return False
 
 
 from osgeo import ogr, gdal, osr
@@ -236,14 +316,86 @@ from osgeo.gdalnumeric import *
 from osgeo.gdalconst import *
 import os
 
-path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
-path_mnt0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0.tif'
-polyg0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0_poly.shp'
+
+def main():
+
+    # Chemins des couches du MNT et de la couche de dépôts
+    path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp'
+    path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
+    path_mnt0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0.tif'
+    polyg0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0_poly.shp'
+
+    # Distance minimale entre les points et nombre de points à produire
+    value = 2000
+    minDistance = 500
+
+    # Lecture de la couche de dépôts et extraction du code EPSG
+    print('Lecture et extraction EPSG...')
+    depot = gpd.read_file(path_depot)
+    epsg = int(str(depot.crs).split(':')[1])
+
+    # Regroupement de la couche de dépôts
+    print('Regroupement couche de dépôts...')
+    depot_reg = dissolve(depot, epsg)
+
+    # Multiplier le mnt par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
+    print('Multiplication du MNT par 0...')
+    path_couche_memory = "/vsimem/mnt0_poly.shp"
+    mnt0_array = raster_calculation(path_mnt)
+    mnt0_raster = creation_raster(mnt0_array, path_mnt)
+
+    # Conversion du raster du mnt0 en polygone et supression des bordures pour créer le cadre d'échantillonnage
+    print('Conversion MNT en polygone...')
+    path_couche_memory = "/vsimem/mnt0_poly.shp"
+    conversion_polygone(mnt0_raster, path_couche_memory)
+    print('Suppresion des bordures...')
+    cadre = delete_border(path_couche_memory)
+
+    # Création du buffer autour de la couche de dépôts à la valeur de la distance minimale
+    print('Création du buffer...')
+    buff = creation_buffer(depot_reg, minDistance, epsg)
+
+    # Clip du buffer aux dimension du cadre
+    print('Clip du buffer...')
+    buff_clip = gpd.clip(buff, cadre)
+    #buff_clip.to_file(r'C:\Users\home\Documents\Documents\APP3\buff_clip.shp')
+
+    # Création de la zone extérieure: différence entre le cadre et le buffer clippé
+    print('Création zone externe...')
+    zone_ext = difference(cadre, buff_clip, epsg)
+    #zone_ext.to_file(r'C:\Users\home\Documents\Documents\APP3\difference.shp')
+
+    # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
+    print('Comparaison...')
+    plus_petite_zone = None
+    plus_grande_zone = None
+    zone = None
+    if comparaison_area(depot_reg, zone_ext):
+        plus_petite_zone = depot_reg
+        plus_grande_zone = zone_ext
+        zone = 1
+        print('Plus petite zone: couche de dépôts ')
+    else:
+        plus_petite_zone = zone_ext
+        plus_grande_zone = depot_reg
+        zone = 0
+        print('Plus petite zone: zone extérieure')
+
+    # Échantillonnage de la plus petite zone
+    print('Échantillonnage petite zone...')
+    ech_petite_zone = echantillon_pixel(plus_petite_zone, minDistance, value, epsg, zone)
+    ech_petite_zone.to_file(r'C:\Users\home\Documents\Documents\APP3\ech_petite_zone.shp')
+
+    # Échantillonnage de la plus grande zone selon le nombre de points contenu dans la petite zone
+    print('Échantillonnage grande zone...')
+    nbPoints = len(ech_petite_zone)
+    ech_grande_zone = echantillon_pixel(plus_grande_zone, minDistance, nbPoints, epsg)
+    ech_grande_zone.to_file(r'C:\Users\home\Documents\Documents\APP3\ech_grande_zone.shp')
+    print('Terminé')
 
 
-
-raster = creation_raster(arr, path_mnt)
-pol = conversion_polygone(dataset=raster, output='mnt0')
+if __name__ == "__main__":
+    main()
 
 
 
