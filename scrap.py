@@ -3,13 +3,17 @@ import random
 from fiona.crs import from_epsg
 from shapely.geometry import shape, Point, Polygon
 from shapely.ops import nearest_points
-import matplotlib.pyplot as plt
-import descartes
+import pandas as pd
+import whitebox
+import glob
+from osgeo import ogr, gdal, osr
+from osgeo.gdalnumeric import *
+from osgeo.gdalconst import *
+import os
 
 
-path = r'C:\Users\home\Documents\Documents\APP2\polygon_test.shp'
-value = 2000
-minDistance = 500
+
+
 
 
 # def check_min_distance(point, distance, points):
@@ -311,23 +315,60 @@ def comparaison_area(gdf1, gdf2):
         return False
 
 
-from osgeo import ogr, gdal, osr
-from osgeo.gdalnumeric import *
-from osgeo.gdalconst import *
-import os
+def extract_value_metrique(path_couche_point, path_metrique):
+
+    wbt = whitebox.WhiteboxTools()
+    print('lecture des métriques...')
+    ls = glob.glob(path_metrique + os.sep + '*.tif')
+    dic_metrique = {'AvrNorVecAngDev': 'ANVAD', 'CirVarAsp': 'CVA', 'DownslopeInd': 'DI', 'EdgeDens': 'EdgeDens', 'Pente':
+            'Pente', 'PlanCur': 'PlanCur', 'ProfCur': 'ProfCur', 'RelTPI': 'TPI', 'SphStdDevNor': 'SSDN', 'tanCur': 'tanCur',
+            'TWI': 'TWI', 'Contrast':'ContHar', 'Mean':'MeanHar', 'correl': 'CorHar'}
+
+    dic_ordre = {}
+
+    print('préparation de la chaine de métriques...')
+    chaine_metrique=''
+    for i in range(len(ls)):
+        metrique = ls[i]
+        nom = os.path.basename(metrique).split('_')[0]
+        #name = dic_metrique[nom_basename]
+        dic_ordre.update({str(i+1):nom})
+
+        if chaine_metrique == '':
+            chaine_metrique = metrique
+        else:
+            chaine_metrique = chaine_metrique + ';' + metrique
+
+    print(dic_ordre)
+    print()
+
+    print('Extraction des valeurs...')
+    wbt.extract_raster_values_at_points(chaine_metrique, points=path_couche_point)
+
+    print('Ouverture du SHP...')
+    shp = gpd.read_file(path_couche_point)
+    # del shp['VALUE']
+
+    print('Création des nouvelles colonnes...')
+    for col in shp.columns:
+        if col == 'id' or col == 'geometry':
+            pass
+        elif col[0:5] == 'VALUE':
+            num = col[5:]
+            nom_colonne = dic_ordre[num]
+            shp[nom_colonne] = shp[col].round(4)
+
+    print('Suppression des anciennes colonnes...')
+    for col in shp.columns:
+        if col[0:5] == 'VALUE':
+            del shp[col]
+
+    print('Sauvegarde...')
+    shp.to_file(path_couche_point)
 
 
-def main():
+def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance):
 
-    # Chemins des couches du MNT et de la couche de dépôts
-    path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp'
-    path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
-    path_mnt0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0.tif'
-    polyg0 = r'C:\Users\home\Documents\Documents\APP3\test_mnt0_poly.shp'
-
-    # Distance minimale entre les points et nombre de points à produire
-    value = 2000
-    minDistance = 500
 
     # Lecture de la couche de dépôts et extraction du code EPSG
     print('Lecture et extraction EPSG...')
@@ -383,19 +424,41 @@ def main():
 
     # Échantillonnage de la plus petite zone
     print('Échantillonnage petite zone...')
-    ech_petite_zone = echantillon_pixel(plus_petite_zone, minDistance, value, epsg, zone)
-    ech_petite_zone.to_file(r'C:\Users\home\Documents\Documents\APP3\ech_petite_zone.shp')
+    ech_petite_zone = echantillon_pixel(plus_petite_zone, minDistance, nbPoints, epsg, zone)
+    #ech_petite_zone.to_file(r'C:\Users\home\Documents\Documents\APP3\ech_petite_zone.shp')
 
     # Échantillonnage de la plus grande zone selon le nombre de points contenu dans la petite zone
+    if zone == 1:
+        zone = 0
+    elif zone == 0:
+        zone = 1
     print('Échantillonnage grande zone...')
-    nbPoints = len(ech_petite_zone)
-    ech_grande_zone = echantillon_pixel(plus_grande_zone, minDistance, nbPoints, epsg)
-    ech_grande_zone.to_file(r'C:\Users\home\Documents\Documents\APP3\ech_grande_zone.shp')
+    nbPoints_petite = len(ech_petite_zone)
+    ech_grande_zone = echantillon_pixel(plus_grande_zone, minDistance, nbPoints_petite, epsg, zone)
+    #ech_grande_zone.to_file(r'C:\Users\home\Documents\Documents\APP3\ech_grande_zone.shp')
+    print('Terminé')
+
+    # Combinaison des deux zones
+    print('Combinaison des échantillons...')
+    ech_total = gpd.GeoDataFrame(pd.concat([ech_petite_zone, ech_grande_zone], ignore_index=True), crs=from_epsg(epsg))
+    ech_total.to_file(output)
+
+    # Extraction des valeurs des métriques
+    print('Extraction des valeurs des métriques')
+    extract_value_metrique(output, path_metriques)
     print('Terminé')
 
 
 if __name__ == "__main__":
-    main()
+
+    # Chemins des couches du MNT et de la couche de dépôts
+    path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp'
+    path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
+    path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02NE'
+    output = r'C:\Users\home\Documents\Documents\APP3\ech_total.shp'
+
+    echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=path_metriques,
+                        output=output, nbPoints=2000, minDistance=500)
 
 
 
