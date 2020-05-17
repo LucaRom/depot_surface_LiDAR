@@ -99,15 +99,15 @@ def creation_metriques(dossier_MNT, path_r, path_script):
         # Création des métriques de textures d'haralick (moyenne, correlation, contraste)
             # moyenne
             mean = os.path.join(dir_metrique, 'MeaH_GLCM_{}.tif'.format(image.split('_')[3][:-4]))
-            textures_glcm(path_r, path_script, mnt55, mean, 1, 3)
+            textures_glcm(path_r, path_script, mnt55, mean, '1', '3')
 
             # correlation
             corel = os.path.join(dir_metrique, 'CorH_GLCM_{}.tif'.format(image.split('_')[3][:-4]))
-            textures_glcm(path_r, path_script, mnt55, corel, 2, 3)
+            textures_glcm(path_r, path_script, mnt55, corel, '2', '3')
 
             # contraste
             cont = os.path.join(dir_metrique, 'ConH_GLCM_{}.tif'.format(image.split('_')[3][:-4]))
-            textures_glcm(path_r, path_script, mnt55, cont, 3, 3)
+            textures_glcm(path_r, path_script, mnt55, cont, '3', '3')
 
         # Suppresion des éléments du répertoire temporaire
             for file in os.listdir(temp):
