@@ -1,7 +1,47 @@
-from osgeo import gdal
+from osgeo import gdal, osr
 import os
 import whitebox
+import subprocess
 
+
+def run_command(command):
+    '''
+    Source:  Kannan Ponnusamy (2015), https://www.endpoint.com/blog/2015/01/28/getting-realtime-output-using-python
+    :param command: Liste de commandes à passer dans le terminal (list)
+    :return: Affiche les output de la console en temps réel tant que le processus n'est pas fini (process.poll() est None)
+    '''
+    # On passe la commande dans le terminal
+    process = subprocess.Popen(command, stdout=subprocess.PIPE)
+    while True:
+        # On itère dans le output tant que le code de sortie est None. Si une nouvelle ligne apparaît, on l'affiche
+        output = process.stdout.readline()
+        if output == b'' and process.poll() is not None:
+            # Si le processus se termine, on quitte la boucle
+            break
+        if output:
+            print(output.strip())
+    ExitCode = process.poll()
+    return ExitCode
+
+
+def textures_glcm(path_r, path_script, input, output, metrique, kernel):
+    '''
+    Nécessite l'installation de R 3.6 et +.
+    :param path_r: Chemin vers l'application Rscript.exe (str)
+    :param path_script: Chemin vers le script 'haralick.R' (str)
+    :param input: Chemin du MNT à traiter (str)
+    :param output: Chemin du fichier de sortie (str)
+    :param metrique: metrique d'haralick à créer (str)
+                    - 1 => moyenne
+                    - 2 => correlation
+                    - 3 => contraste
+    :param kernel: Taille du Kernel (str)
+    :return: Raster de la métrique d'haralick voulue sur le MNT en entrée (.tif)
+    '''
+    # On crée la liste de commande à passer
+    commande = [path_r, path_script, input, output, metrique, kernel]
+    # On passe la liste de commande dans le terminal
+    run_command(commande)
 
 
 def resampling_cubic_spline(input, output, size):
@@ -16,10 +56,12 @@ def resampling_cubic_spline(input, output, size):
     dataset = gdal.Open(input, gdal.GA_ReadOnly)
     largeur, hauteur = (dataset.RasterXSize, dataset.RasterYSize)
     proj = dataset.GetProjection()
+    crs = osr.SpatialReference()
+    crs.ImportFromWkt(proj)
 
     # Resampling
     print('Resampling...')
-    warp_object = gdal.WarpOptions(width=largeur / size, height=hauteur / size, resampleAlg=3, srcSRS=proj, dstSRS=proj)
+    warp_object = gdal.WarpOptions(width=largeur / size, height=hauteur / size, resampleAlg=3, srcSRS=crs, dstSRS=crs)
     gdal.Warp(destNameOrDestDS=output, srcDSOrSrcDSTab=input, options=warp_object)
     print('Terminé')
     print()
@@ -147,7 +189,7 @@ def gdal_translate_32to64(input, output):
     print()
 
 
-def CircularVarofAspect(dem, output):
+def CircularVarofAspect(dem, output, size):
 
     wbt = whitebox.WhiteboxTools()
     wbt.verbose = False
@@ -158,12 +200,12 @@ def CircularVarofAspect(dem, output):
 
     # Création du CircularVarianceOfAspect
     print('Creation du CircularVarianceOfAspect...')
-    wbt.circular_variance_of_aspect(dem, output)
+    wbt.circular_variance_of_aspect(dem, output, size)
     print('Terminé')
     print()
 
 
-def EdgeDensity(dem, output):
+def EdgeDensity(dem, output, size, seuil):
 
     wbt = whitebox.WhiteboxTools()
     wbt.verbose = False
@@ -174,12 +216,12 @@ def EdgeDensity(dem, output):
 
     # Création du Edge Density
     print('Creation du EdgeDensity...')
-    wbt.edge_density(dem, output)
+    wbt.edge_density(dem, output, size, seuil)
     print('Terminé')
     print()
 
 
-def sphericalStdDevNormals(dem, output):
+def sphericalStdDevNormals(dem, output, size):
 
     wbt = whitebox.WhiteboxTools()
     wbt.verbose = False
@@ -190,7 +232,7 @@ def sphericalStdDevNormals(dem, output):
 
     # Création du Spherical Standard Deviation of Normals
     print('Creation du Spherical Standard Deviation of Normals...')
-    wbt.spherical_std_dev_of_normals(dem, output)
+    wbt.spherical_std_dev_of_normals(dem, output, size)
     print('Terminé')
     print()
 
@@ -259,7 +301,7 @@ def Downslope_Ind(dem, output):
     print()
 
 
-def AverNormVectAngDev(dem, output):
+def AverNormVectAngDev(dem, output, size):
 
     wbt = whitebox.WhiteboxTools()
     wbt.verbose = False
@@ -270,6 +312,6 @@ def AverNormVectAngDev(dem, output):
 
     # Average Normal Vector Angular Deviation
     print('Creation du Average Normal Vector Angular Deviation ...')
-    wbt.average_normal_vector_angular_deviation(dem, output)
+    wbt.average_normal_vector_angular_deviation(dem, output, size)
     print('Terminé')
     print()
