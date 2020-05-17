@@ -5,9 +5,6 @@ from osgeo import gdal
 from osgeo import ogr
 
 
-dossier_MNT = r'C:\Users\home\Documents\Documents\APP2\mnt'
-
-
 def resampling(dossier_MNT, size):
 
     main_dir = os.path.dirname(dossier_MNT)
