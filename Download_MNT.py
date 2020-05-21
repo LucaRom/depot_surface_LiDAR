@@ -17,10 +17,12 @@ def selection_mnt(feuillet, path_index, col_feuillet):
 
 
 def download_ftp(ftpparent, ftpdirectory, liste_files, rep_output):
+
     for i in liste_files:
-        if os.path.exists(os.path.join(output, 'MNT_{}.tif'.format(i))):
+        if os.path.exists(os.path.join(rep_output, 'MNT_{}.tif'.format(i))):
             liste_files.remove(i)
     print(liste_files)
+
     with FTP(ftpdirectory) as ftp:
         ftp.login()
         ftp.retrlines("LIST")
@@ -67,11 +69,11 @@ def download_ftp(ftpparent, ftpdirectory, liste_files, rep_output):
                                 print('début du téléchargement')
 
                                 #output_dir = os.path.join(rep_output, num_rep[:5])
-                                if not os.path.exists(output):
-                                    print('création du répertoire {}'.format(output))
+                                if not os.path.exists(rep_output):
+                                    print('création du répertoire {}'.format(rep_output))
                                     os.makedirs(output)
 
-                                local_filename = os.path.join(output, fichier_mnt)
+                                local_filename = os.path.join(rep_output, fichier_mnt)
                                 lf = open(local_filename, "wb")
                                 ftp.retrbinary("RETR " + fichier_mnt, lf.write, 8 * 1024)
                                 lf.close()
