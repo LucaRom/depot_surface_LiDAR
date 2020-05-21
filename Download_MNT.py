@@ -17,11 +17,13 @@ def selection_mnt(feuillet, path_index, col_feuillet):
 
 
 def download_ftp(ftpparent, ftpdirectory, liste_files, rep_output):
-
+    print('liste des MNT adjacents: {}'.format(liste_files))
+    deja_present = []
     for i in liste_files:
         if os.path.exists(os.path.join(rep_output, 'MNT_{}.tif'.format(i))):
-            liste_files.remove(i)
-    print(liste_files)
+            deja_present.append(i)
+    liste_files = [i for i in liste_files if i not in deja_present]
+    print('liste des MNT à télécharger: {}'.format(liste_files))
 
     with FTP(ftpdirectory) as ftp:
         ftp.login()
