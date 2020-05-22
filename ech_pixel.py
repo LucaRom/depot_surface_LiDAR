@@ -53,7 +53,7 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
     # Création de la couche de sortie
     #poly = gpd.read_file(input)
     sample = gpd.GeoDataFrame(columns=['geometry', 'id', 'Zone'])
-    sample.crs = from_epsg(epsg)
+    sample.crs = epsg
 
     # On itère dans la couche en entrée
     for ind, row in poly.iterrows():
@@ -64,7 +64,7 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
         nPoints = 0
         nIterations = 0
         # Nombre d'itération maximal à faire avant d'arrêter
-        maxIterations = value * 5
+        maxIterations = value * 50
 
         random.seed()
         pointId = 0
@@ -114,7 +114,7 @@ def dissolve(geodataframe, epsg):
         # Création de la couche de sortie
         shpDiss = gpd.GeoDataFrame(columns=['geometry'])
         shpDiss.loc[0, 'geometry'] = diss
-        shpDiss.crs = from_epsg(epsg)
+        shpDiss.crs = epsg
         return shpDiss
     # Si le geodataframe ne contient qu'une entité, retourne le geodataframe en input
     return geodataframe
@@ -159,6 +159,9 @@ def creation_raster (inputArray,inputMet):
 
     # J'applique les paramètres de positionnement
     geoTransform = data.GetGeoTransform()
+
+    # On va chercher la projection
+    proj = data.GetProjection()
     data = None # On vide la mémoire
 
     # On donne la coordonnée d'origine de l'image raster tiré d'une des métriques
@@ -176,10 +179,9 @@ def creation_raster (inputArray,inputMet):
     band.WriteArray(inputArray, 0, 0)
 
     # Je définis la projection
-    outRasterSRS = osr.SpatialReference()
-    outRasterSRS.ImportFromEPSG(2950)
-
-    image.SetProjection(outRasterSRS.ExportToWkt())
+    # outRasterSRS = osr.SpatialReference()
+    # outRasterSRS.ImportFromEPSG(2950)
+    image.SetProjection(proj)
 
     # je vide la cache
     band.FlushCache()
@@ -237,7 +239,7 @@ def delete_border(path_shp):
     return df
 
 
-def creation_buffer(geodataframe, distance, epsg):
+def creation_buffer(geodataframe, distance, epsg, cap_style, join_style):
     '''
     :param geodataframe: Couche à traiter (GeoDataframe)
     :param distance: Distance du buffer à créer (int)
@@ -246,9 +248,9 @@ def creation_buffer(geodataframe, distance, epsg):
     '''
     # Création de a couche de sortie
     buff = gpd.GeoDataFrame(columns=['geometry'])
-    buff.crs = from_epsg(epsg)
+    buff.crs = epsg
     # Création du buffer sur la couche input et ajout du buffer dans la couche de sortie
-    buff.loc[0, 'geometry'] = geodataframe.loc[0,'geometry'].buffer(distance, 16)
+    buff.loc[0, 'geometry'] = geodataframe.loc[0,'geometry'].buffer(distance, 16, cap_style=cap_style, join_style=join_style)
     return buff
 
 
@@ -264,7 +266,7 @@ def difference(input, mask, epsg):
     masque = mask.loc[0, 'geometry']
     # Création de la couche de sortie
     diff = gpd.GeoDataFrame(columns=['geometry'])
-    diff.crs = from_epsg(epsg)
+    diff.crs = epsg
     # Calcul de la différence et ajout de la différence à la couche de sortie
     diff.loc[0, 'geometry'] = source.difference(masque)
     return diff
@@ -358,7 +360,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     # Lecture de la couche de dépôts et extraction du code EPSG
     print('Lecture et extraction EPSG...')
     depot = gpd.read_file(path_depot)
-    epsg = int(str(depot.crs).split(':')[1])
+    epsg = int(str(depot.crs))
 
     # Regroupement de la couche de dépôts
     print('Regroupement couche de dépôts...')
@@ -379,7 +381,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
     # Création du buffer autour de la couche de dépôts à la valeur de la distance minimale
     print('Création du buffer...')
-    buff = creation_buffer(depot_reg, minDistance, epsg)
+    buff = creation_buffer(depot_reg, minDistance, epsg, 1, 1)
 
     # Clip du buffer aux dimension du cadre
     print('Clip du buffer...')
@@ -425,7 +427,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
     # Combinaison des deux zones
     print('Combinaison des échantillons...')
-    ech_total = gpd.GeoDataFrame(pd.concat([ech_petite_zone, ech_grande_zone], ignore_index=True), crs=from_epsg(epsg))
+    ech_total = gpd.GeoDataFrame(pd.concat([ech_petite_zone, ech_grande_zone], ignore_index=True), crs=epsg)
     ech_total.to_file(output)
 
     # Extraction des valeurs des métriques
@@ -437,10 +439,10 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 if __name__ == "__main__":
 
     # Chemins des couches du MNT et de la couche de dépôts
-    path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp'
-    path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
-    path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02NE'
-    output = r'C:\Users\home\Documents\Documents\APP3\ech_total.shp'
+    path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zones_depots_glaciolacustres_31H02SE_MTM8.shp'
+    path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02SE_5x5.tif'
+    path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'
+    output = r'C:\Users\home\Documents\Documents\APP3\ech_31H02SE.shp'
 
     # Échantillonnage
     echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=path_metriques,
