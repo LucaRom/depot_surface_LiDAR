@@ -88,24 +88,8 @@ def creation_buffer_raster(input_raster, input_mosaic, distance, output, epsg):
     clip = gdal.Warp(output, input_mosaic, cutlineDSName=path_buff)
 
 
-def breachDepressionLeastCost(input, output, size, filling):
 
-    wbt = whitebox.WhiteboxTools()
-    wbt.verbose = True
-
-    # Création des répertoire de sortie
-    head_output = os.path.dirname(output)
-    if not os.path.exists(head_output):
-        os.makedirs(head_output)
-
-    # Création du MNT corrigé
-    print('Creation du MNT corrigé')
-    wbt.breach_depressions_least_cost(dem=input, output=output, dist=size, fill=filling)
-    print('Terminé')
-    print()
-
-
-def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp, size_breach, rep_output):
+def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp, rep_output):
 
     # Vérification des fichiers déjà présents dans le répertoire
     manquants = [path for path in liste_path_feuillets if not os.path.exists(path)]
@@ -145,10 +129,6 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
     raster_buffer = os.path.join(rep_output, '{}_buffer.tif'.format(feuillet))
     creation_buffer_raster(path_feuillet, mosaique, distance_buffer, raster_buffer, epsg)
 
-    # Brèchage et remplissage du MNT
-    print('Brèchage, remplissage...')
-    breachDepressionLeastCost(raster_buffer, raster_buffer, size_breach, True)
-
     # Suppression des fichiers temporaires (mnt rééchantillonnés, mosaique)
     print('Suppression des fichiers temporaires...')
     for files in liste_resample:
@@ -175,4 +155,4 @@ if __name__ == '__main__':
 
     # Prétraitements
     pretraitements(feuillet=feuillet, liste_path_feuillets=liste_path, distance_buffer=distance_buffer,
-                   size_resamp=size_resamp, size_breach=size_breach, rep_output=rep_output)
+                   size_resamp=size_resamp, rep_output=rep_output)
