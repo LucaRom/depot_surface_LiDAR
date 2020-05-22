@@ -17,73 +17,84 @@ def selection_mnt(feuillet, path_index, col_feuillet):
 
 
 def download_ftp(ftpparent, ftpdirectory, liste_files, rep_output):
+
+    # Vérification des fichiers déjà présents dans le répertoire
     print('liste des MNT adjacents: {}'.format(liste_files))
+    liste_path = []
     deja_present = []
-    for i in liste_files:
-        if os.path.exists(os.path.join(rep_output, 'MNT_{}.tif'.format(i))):
-            deja_present.append(i)
+    for root, dir, files in os.walk(rep_output):
+        for i in liste_files:
+            for j in files:
+                if i in j:
+                    deja_present.append(i)
+                    liste_path.append(os.path.join(root, j))
+
     liste_files = [i for i in liste_files if i not in deja_present]
     print('liste des MNT à télécharger: {}'.format(liste_files))
 
-    with FTP(ftpdirectory) as ftp:
-        ftp.login()
-        ftp.retrlines("LIST")
-        ftp.cwd(ftpparent)
-        listing = []
-        ftp.retrlines("MLSD", listing.append)
+    if len(liste_files) > 0:
+        with FTP(ftpdirectory) as ftp:
+            ftp.login()
+            ftp.retrlines("LIST")
+            ftp.cwd(ftpparent)
+            listing = []
+            ftp.retrlines("MLSD", listing.append)
 
-        liste_rep_ordre = sorted([i.split(';') for i in listing], key=lambda liste: liste[-1])
+            liste_rep_ordre = sorted([i.split(';') for i in listing], key=lambda liste: liste[-1])
 
-        for rep in liste_rep_ordre:
+            for rep in liste_rep_ordre:
 
-            if rep[0].strip() == 'Type=dir' and rep[-1].strip() in [i[:3] for i in liste_files]:
-                num = rep[-1].strip()
+                if rep[0].strip() == 'Type=dir' and rep[-1].strip() in [i[:3] for i in liste_files]:
+                    num = rep[-1].strip()
 
-                print('{} dans la liste des répertoire voulus'.format(num))
-                print('Parcours du repertoire {}'.format(num))
+                    print('{} dans la liste des répertoire voulus'.format(num))
+                    print('Parcours du repertoire {}'.format(num))
 
-                ftp.cwd(rep[-1].strip())
-                liste_file = []
-                ftp.retrlines("MLSD", liste_file.append)
+                    ftp.cwd(rep[-1].strip())
+                    liste_file = []
+                    ftp.retrlines("MLSD", liste_file.append)
 
-                liste_feuillet_ordre = sorted([i.split(';') for i in liste_file], key=lambda liste: liste[-1])
+                    liste_feuillet_ordre = sorted([i.split(';') for i in liste_file], key=lambda liste: liste[-1])
 
-                for rep_feuillet in liste_feuillet_ordre:
+                    for rep_feuillet in liste_feuillet_ordre:
 
-                    if rep_feuillet[0].strip() == 'Type=dir' and rep_feuillet[-1].strip() in liste_files:
+                        if rep_feuillet[0].strip() == 'Type=dir' and rep_feuillet[-1].strip() in liste_files:
 
-                        num_rep = rep_feuillet[-1].strip()
+                            num_rep = rep_feuillet[-1].strip()
 
-                        print('{} dans la liste des MNT voulus'.format(num_rep))
-                        print('Parcours du repertoire {}'.format(num_rep))
+                            print('{} dans la liste des MNT voulus'.format(num_rep))
+                            print('Parcours du repertoire {}'.format(num_rep))
 
-                        ftp.cwd(rep_feuillet[-1].strip())
-                        liste_file = []
-                        ftp.retrlines("MLSD", liste_file.append)
+                            ftp.cwd(rep_feuillet[-1].strip())
+                            liste_file = []
+                            ftp.retrlines("MLSD", liste_file.append)
 
-                        for files in liste_file:
-                            info_file = files.split(';')
-                            fichier_mnt = info_file[-1].strip()
+                            for files in liste_file:
+                                info_file = files.split(';')
+                                fichier_mnt = info_file[-1].strip()
 
-                            if fichier_mnt == 'MNT_{}.tif'.format(num_rep):
+                                if fichier_mnt == 'MNT_{}.tif'.format(num_rep):
 
-                                print('fichier MNT: {} trouvé'.format(fichier_mnt))
-                                print('début du téléchargement')
+                                    print('fichier MNT: {} trouvé'.format(fichier_mnt))
+                                    print('début du téléchargement')
 
-                                #output_dir = os.path.join(rep_output, num_rep[:5])
-                                if not os.path.exists(rep_output):
-                                    print('création du répertoire {}'.format(rep_output))
-                                    os.makedirs(output)
+                                    output_dir = os.path.join(rep_output, num_rep[:5])
+                                    if not os.path.exists(output_dir):
+                                        print('création du répertoire {}'.format(output_dir))
+                                        os.makedirs(output_dir)
 
-                                local_filename = os.path.join(rep_output, fichier_mnt)
-                                lf = open(local_filename, "wb")
-                                ftp.retrbinary("RETR " + fichier_mnt, lf.write, 8 * 1024)
-                                lf.close()
+                                    local_filename = os.path.join(rep_output, fichier_mnt)
+                                    lf = open(local_filename, "wb")
+                                    ftp.retrbinary("RETR " + fichier_mnt, lf.write, 8 * 1024)
+                                    lf.close()
 
-                                print('Fin du téléchargement')
-                                print()
+                                    liste_path.append(local_filename)
 
-                        ftp.cwd('..')
+                                    print('Fin du téléchargement')
+                                    print()
+
+                            ftp.cwd('..')
+    return liste_path
 
 
 def download_mnt(feuillet, path_index, col_feuillet, ftpparent, ftpdirectory, output):
@@ -92,7 +103,8 @@ def download_mnt(feuillet, path_index, col_feuillet, ftpparent, ftpdirectory, ou
     liste = selection_mnt(feuillet, path_index, col_feuillet)
 
     # Téléchargement des MNT
-    download_ftp(ftpparent, ftpdirectory, liste, output)
+    fichiers = download_ftp(ftpparent, ftpdirectory, liste, output)
+    return fichiers
 
 
 if __name__ == '__main__':
@@ -108,5 +120,5 @@ if __name__ == '__main__':
     # répertoire output
     output = r'C:\Users\home\Documents\Documents\APP2\mnt\31H02NE'
 
-    download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
+    mnts = download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
                  ftpparent=ftpparent, ftpdirectory=ftpdirectory, output=output)
