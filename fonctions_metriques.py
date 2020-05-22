@@ -11,7 +11,7 @@ def run_command(command):
     :return: Affiche les output de la console en temps réel tant que le processus n'est pas fini (process.poll() est None)
     '''
     # On passe la commande dans le terminal
-    process = subprocess.Popen(command, stdout=subprocess.PIPE)
+    process = subprocess.Popen(command, stdout=subprocess.PIPE, shell=True)
     while True:
         # On itère dans le output tant que le code de sortie est None. Si une nouvelle ligne apparaît, on l'affiche
         output = process.stdout.readline()
@@ -44,31 +44,7 @@ def textures_glcm(path_r, path_script, input, output, metrique, kernel):
     run_command(commande)
 
 
-def resampling_cubic_spline(input, output, size):
-
-    # Création des répertoire de sortie
-    head_output = os.path.dirname(output)
-    if not os.path.exists(head_output):
-        os.makedirs(head_output)
-
-    # ouverture des images et extraction des dimensions
-    print('Ouverture {}'.format(input))
-    dataset = gdal.Open(input, gdal.GA_ReadOnly)
-    largeur, hauteur = (dataset.RasterXSize, dataset.RasterYSize)
-    proj = dataset.GetProjection()
-    crs = osr.SpatialReference()
-    crs.ImportFromWkt(proj)
-
-    # Resampling
-    print('Resampling...')
-    warp_object = gdal.WarpOptions(width=largeur / size, height=hauteur / size, resampleAlg=3, srcSRS=crs, dstSRS=crs)
-    gdal.Warp(destNameOrDestDS=output, srcDSOrSrcDSTab=input, options=warp_object)
-    print('Terminé')
-    print()
-
-
-
-def breachDepression(dem, output):
+def breachDepressionLeastCost(input, output, size, filling):
 
     wbt = whitebox.WhiteboxTools()
     wbt.verbose = False
@@ -80,7 +56,7 @@ def breachDepression(dem, output):
 
     # Création du MNT corrigé
     print('Creation du MNT corrigé')
-    wbt.breach_depressions(dem, output)
+    wbt.breach_depressions_least_cost(dem=input, output=output, dist=size, fill=filling)
     print('Terminé')
     print()
 
