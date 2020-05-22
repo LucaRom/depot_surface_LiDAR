@@ -1,6 +1,7 @@
 import rasterio, os
 from osgeo import gdal, osr
 from rasterio.merge import merge
+from rasterio.mask import mask
 from ech_pixel import raster_calculation, creation_raster, creation_buffer, conversion_polygone, delete_border
 import whitebox
 
@@ -66,6 +67,31 @@ def creation_mosaique(liste_mnt, output, epsg):
             files.close()
 
 
+def getFeatures(gdf):
+    """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
+    import json
+    return [json.loads(gdf.to_json())['features'][0]['geometry']]
+
+
+def clip_raster_to_polygon(input_raster, input_polygon, epsg, output):
+
+    with rasterio.open(input_raster) as raster:
+        coords = getFeatures(input_polygon)
+        out_img, out_transform = mask(dataset=raster, shapes=coords, crop=True)
+        out_meta = raster.meta.copy()
+        out_meta.update({"driver": "GTiff",
+                         "height": out_img.shape[1],
+                         "width": out_img.shape[2],
+                         "transform": out_transform,
+                         "crs": epsg
+                         })
+
+        with rasterio.open(output, "w", **out_meta) as dest:
+            dest.write(out_img)
+            dest.close()
+        raster.close()
+
+
 def creation_buffer_raster(input_raster, input_mosaic, distance, output, epsg):
 
     # Transormation du MNT en en valeurs 0 pour simplifier la polygonisation
@@ -85,7 +111,7 @@ def creation_buffer_raster(input_raster, input_mosaic, distance, output, epsg):
     buff.to_file(path_buff)
 
     # Clip de la mosaique au buffer
-    clip = gdal.Warp(output, input_mosaic, cutlineDSName=path_buff)
+    clip_raster_to_polygon(input_mosaic, buff, epsg, output)
 
 
 
