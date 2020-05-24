@@ -357,10 +357,12 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     :return: Couche de points échantillonnés aléatoirement sur le MNT avec les valeurs des métriques comme attribut (shp)
     '''
 
+    print('***ÉCHANTILLONNAGE PAR PIXEL***')
+
     # Lecture de la couche de dépôts et extraction du code EPSG
     print('Lecture et extraction EPSG...')
     depot = gpd.read_file(path_depot)
-    epsg = int(str(depot.crs))
+    epsg = str(depot.crs)
 
     # Regroupement de la couche de dépôts
     print('Regroupement couche de dépôts...')
