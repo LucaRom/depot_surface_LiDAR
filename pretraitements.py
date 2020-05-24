@@ -43,17 +43,18 @@ def creation_mosaique(liste_mnt, output, epsg):
 
     # Ouverture des raster avec rasterio
     with liste_mosaic(rasterio.open(mnt) for mnt in liste_mnt) as liste_mosaic:
+        # Extraction du feuillet principal
         # Création de la mosaique
         mosaique, out_trans = merge(liste_mosaic)
         # Affichage de la mosaique
         #show(mosaique, cmap='terrain')
         out_meta = liste_mosaic[0].meta.copy()
-        # Update les metadata
+        #Update les metadata
         out_meta.update({"driver": "GTiff",
                          "height": mosaique.shape[1],
                           "width": mosaique.shape[2],
                           "transform": out_trans,
-                          "crs": epsg
+                          #"crs": epsg
                           }
                         )
 
@@ -92,7 +93,7 @@ def clip_raster_to_polygon(input_raster, input_polygon, epsg, output):
         raster.close()
 
 
-def creation_buffer_raster(input_raster, input_mosaic, distance, output, epsg):
+def creation_buffer_raster(input_raster, input_mosaic, distance, epsg, output):
 
     # Transormation du MNT en en valeurs 0 pour simplifier la polygonisation
     mnt0 = raster_calculation(input_raster)
@@ -107,15 +108,15 @@ def creation_buffer_raster(input_raster, input_mosaic, distance, output, epsg):
 
     # Création du buffer autour du cadre
     buff = creation_buffer(cadre, distance, epsg, 3, 2)
-    path_buff = "/vsimem/buffer.shp"
-    buff.to_file(path_buff)
 
-    # Clip de la mosaique au buffer
+    #Clip de la mosaique au buffer
     clip_raster_to_polygon(input_mosaic, buff, epsg, output)
 
 
 
 def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp, rep_output):
+
+    print('***PRÉTRAITEMENTS***')
 
     # Vérification des fichiers déjà présents dans le répertoire
     manquants = [path for path in liste_path_feuillets if not os.path.exists(path)]
@@ -133,12 +134,17 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
         resampling_cubic_spline(i, resampled, size_resamp)
         liste_resample.append(resampled)
 
-    # Identification du path du feuillet et de son crs
+    # Identification du path du feuillet et on le place en premier dans la liste pour créer la mosaique
     path_feuillet = ''
     for path in liste_resample:
         if feuillet in path:
-            path_feuillet = path
+            index_feuillet = liste_resample.index(path)
+            path_feuillet = liste_resample[index_feuillet]
+            first = liste_resample[0]
+            liste_resample[index_feuillet] = first
+            liste_resample[0] = path_feuillet
 
+    # Identification du crs
     epsg = ''
     with rasterio.open(path_feuillet) as principal:
         epsg = principal.crs
@@ -152,13 +158,17 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
 
     # Création du buffer autour du feuillet principal
     print('Création du buffer...')
-    raster_buffer = os.path.join(rep_output, '{}_buffer.tif'.format(feuillet))
-    creation_buffer_raster(path_feuillet, mosaique, distance_buffer, raster_buffer, epsg)
+    rep_raster_buffer = os.path.join(rep_output, feuillet[:-2])
+    if not os.path.exists(rep_raster_buffer):
+        os.makedirs(rep_raster_buffer)
+    raster_buffer = os.path.join(rep_raster_buffer,'{}_buffer.tif'.format(feuillet))
+    creation_buffer_raster(path_feuillet, mosaique, distance_buffer, epsg, raster_buffer)
 
     # Suppression des fichiers temporaires (mnt rééchantillonnés, mosaique)
     print('Suppression des fichiers temporaires...')
     for files in liste_resample:
-        os.remove(files)
+        if feuillet not in files:
+            os.remove(files)
     os.remove(mosaique)
 
     print('Terminé')
