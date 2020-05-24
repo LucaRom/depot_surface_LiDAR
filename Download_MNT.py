@@ -30,9 +30,10 @@ def download_ftp(ftpparent, ftpdirectory, liste_files, rep_output):
                     liste_path.append(os.path.join(root, j))
 
     liste_files = [i for i in liste_files if i not in deja_present]
-    print('liste des MNT à télécharger: {}'.format(liste_files))
+
 
     if len(liste_files) > 0:
+        print('liste des MNT à télécharger: {}'.format(liste_files))
         with FTP(ftpdirectory) as ftp:
             ftp.login()
             ftp.retrlines("LIST")
@@ -98,6 +99,8 @@ def download_ftp(ftpparent, ftpdirectory, liste_files, rep_output):
 
 
 def download_mnt(feuillet, path_index, col_feuillet, ftpparent, ftpdirectory, output):
+
+    print('***VÉRIFICATION DES IMAGES NÉCESSAIRES ET TÉLÉCHARGEMENT***')
 
     # Création de la liste des MNT à télécharger
     liste = selection_mnt(feuillet, path_index, col_feuillet)
