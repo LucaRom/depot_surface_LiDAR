@@ -2,105 +2,91 @@ from fonctions_metriques import *
 import os
 
 
-def creation_metriques(rep_mnt, rep_output, path_r, path_script):
+def creation_metriques(mnt, feuillet, rep_output, path_r, path_script):
 
-    # Création des répertoire de sortie et temporaires
+    print('***CRÉATION DES MÉTRIQUES***')
+
+    # répertoire temporaire
     temp = os.path.join(rep_output, 'temp')
 
-    for parent, dossier, fichier in os.walk(rep_mnt):
-        for image in fichier:
+    # # Extraction du nom du feuillet
+    # feuillet = os.path.basename(mnt).split('_')[0]
 
-        # Image de base input
-            print('Ouverture image {}'.format(image))
-            mntBuff = os.path.join(parent, image)
+    # # Repertoire de sortie des metrique
+    # dir_metrique =os.path.join(rep_output, division_feuillet)
 
-        # Extraction du nom du feuillet
-            feuillet = image.split('_')[0][:-2]
-            division_feuillet = image.split('_')[0]
+    # Création du TPI relatif avec un kernel de 200m
+    TPI = os.path.join(rep_output, 'TPI_WB_{}.tif'.format(feuillet))
+    relative_TPI(mnt, TPI, 40)
 
-        # Repertoire de sortie des metrique
-            #dir_metrique = os.path.join(main_dir, 'Metriques', '{}'.format(image.split('_')[3].split('.')[0][:-2]), '{}'.format(image.split('_')[3].split('.')[0]))
-            dir_metrique =os.path.join(rep_output, feuillet, division_feuillet)
+    # Correction hydrologique, breach depressions pour le calcul du SCA
+    MNTBreachDepression = os.path.join(temp, 'MNT_BD_{}.tif'.format(feuillet))
+    breachDepressionLeastCost(mnt, MNTBreachDepression, 40, True)
 
-        # Création du TPI relatif avec un kernel de 200
-            TPI = os.path.join(dir_metrique, 'TPI_WB_{}.tif'.format(division_feuillet))
-            relative_TPI(mntBuff, TPI, 40)
+    # Création du SCA
+    sca = os.path.join(temp, 'SCA_{}.tif'.format(feuillet))
+    SCA(MNTBreachDepression, sca)
 
-        # Correction hydrologique, breach depressions pour le calcul du SCA
-            MNTBreachDepression = os.path.join(temp, 'MNT_BD_{}.tif'.format(division_feuillet))
-            breachDepressionLeastCost(mntBuff, MNTBreachDepression, 40, True)
+    # Création de la pente
+    pente = os.path.join(rep_output, 'Pen_WB_{}.tif'.format(feuillet))
+    slope(mnt, pente)
 
-        # Création du SCA
-            sca = os.path.join(temp, 'SCA_{}.tif'.format(division_feuillet))
-            SCA(MNTBreachDepression, sca)
+    # Creation du TWI
+    twi = os.path.join(rep_output, 'TWI_WB_{}.tif'.format(feuillet))
+    TWI(pente, sca, twi)
 
-        # Création de la pente
-            pente = os.path.join(dir_metrique, 'Pen_WB_{}.tif'.format(division_feuillet))
-            slope(mntBuff, pente)
+    # Creation du profile Curvature
+    profCur = os.path.join(rep_output, 'PC_WB_{}.tif'.format(feuillet))
+    profile_curvature(mnt, profCur)
 
-        # Creation du TWI
-            twi = os.path.join(dir_metrique, 'TWI_WB_{}.tif'.format(division_feuillet))
-            TWI(pente, sca, twi)
+    # Creation du Circular Variance of Aspect
+    cirVar = os.path.join(rep_output, 'CVA_WB_{}.tif'.format(feuillet))
+    CircularVarofAspect(mnt, cirVar, 39)
 
-        # # Creation du plan Curvature
-        #     planCur = os.path.join(dir_metrique, 'PlanCur_WB_{}.tif'.format(image.split('_')[3][:-4]))
-        #     plan_curvature(mnt55, planCur)
+    # Création du Spherical Std Deviation of Normals
+    sphStd = os.path.join(rep_output, 'SSDN_WB_{}.tif'.format(feuillet))
+    sphericalStdDevNormals(mnt,sphStd, 39)
 
-        # Creation du profile Curvature
-            profCur = os.path.join(dir_metrique, 'PC_WB_{}.tif'.format(division_feuillet))
-            profile_curvature(mntBuff, profCur)
+    # Création du Edge Density
+    edgeDensity = os.path.join(rep_output, 'ED_WB_{}.tif'.format(feuillet))
+    EdgeDensity(mnt, edgeDensity, 40, 5)
 
-        # # Creation du tangential Curvature
-        #     tanCur = os.path.join(dir_metrique, 'tanCur_WB_{}.tif'.format(division_feuillet))
-        #     tan_curvature(mntBuff, tanCur)
+    # Création du Downslope Index
+    DownslopeInd = os.path.join(rep_output, 'DI_WB_{}.tif'.format(feuillet))
+    Downslope_Ind(MNTBreachDepression, DownslopeInd)
 
-        # Creation du Circular Variance of Aspect
-            cirVar = os.path.join(dir_metrique, 'CVA_WB_{}.tif'.format(division_feuillet))
-            CircularVarofAspect(mntBuff, cirVar, 39)
+    # Création du Average Normal Vector Angular Deviation
+    avrNor = os.path.join(rep_output, 'ANVAD_WB_{}.tif'.format(feuillet))
+    AverNormVectAngDev(mnt, avrNor, 40)
 
-        # Création du Spherical Std Deviation of Normals
-            sphStd = os.path.join(dir_metrique, 'SSDN_WB_{}.tif'.format(division_feuillet))
-            sphericalStdDevNormals(mntBuff,sphStd, 39)
+    # Création des métriques de textures d'haralick (moyenne, correlation, contraste)
+    # moyenne
+    mean = os.path.join(rep_output, 'MeaH_GLCM_{}.tif'.format(feuillet))
+    textures_glcm(path_r, path_script, mnt, mean, '1', '39')
 
-        # Création du Edge Density
-            edgeDensity = os.path.join(dir_metrique, 'ED_WB_{}.tif'.format(division_feuillet))
-            EdgeDensity(mntBuff, edgeDensity, 40, 5)
+    # correlation
+    corel = os.path.join(rep_output, 'CorH_GLCM_{}.tif'.format(feuillet))
+    textures_glcm(path_r, path_script, mnt, corel, '2', '39')
 
-        # Création du Downslope Index
-            DownslopeInd = os.path.join(dir_metrique, 'DI_WB_{}.tif'.format(division_feuillet))
-            Downslope_Ind(MNTBreachDepression, DownslopeInd)
+    # contraste
+    cont = os.path.join(rep_output, 'ConH_GLCM_{}.tif'.format(feuillet))
+    textures_glcm(path_r, path_script, mnt, cont, '3', '39')
 
-        # Création du Average Normal Vector Angular Deviation
-            avrNor = os.path.join(dir_metrique, 'ANVAD_WB_{}.tif'.format(division_feuillet))
-            AverNormVectAngDev(mntBuff, avrNor, 40)
-
-        # Création des métriques de textures d'haralick (moyenne, correlation, contraste)
-            # moyenne
-            mean = os.path.join(dir_metrique, 'MeaH_GLCM_{}.tif'.format(division_feuillet))
-            textures_glcm(path_r, path_script, mntBuff, mean, '1', '39')
-
-            # correlation
-            corel = os.path.join(dir_metrique, 'CorH_GLCM_{}.tif'.format(division_feuillet))
-            textures_glcm(path_r, path_script, mntBuff, corel, '2', '39')
-
-            # contraste
-            cont = os.path.join(dir_metrique, 'ConH_GLCM_{}.tif'.format(division_feuillet))
-            textures_glcm(path_r, path_script, mntBuff, cont, '3', '39')
-
-        # Suppresion des éléments du répertoire temporaire
-            print('Suppression des fichiers temporaires...')
-            for file in os.listdir(temp):
-                os.remove(os.path.join(temp,file))
-
-
+    # Suppresion des éléments du répertoire temporaire
+    print('Suppression des fichiers temporaires...')
+    for file in os.listdir(temp):
+        os.remove(os.path.join(temp,file))
     else:
+        os.rmdir(temp)
         print('Toutes les métriques ont été créées')
 
 
 if __name__ == '__main__':
 
-    # Chemin vers le répertoire contenant les mnt à traiter
-    rep_mnt = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer'
+    # Chemin vers le mnt à traiter
+    mnt = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\31H02\31H02NE_buffer.tif'
+    # feuillet
+    feuillet = '31H02NE'
     # Chemin vers le répertoire output des métriques
     rep_output = r'C:\Users\home\Documents\Documents\APP3\metriques'
     # Chemin vers l'application 'Rscript.exe'
@@ -113,6 +99,6 @@ if __name__ == '__main__':
     path_mod = r'C:\Users\home\Documents\Documents\APP3\saga-7.6.3_x64\saga-7.6.3_x64\tools'
 
     # Création des métriques
-    creation_metriques(rep_mnt=rep_mnt, rep_output=rep_output, path_r=path_r, path_script=path_script)
+    creation_metriques(mnt=mnt, feuillet=feuillet, rep_output=rep_output, path_r=path_r, path_script=path_script)
 
 
