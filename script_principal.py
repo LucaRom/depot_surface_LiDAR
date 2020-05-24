@@ -4,8 +4,8 @@ from production_metriques import creation_metriques
 from ech_pixel import echantillonnage_pix
 import os
 
-feuillet = '32D06NE'
 
+feuillet = '31H02NE'
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
 
@@ -21,17 +21,15 @@ distance_buffer = 1000  # Distance pour le buffer autour du raster
 size_resamp = 5  # Taille de rééchantillonnage
 rep_mnt_buff = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer'
 
-
 # Intrants pour la production de métriques
 rep_metriques = os.path.join(root_dir, 'inputs/tiffs', feuillet)  # Chemin vers le répertoire output des métriques
-# rep_metriques = r'C:\Users\home\Documents\Documents\APP3\metriques'
+mntbuff = os.path.join(rep_mnt_buff, feuillet[:-2], '{}_buffer.tif'.format(feuillet))
 path_r = r"C:\Program Files\R\R-3.6.3\bin\Rscript.exe"  # Chemin vers l'application 'Rscript.exe'
 path_script = r"C:\Users\home\Documents\Documents\APP2\haralick.R"  # Chemin vers le script 'haralick.R'
 
 # Intrants pour l'échantillonnage par pixel
-path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zones_depots_glaciolacustres_31H02SE_MTM8.shp'  ## Chemins des couches du MNT et de la couche de dépôts
-path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02SE_5x5.tif'
-path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'
+path_depot = os.path.join(root_dir, 'inputs/depots', feuillet, 'zones_depots_glaciolacustres_{}_MTM8_reg.shp'.format(feuillet))  ## Chemins des couches du MNT et de la couche de dépôts
+path_mnt = os.path.join(rep_mnt_buff, 'MNT_{}_resample.tif'.format(feuillet))
 echant = os.path.join(os.path.join(root_dir, 'inputs/inputs_modele_avril2020', 'ech_{}.shp'.format(feuillet)))
 
 
@@ -44,9 +42,16 @@ pretraitements(feuillet=feuillet, liste_path_feuillets=mnts, distance_buffer=dis
                size_resamp=size_resamp, rep_output=rep_mnt_buff)
 
 # Création des métriques
-creation_metriques(rep_mnt=rep_mnt_buff, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
+creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
 
 
 # Échantillonnage par pixel
-echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=path_metriques,
+echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
                     output=echant, nbPoints=2000, minDistance=500)
+
+# Suppression des fichiers
+for files in os.listdir(rep_mnt_buff):
+    path = os.path.join(rep_mnt_buff, files)
+    if os.path.isdir(path) is False:
+        os.remove(path)
+
