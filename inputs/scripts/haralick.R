@@ -10,12 +10,12 @@ metrique <- args[3]
 kernel <- strtoi(args[4])
 
 
-# On verifie si les packages necessaires sont installes, sinon on les intstalle
+# On verifie si les packages necessaires sont installes, sinon on les installe
 print('Vérification des packages nécessaire..')
 packages <- c("raster", "rgdal", "sp", "glcm")
 if (length(setdiff(packages, rownames(installed.packages()))) > 0) {
   print('installation...')
-  install.packages(setdiff(packages, rownames(installed.packages())))
+  install.packages(setdiff(packages, rownames(installed.packages())), repos = "http://cran.us.r-project.org")
 }
 
 require(raster)

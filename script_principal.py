@@ -48,7 +48,7 @@ creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, pat
 
 # Échantillonnage par pixel
 echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
-                    output=echant, nbPoints=2000, minDistance=500)
+                    output=echant, nbPoints=4000, minDistance=500)
 
 # Suppression des fichiers
 for files in os.listdir(rep_mnt_buff):
