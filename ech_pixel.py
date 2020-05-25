@@ -217,7 +217,7 @@ def conversion_polygone (dataset, output):
     dst_layername = os.path.join(output)
     drv = ogr.GetDriverByName('ESRI Shapefile')
     dst_ds = drv.CreateDataSource(dst_layername)
-    srs = ogr.osr.SpatialReference(wkt=prj)
+    srs = osr.SpatialReference(wkt=prj)
     dst_layer = dst_ds.CreateLayer(dst_layername, srs=srs)
     raster_field = ogr.FieldDefn('id', type_mapping[srcband.DataType])
 
