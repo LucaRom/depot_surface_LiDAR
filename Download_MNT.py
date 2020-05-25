@@ -84,7 +84,7 @@ def download_ftp(ftpparent, ftpdirectory, liste_files, rep_output):
                                         print('création du répertoire {}'.format(output_dir))
                                         os.makedirs(output_dir)
 
-                                    local_filename = os.path.join(rep_output, fichier_mnt)
+                                    local_filename = os.path.join(output_dir, fichier_mnt)
                                     lf = open(local_filename, "wb")
                                     ftp.retrbinary("RETR " + fichier_mnt, lf.write, 8 * 1024)
                                     lf.close()
