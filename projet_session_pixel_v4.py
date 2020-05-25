@@ -2,7 +2,8 @@
 
 """
 Created on Wed Jan 2020
-@author: Luca Romanini
+@authors: David Ethier  david.ethier2@usherbrooke.ca
+          Luca Romanini luca.romanini@usherbrooke.ca
 
 """
 
