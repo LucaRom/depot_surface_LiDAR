@@ -440,7 +440,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
 if __name__ == "__main__":
 
-    Chemins des couches du MNT et de la couche de dépôts
+    # Chemins des couches du MNT et de la couche de dépôts
     path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zones_depots_glaciolacustres_31H02SE_MTM8.shp'
     path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02SE_5x5.tif'
     path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'

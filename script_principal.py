@@ -5,7 +5,7 @@ from ech_pixel import echantillonnage_pix
 import os
 
 
-feuillet = '31H02SE'
+feuillet = '31H02NE'
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Intrants pour le téléchargement
@@ -29,10 +29,9 @@ path_r = r"E:\Program Files\R\R-3.6.1\bin\Rscript.exe"  # Chemin vers l'applicat
 path_script = os.path.join(root_dir, 'inputs/scripts/haralick.R') # Chemin vers le script 'haralick.R'
 
 # Intrants pour l'échantillonnage par pixel
-path_depot = os.path.join(root_dir, 'inputs/depots', feuillet, 'zones_depots_glaciolacustres_{}_MTM8.shp'.format(feuillet))  ## Chemins des couches du MNT et de la couche de dépôts
+path_depot = os.path.join(root_dir, 'inputs/depots', feuillet, 'zones_depots_glaciolacustres_{}_MTM8.shp'.format(feuillet))  # Chemins des couches du MNT et de la couche de dépôts
 path_mnt = os.path.join(rep_mnt_buff, 'MNT_{}_resample.tif'.format(feuillet))
-echant = os.path.join(os.path.join(root_dir, 'inputs/inputs_modele_avril2020', 'ech_{}.shp'.format(feuillet)))
-
+echant = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel', 'ech_{}.shp'.format(feuillet)))
 
 # Téléchargement des MNT si nécessaire
 mnts = download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
