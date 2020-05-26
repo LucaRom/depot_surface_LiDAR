@@ -2,6 +2,7 @@ from Download_MNT import download_mnt
 from pretraitements import pretraitements
 from production_metriques import creation_metriques
 from ech_pixel import echantillonnage_pix
+from fonctions_modele import entrainement, classification
 import os
 
 
@@ -33,21 +34,29 @@ path_depot = os.path.join(root_dir, 'inputs/depots', feuillet, 'zones_depots_gla
 path_mnt = os.path.join(rep_mnt_buff, 'MNT_{}_resample.tif'.format(feuillet))
 echant = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel', 'ech_{}.shp'.format(feuillet)))
 
-# Téléchargement des MNT si nécessaire
-mnts = download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
-                    ftpparent=ftpparent, ftpdirectory=ftpdirectory, output=rep_mnt)
+# Intrants pour l'entraînement du model
+metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
+inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel'))
 
-# Prétraitements
-pretraitements(feuillet=feuillet, liste_path_feuillets=mnts, distance_buffer=distance_buffer,
-               size_resamp=size_resamp, rep_output=rep_mnt_buff)
+# # Téléchargement des MNT si nécessaire
+# mnts = download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
+#                     ftpparent=ftpparent, ftpdirectory=ftpdirectory, output=rep_mnt)
 
-# Création des métriques
-creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
+# # Prétraitements
+# pretraitements(feuillet=feuillet, liste_path_feuillets=mnts, distance_buffer=distance_buffer,
+#                size_resamp=size_resamp, rep_output=rep_mnt_buff)
 
+# # Création des métriques
+# creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
+#
+#
+# # Échantillonnage par pixel
+# echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
+#                     output=echant, nbPoints=4000, minDistance=500)
 
-# Échantillonnage par pixel
-echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
-                    output=echant, nbPoints=4000, minDistance=500)
+# Entrainement du modèle
+entrainement(inputEch=inputEch, metriques=metriques_pixel)
+## AJOUTER LES GRAPHIQUES DANS FONCTIONS MODELES
 
 # Suppression des fichiers
 for files in os.listdir(rep_mnt_buff):
