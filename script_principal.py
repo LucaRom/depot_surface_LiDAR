@@ -2,8 +2,10 @@ from Download_MNT import download_mnt
 from pretraitements import pretraitements
 from production_metriques import creation_metriques
 from ech_pixel import echantillonnage_pix
-from fonctions_modele import entrainement, model_plots
+from fonctions_modele import entrainement, classification, creation_output
 import os
+from osgeo import gdal, osr
+from gdalconst import *
 
 
 feuillet = '31H02NE'
@@ -19,7 +21,6 @@ rep_mnt = os.path.join(root_dir, 'inputs/MNT/originaux') # Répertoire contenant
 # Intrants pour les prétraitements
 distance_buffer = 1000  # Distance pour le buffer autour du raster
 size_resamp = 5  # Taille de rééchantillonnage
-#rep_mnt_buff = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer'
 rep_mnt_buff = os.path.join(root_dir, 'inputs/MNT/resample')
 
 # Intrants pour la production de métriques
@@ -37,6 +38,24 @@ echant = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel'
 metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
 inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel'))
 
+# Intrants pour la classification du modèle
+tiff_path_list = os.listdir(rep_metriques)  # Liste des fichiers
+# On crée une liste avec toutes les images lues
+tiffs_list = []
+for i in tiff_path_list:
+    if i.endswith('.tif'):
+        ds = gdal.Open(os.path.join(rep_metriques, i))
+        tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
+
+# Intrants pour la creation des outputs de prédiction (inclut dans la section "classification de modèle"
+outputdir = os.path.join(root_dir, 'outputs/pixel') # Dossier
+nom_fichier = 'prediction_{}.tif'.format(feuillet)
+
+
+#### FIN DES INTRANTS ####
+
+#### DÉBUT DES TRAITEMENTS ####
+
 # # Téléchargement des MNT si nécessaire
 # mnts = download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
 #                     ftpparent=ftpparent, ftpdirectory=ftpdirectory, output=rep_mnt)
@@ -53,11 +72,17 @@ inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixe
 # echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
 #                     output=echant, nbPoints=4000, minDistance=500)
 
-# Entrainement du modèle
-#entrainement(inputEch=inputEch, metriques=metriques_pixel)
+# Entrainement du modèle et matrice de confusion/importance des métriques
 clf, plt = entrainement(inputEch=inputEch, metriques=metriques_pixel)
 
-## AJOUTER LES GRAPHIQUES DANS FONCTIONS MODELES
+# À mettre à la fin d'entrainement modèle
+print('Fin de l\'entrainement, veuillez fermer les graphiques pour continuer')
+plt.show() # Garder les graphiques ouverts jusqu'à la fin si nécessaire
+
+# Classification avec le modèle et création du fichier résultant
+classif = classification(clf=clf, tiffs_list=tiffs_list)
+creation_output(prediction=classif, outputdir=outputdir, nom_fichier=nom_fichier,
+                inputMet=rep_metriques, tiff_path_list=tiff_path_list)
 
 # Suppression des fichiers
 for files in os.listdir(rep_mnt_buff):
@@ -65,6 +90,3 @@ for files in os.listdir(rep_mnt_buff):
     if os.path.isdir(path) is False:
         os.remove(path)
 
-# À mettre à la fin
-print('Fin du script, veuillez fermer les graphiques pour terminer')
-plt.show() # Garder les graphiques ouverts jusqu'à la fin si nécessaire

@@ -103,15 +103,19 @@ def classification (clf, tiffs_list):
     data2d = np.reshape(met_stack, (rows * cols, bands))
 
     # Prediction du modèle et on le reshape
+    print('Début de la prédiction complète. Cette étape peut prendre plusieurs minutes.')
     prediction = clf.predict(data2d)
     prediction = np.reshape(prediction, (rows, cols))
+    print('Classification terminée.')
 
     return prediction
 
-def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start, logger):
+#def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start, logger):
+def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list):
     # On crée une image GEOTIFF en sortie
-    logger.info('Création du fichier de sortie {}'.format(os.path.join(outputdir, nom_fichier)))
+    #logger.info('Création du fichier de sortie {}'.format(os.path.join(outputdir, nom_fichier)))
 
+    print('Enregistrement du shapefile de sortie')
     # je déclare tous les drivers
     gdal.AllRegister()
     # le driver que je veux utiliser GEOTIFF
@@ -159,12 +163,12 @@ def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_lis
     del band
     del image
 
-    #print("Fin de la classification")
+    print('Fin de l\'enregistrement du fichier shapefile')
 
     # Impression du temps
-    end = time.time()
-    elapsed = end - start
-    print("Elapsed time : %.2f s" % (elapsed))
+    #end = time.time()
+    #elapsed = end - start
+    #print("Elapsed time : %.2f s" % (elapsed))
 
     #### FIN SCRIPT ET PROJET GEOINFO ####
 
@@ -194,49 +198,49 @@ def main():
     logger.addHandler(ch)
 
     logger.info('Début')
-    erreur1 = "Il manque des arguments. Assurez vous de bien avoir fournie les trois arguments -e -m et -o"
-    inputEch, inputMet, outputdir = "","",""   # Paramètres à fournir par l'utilisateur
-
-    # Définition et parcours des options
-    opts = None
-    try:
-        opts, args = getopt.getopt(sys.argv[1:], "hde:m:o:", ["help", "defaultPaths", "inputEchant=","inputMetriques=", "output="])
-        # print(args)
-        # print(opts)
-    except getopt.GetoptError as err:
-        logger.error(erreur1)
-        print(err)
-        print("Pour l'aide, utiliser -h ou --help")
-        sys.exit(2)
-
-    if len(opts) == 0:                       # On teste d'abord s'il n'y a aucun argument
-        logger.error(erreur1)
-        sys.exit(2)
-    elif opts[0][0] in ("-h", "--help"):     # On test si l'utilisateur demande l'aide
-        print("Cette application vous permet d'appliquer un modèle de prédiction sur un MNT\n"
-              "Il faut lui fournir le chemin vers vos dossiers d'entraînement, de métrique et de sortie\n"
-              "Listes des options disponibles en ligne de commande :\n"
-              "-d ou --defaultPaths     Fournie automatique les données nécessaires pour tester le programme\n"
-              "-e ou --inputEchant      Spécifier le chemin vers les données d'échantillonage\n"
-              "-m ou --inputMetriques   Spécifier le chemin vers les données des métriques\n"
-              "-o ou --output           Spécifier le chemin vers le dossier d'enregistrement")
-        sys.exit(2)
-    elif opts[0][0] in ("-d", "--defaultPaths"):     # On test si l'utilisateur veut les chemins par défauts
-        inputEch  = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
-        inputMet  = os.path.join(root_dir, 'inputs/tiffs/31H02NE_50m')
-        outputdir = os.path.join(root_dir, 'outputs/projet_geo_info')
-    elif len(opts) < 3:             # Si l'utilisateur à moins de 3 arguments et n'a pas demandé d'aide
-        logger.error(erreur1)
-        sys.exit(2)
-    else:                                            # Si les trois inputs sont entrées, on part le script
-        for o, a in opts:
-            if o in ("-e", "--inputEchant"):
-                inputEch = a
-            elif o in ("-m", "--inputMetriques"):
-                inputMet = a
-            elif o in ("-o", "--output"):
-                outputdir = a
-        logger.info('\ninputEch: {}\n'.format(inputEch) + 'inputMet: {}\n'.format(inputMet) + 'outputdir: {}\n'.format(outputdir))
+    # erreur1 = "Il manque des arguments. Assurez vous de bien avoir fournie les trois arguments -e -m et -o"
+    # inputEch, inputMet, outputdir = "","",""   # Paramètres à fournir par l'utilisateur
+    #
+    # # Définition et parcours des options
+    # opts = None
+    # try:
+    #     opts, args = getopt.getopt(sys.argv[1:], "hde:m:o:", ["help", "defaultPaths", "inputEchant=","inputMetriques=", "output="])
+    #     # print(args)
+    #     # print(opts)
+    # except getopt.GetoptError as err:
+    #     logger.error(erreur1)
+    #     print(err)
+    #     print("Pour l'aide, utiliser -h ou --help")
+    #     sys.exit(2)
+    #
+    # if len(opts) == 0:                       # On teste d'abord s'il n'y a aucun argument
+    #     logger.error(erreur1)
+    #     sys.exit(2)
+    # elif opts[0][0] in ("-h", "--help"):     # On test si l'utilisateur demande l'aide
+    #     print("Cette application vous permet d'appliquer un modèle de prédiction sur un MNT\n"
+    #           "Il faut lui fournir le chemin vers vos dossiers d'entraînement, de métrique et de sortie\n"
+    #           "Listes des options disponibles en ligne de commande :\n"
+    #           "-d ou --defaultPaths     Fournie automatique les données nécessaires pour tester le programme\n"
+    #           "-e ou --inputEchant      Spécifier le chemin vers les données d'échantillonage\n"
+    #           "-m ou --inputMetriques   Spécifier le chemin vers les données des métriques\n"
+    #           "-o ou --output           Spécifier le chemin vers le dossier d'enregistrement")
+    #     sys.exit(2)
+    # elif opts[0][0] in ("-d", "--defaultPaths"):     # On test si l'utilisateur veut les chemins par défauts
+    #     inputEch  = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
+    #     inputMet  = os.path.join(root_dir, 'inputs/tiffs/31H02NE_50m')
+    #     outputdir = os.path.join(root_dir, 'outputs/projet_geo_info')
+    # elif len(opts) < 3:             # Si l'utilisateur à moins de 3 arguments et n'a pas demandé d'aide
+    #     logger.error(erreur1)
+    #     sys.exit(2)
+    # else:                                            # Si les trois inputs sont entrées, on part le script
+    #     for o, a in opts:
+    #         if o in ("-e", "--inputEchant"):
+    #             inputEch = a
+    #         elif o in ("-m", "--inputMetriques"):
+    #             inputMet = a
+    #         elif o in ("-o", "--output"):
+    #             outputdir = a
+    #     logger.info('\ninputEch: {}\n'.format(inputEch) + 'inputMet: {}\n'.format(inputMet) + 'outputdir: {}\n'.format(outputdir))
 
     #### PARAMETRES INITIAUX ####
 
@@ -254,7 +258,6 @@ def main():
     ## DÉBUT DES TRAITEMENTS####
     # On démarre le compteur pour cette section
     # Calcul du temps
-    start = time.time()
     logger.info('Metriques choisies: {}'.format(metriques))
 
     # Import des images en matrices numpy
