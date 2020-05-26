@@ -5,9 +5,8 @@ from ech_pixel import echantillonnage_pix
 from fonctions_modele import entrainement, classification, creation_output
 import os
 from osgeo import gdal
-import osr
 
-feuillet = '31H02NE'
+feuillet = '31H02SE'
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
 # Intrants pour le téléchargement
