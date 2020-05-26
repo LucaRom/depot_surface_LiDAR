@@ -2,7 +2,7 @@ from Download_MNT import download_mnt
 from pretraitements import pretraitements
 from production_metriques import creation_metriques
 from ech_pixel import echantillonnage_pix
-from fonctions_modele import entrainement, classification
+from fonctions_modele import entrainement, model_plots
 import os
 
 
@@ -14,8 +14,7 @@ ftpdirectory = 'transfert.mffp.gouv.qc.ca'  # site ftp
 ftpparent = r'Public/Diffusion/DonneeGratuite/Foret/IMAGERIE/Produits_derives_LiDAR/'  # répertoire de base
 path_index = os.path.join(root_dir, 'inputs/MNT/index/Index_ProduitsDerive_LiDAR_Sweb.shp')
 col_feuillet = 'FCA_NO_FEU'  # colonne des numéro de feuillet dans la couche index
-#rep_mnt = r'C:\Users\home\Documents\Documents\APP2\mnt'  # Répertoire contenant les MNT téléchargés
-rep_mnt = os.path.join(root_dir, 'inputs/MNT/originaux')
+rep_mnt = os.path.join(root_dir, 'inputs/MNT/originaux') # Répertoire contenant les MNT téléchargés
 
 # Intrants pour les prétraitements
 distance_buffer = 1000  # Distance pour le buffer autour du raster
@@ -55,7 +54,9 @@ inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixe
 #                     output=echant, nbPoints=4000, minDistance=500)
 
 # Entrainement du modèle
-entrainement(inputEch=inputEch, metriques=metriques_pixel)
+#entrainement(inputEch=inputEch, metriques=metriques_pixel)
+clf, plt = entrainement(inputEch=inputEch, metriques=metriques_pixel)
+
 ## AJOUTER LES GRAPHIQUES DANS FONCTIONS MODELES
 
 # Suppression des fichiers
@@ -64,3 +65,6 @@ for files in os.listdir(rep_mnt_buff):
     if os.path.isdir(path) is False:
         os.remove(path)
 
+# À mettre à la fin
+print('Fin du script, veuillez fermer les graphiques pour terminer')
+plt.show() # Garder les graphiques ouverts jusqu'à la fin si nécessaire

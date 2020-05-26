@@ -8,22 +8,52 @@ Created on Wed Jan 2020
 """
 
 # Import des librairies
-from datetime import datetime
 import geopandas as gpd
+import matplotlib.pyplot as plt
 import numpy as np
-import os, osr
+import os
 from osgeo import gdal
 from gdalconst import *
 import pandas as pd
-import time
-import getopt
-import sys
-import configparser
-import logging
 
-# Pour modèle de classification
+from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn import metrics
+
+from sklearn.metrics import confusion_matrix
+from sklearn.metrics import plot_confusion_matrix
+from sklearn.feature_selection import SelectFromModel
+from sklearn.utils import resample
+
+def model_plots(test_y, y_pred, clf, test_metriques, metriques):
+    # Impression de précision
+    accu_mod = metrics.accuracy_score(test_y, y_pred)
+    print("Accuracy:", accu_mod)
+
+    # Matrice de confusion
+    #c_matrice = confusion_matrix(test_y, y_pred)
+
+    disp = plot_confusion_matrix(clf, test_metriques, test_y,
+                                 cmap=plt.cm.Blues,
+                                 values_format='d')
+    disp.ax_.set_title('Matrice de confusion à 12 métriques')
+    plt.xlabel('Réel')
+    plt.ylabel('Prédit')
+
+    # Importances des metriques
+    importances = clf.feature_importances_
+    indices = np.argsort(importances)
+
+    # plot them with a horizontal bar chart
+    plt.figure()  # Crée une nouvelle instance de graphique
+    plt.title('Importances des métriques')
+    plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+    plt.yticks(range(len(indices)), [metriques[i] for i in indices])
+    plt.xlabel('Importance relative (%)')
+    plt.show(block=False)
+
+    return accu_mod, plt
 
 def entrainement (inputEch, metriques):
     # Pour importer un shapefile
@@ -52,9 +82,12 @@ def entrainement (inputEch, metriques):
 
     # Train the model using the training sets y_pred=clf.predict(X_test)
     clf.fit(train_metriques, train_y)     # Model fit sur 70%
-    #y_pred = clf.predict(test_metriques)  # Predicition sur 30%
+    y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
-    return clf
+    # Génération des graphiques (Appel de fonction)
+    model_plots(test_y=test_y, y_pred=y_pred, clf=clf, test_metriques=test_metriques, metriques=metriques)
+
+    return clf, plt
 
     #### FIN ENTRAINEMENT MODELE ####
 
@@ -74,7 +107,6 @@ def classification (clf, tiffs_list):
     prediction = np.reshape(prediction, (rows, cols))
 
     return prediction
-
 
 def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start, logger):
     # On crée une image GEOTIFF en sortie
