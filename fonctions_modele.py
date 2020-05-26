@@ -12,7 +12,8 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from osgeo import gdal, osr
+from osgeo import gdal
+import osr
 from gdalconst import *
 import pandas as pd
 
@@ -115,7 +116,7 @@ def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list
     # On crée une image GEOTIFF en sortie
     #logger.info('Création du fichier de sortie {}'.format(os.path.join(outputdir, nom_fichier)))
 
-    print('Enregistrement du shapefile de sortie')
+    print('Enregistrement du raster de sortie')
     # je déclare tous les drivers
     gdal.AllRegister()
     # le driver que je veux utiliser GEOTIFF
@@ -163,7 +164,8 @@ def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list
     del band
     del image
 
-    print('Fin de l\'enregistrement du fichier shapefile')
+    print('Fin de l\'enregistrement du fichier raster')
+    print('...')
 
     # Impression du temps
     #end = time.time()
