@@ -12,7 +12,7 @@ import geopandas as gpd
 import matplotlib.pyplot as plt
 import numpy as np
 import os
-from osgeo import gdal
+from osgeo import gdal, osr
 from gdalconst import *
 import pandas as pd
 
