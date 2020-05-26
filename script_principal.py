@@ -50,26 +50,26 @@ outputdir = os.path.join(root_dir, 'outputs/pixel') # Dossier
 nom_fichier = 'prediction_{}.tif'.format(feuillet)
 
 
-# #### FIN DES INTRANTS ####
-#
-# #### DÉBUT DES TRAITEMENTS ####
-#
-# # Téléchargement des MNT si nécessaire
-# mnts = download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
-#                     ftpparent=ftpparent, ftpdirectory=ftpdirectory, output=rep_mnt)
-#
-# # Prétraitements
-# pretraitements(feuillet=feuillet, liste_path_feuillets=mnts, distance_buffer=distance_buffer,
-#                size_resamp=size_resamp, rep_output=rep_mnt_buff)
-#
-# # Création des métriques
-# creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
-#
-#
-# # Échantillonnage par pixel
-# echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
-#                     output=echant, nbPoints=4000, minDistance=500)
-#
+#### FIN DES INTRANTS ####
+
+#### DÉBUT DES TRAITEMENTS ####
+
+# Téléchargement des MNT si nécessaire
+mnts = download_mnt(feuillet=feuillet, path_index=path_index, col_feuillet=col_feuillet,
+                    ftpparent=ftpparent, ftpdirectory=ftpdirectory, output=rep_mnt)
+
+# Prétraitements
+pretraitements(feuillet=feuillet, liste_path_feuillets=mnts, distance_buffer=distance_buffer,
+               size_resamp=size_resamp, rep_output=rep_mnt_buff)
+
+# Création des métriques
+creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
+
+
+# Échantillonnage par pixel
+echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
+                    output=echant, nbPoints=4000, minDistance=500)
+
 # Entrainement du modèle et matrice de confusion/importance des métriques
 clf, plt = entrainement(inputEch=inputEch, metriques=metriques_pixel)
 
