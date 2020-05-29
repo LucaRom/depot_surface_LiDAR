@@ -44,6 +44,23 @@ def textures_glcm(path_r, path_script, input, output, metrique, kernel):
     run_command(commande)
 
 
+# def breachDepressionLeastCost(input, output, size, filling):
+#
+#     wbt = whitebox.WhiteboxTools()
+#     wbt.verbose = False
+#
+#     # Création des répertoire de sortie
+#     head_output = os.path.dirname(output)
+#     if not os.path.exists(head_output):
+#         os.makedirs(head_output)
+#
+#     # Création du MNT corrigé
+#     print('Creation du MNT corrigé')
+#     wbt.breach_depressions_least_cost(dem=input, output=output, dist=size, fill=filling)
+#     print('Terminé')
+#     print()
+
+
 def breachDepressionLeastCost(input, output, size, filling):
 
     wbt = whitebox.WhiteboxTools()
@@ -56,10 +73,10 @@ def breachDepressionLeastCost(input, output, size, filling):
 
     # Création du MNT corrigé
     print('Creation du MNT corrigé')
-    wbt.breach_depressions_least_cost(dem=input, output=output, dist=size, fill=filling)
+    # wbt.breach_depressions_least_cost(dem=input, output=output, dist=size, fill=filling)
+    wbt.breach_depressions(dem=input, output=output)
     print('Terminé')
     print()
-
 
 def relative_TPI(input, output, size):
 

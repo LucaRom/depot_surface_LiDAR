@@ -28,10 +28,6 @@ from sklearn.feature_selection import SelectFromModel
 from sklearn.utils import resample
 
 def model_plots(test_y, y_pred, clf, test_metriques, metriques):
-    # Impression de précision
-    accu_mod = metrics.accuracy_score(test_y, y_pred)
-    print("Accuracy:", accu_mod)
-
     # Matrice de confusion
     #c_matrice = confusion_matrix(test_y, y_pred)
 
@@ -76,19 +72,26 @@ def entrainement (inputEch, metriques):
     X_metriques = new_shp[metriques]
 
     # Séparation des données en données d'entrainement et données de tests
-    train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size = 0.30, random_state = 42)
+    #train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size = 0.30, random_state = 42)
+    train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size=0.30)
 
     # Create a Gaussian Classifier
-    clf = RandomForestClassifier(n_estimators = 500, verbose = 2, oob_score = True, random_state = 42)
+    #clf = RandomForestClassifier(n_estimators = 15000, verbose = 2, oob_score = True, random_state = 42)
+    clf = RandomForestClassifier(n_estimators=500, verbose=2, oob_score=True, random_state=42)
 
     # Train the model using the training sets y_pred=clf.predict(X_test)
     clf.fit(train_metriques, train_y)     # Model fit sur 70%
     y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
-    # Génération des graphiques (Appel de fonction)
-    model_plots(test_y=test_y, y_pred=y_pred, clf=clf, test_metriques=test_metriques, metriques=metriques)
+    # Impression de précision
+    accu_mod = metrics.accuracy_score(test_y, y_pred)
+    print("Accuracy:", accu_mod)
 
-    return clf, plt
+    # Génération des graphiques (Appel de fonction)
+    #accu_mod, plt = model_plots(test_y=test_y, y_pred=y_pred, clf=clf, test_metriques=test_metriques, metriques=metriques)
+
+    #return clf, plt, accu_mod
+    return clf, accu_mod
 
     #### FIN ENTRAINEMENT MODELE ####
 

@@ -35,19 +35,19 @@ def creation_metriques(mnt, feuillet, rep_output, path_r, path_script):
     twi = os.path.join(rep_output, 'TWI_WB_{}.tif'.format(feuillet))
     TWI(pente, sca, twi)
 
-    # Creation du profile Curvature
+    ## Creation du profile Curvature
     profCur = os.path.join(rep_output, 'PC_WB_{}.tif'.format(feuillet))
     profile_curvature(mnt, profCur)
 
-    # Creation du Circular Variance of Aspect
+    ## Creation du Circular Variance of Aspect
     cirVar = os.path.join(rep_output, 'CVA_WB_{}.tif'.format(feuillet))
     CircularVarofAspect(mnt, cirVar, 39)
 
-    # Création du Spherical Std Deviation of Normals
+    ## Création du Spherical Std Deviation of Normals
     sphStd = os.path.join(rep_output, 'SSDN_WB_{}.tif'.format(feuillet))
     sphericalStdDevNormals(mnt,sphStd, 39)
 
-    # Création du Edge Density
+    ## Création du Edge Density
     edgeDensity = os.path.join(rep_output, 'ED_WB_{}.tif'.format(feuillet))
     EdgeDensity(mnt, edgeDensity, 40, 5)
 
@@ -55,7 +55,7 @@ def creation_metriques(mnt, feuillet, rep_output, path_r, path_script):
     DownslopeInd = os.path.join(rep_output, 'DI_WB_{}.tif'.format(feuillet))
     Downslope_Ind(MNTBreachDepression, DownslopeInd)
 
-    # Création du Average Normal Vector Angular Deviation
+    ## Création du Average Normal Vector Angular Deviation
     avrNor = os.path.join(rep_output, 'ANVAD_WB_{}.tif'.format(feuillet))
     AverNormVectAngDev(mnt, avrNor, 40)
 
