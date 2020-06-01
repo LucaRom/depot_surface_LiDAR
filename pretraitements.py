@@ -136,6 +136,14 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
         resampling_cubic_spline(i, resampled, size_resamp)
         liste_resample.append(resampled)
 
+
+    # for i in liste_path_feuillets:
+    #     if feuillet in i:
+    #         name = '{}_resample.tif'.format(os.path.basename(i)[:-4])
+    #         resampled = os.path.join(rep_output, name)
+    #         resampling_cubic_spline(i, resampled, size_resamp)
+    #         liste_resample.append(resampled)
+
     # Identification du path du feuillet et on le place en premier dans la liste pour créer la mosaique
     path_feuillet = ''
     for path in liste_resample:
@@ -165,13 +173,13 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
         os.makedirs(rep_raster_buffer)
     raster_buffer = os.path.join(rep_raster_buffer,'{}_buffer.tif'.format(feuillet))
     creation_buffer_raster(path_feuillet, mosaique, distance_buffer, epsg, raster_buffer)
-
+    #
     # Suppression des fichiers temporaires (mnt rééchantillonnés, mosaique)
-    print('Suppression des fichiers temporaires...')
-    for files in liste_resample:
-        if feuillet not in files:
-            os.remove(files)
-    os.remove(mosaique)
+    # print('Suppression des fichiers temporaires...')
+    # for files in liste_resample:
+    #     if feuillet not in files:
+    #         os.remove(files)
+    # os.remove(mosaique)
 
     print('Terminé')
 
