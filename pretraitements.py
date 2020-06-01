@@ -20,11 +20,12 @@ def resampling_cubic_spline(input, output, size):
     proj = dataset.GetProjection()
     crs = osr.SpatialReference()
     crs.ImportFromWkt(proj)
-
+    #width=largeur / size, height=hauteur / size
+    #targetAlignedPixels=True
     # Resampling
     print('Resampling...')
-    warp_object = gdal.WarpOptions(width=largeur / size, height=hauteur / size,
-                                   resampleAlg=3, srcSRS=crs, dstSRS=crs)
+    warp_object = gdal.WarpOptions(xRes=size, yRes=size, targetAlignedPixels=True, resampleAlg=3,
+                                   srcSRS=crs, dstSRS=crs)
     gdal.Warp(destNameOrDestDS=output, srcDSOrSrcDSTab=input, options=warp_object)
 
     dataset = None
@@ -54,7 +55,7 @@ def creation_mosaique(liste_mnt, output, epsg):
                          "height": mosaique.shape[1],
                           "width": mosaique.shape[2],
                           "transform": out_trans,
-                          #"crs": epsg
+                          "crs": epsg
                           }
                         )
 
@@ -66,6 +67,7 @@ def creation_mosaique(liste_mnt, output, epsg):
         # Fermeture des fichiers ouverts
         for files in liste_mosaic:
             files.close()
+
 
 
 def getFeatures(gdf):
@@ -179,7 +181,10 @@ if __name__ == '__main__':
     # Intrants
     feuillet = '31H02NE'
     liste_adj = ['31H08SO', '31H07SO', '31H07SE', '31H02SO', '31H02NO', '31H01NO', '31H01SO', '31H02NE', '31H02SE']
-    path_feuillets = r'C:\Users\home\Documents\Documents\APP2\mnt'
+    #liste_adj = ['31H01SO', '31H02SO', '31H02NO', '31H02NE', '31H01NO', '31H02SE']
+    #liste_adj = ['31H02SE', '31H01SO']
+    #path_feuillets = r'C:\Users\home\Documents\Documents\APP2\mnt'
+    path_feuillets = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\MNT\originaux'
     liste_path = []
     for root, dir, files in os.walk(path_feuillets):
         for i in liste_adj:
