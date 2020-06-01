@@ -10,7 +10,73 @@ from osgeo import ogr, gdal, osr
 from osgeo.gdalnumeric import *
 from osgeo.gdalconst import *
 import os
+import rtree
+import numpy as np
+from shapely.geometry import box, Polygon, MultiPolygon, GeometryCollection
 
+
+def katana(geometry, threshold, count=0):
+
+    """Split a Polygon into two parts across it's shortest dimension
+    Copyright (c) 2016, Joshua Arnott
+    url: https://snorfalorpagus.net/blog/2016/03/13/splitting-large-polygons-for-faster-intersections/"""
+
+    bounds = geometry.bounds
+    width = bounds[2] - bounds[0]
+    height = bounds[3] - bounds[1]
+    if max(width, height) <= threshold or count == 250:
+        # either the polygon is smaller than the threshold, or the maximum
+        # number of recursions has been reached
+        return [geometry]
+    if height >= width:
+        # split left to right
+        a = box(bounds[0], bounds[1], bounds[2], bounds[1]+height/2)
+        b = box(bounds[0], bounds[1]+height/2, bounds[2], bounds[3])
+    else:
+        # split top to bottom
+        a = box(bounds[0], bounds[1], bounds[0]+width/2, bounds[3])
+        b = box(bounds[0]+width/2, bounds[1], bounds[2], bounds[3])
+    result = []
+    for d in (a, b,):
+        c = geometry.intersection(d)
+        if not isinstance(c, GeometryCollection):
+            c = [c]
+        for e in c:
+            if isinstance(e, (Polygon, MultiPolygon)):
+                result.extend(katana(e, threshold, count+1))
+    if count > 0:
+        return result
+    # convert multipart into singlepart
+    final_result = []
+    for g in result:
+        if isinstance(g, MultiPolygon):
+            final_result.extend(g)
+        else:
+            final_result.append(g)
+
+    return final_result
+
+
+# def check_min_distance(point, distance, points):
+#     '''
+#     :param point: Géométrie à comparer avec la couche Points (shapely.Point)
+#     :param distance: Distance minimale à respecter (int)
+#     :param points: Couche de points à comparer avec la géométrie point (GeoDataframe)
+#     :return: vrai si la distance entre le point et la couche de points est inférieure à la distance minimale
+#     '''
+#     if distance == 0:
+#         return True
+#     if len(points) > 0:
+#         index = rtree.index.Index()
+#         index.insert()
+#         pointIndex = points.sindex
+#         nearIndex = list(pointIndex.nearest(point.bounds))
+#         nearest = points.iloc[nearIndex]['geometry'].values[0]
+#
+#         # Comparaison de la distance du point le plus proche à la distance minimale
+#         if nearest[1].distance(point) < distance:
+#             return False
+#     return True
 
 def check_min_distance(point, distance, points):
     '''
@@ -23,8 +89,12 @@ def check_min_distance(point, distance, points):
         return True
     if len(points) > 0:
         # Union de toutes les géométries de la couche points en multipoint
-        uni = points.unary_union
-        # Calcul du point le plus proche
+        # pointIndex = points.sindex
+        # nearIndex = list(pointIndex.nearest(point.bounds))
+        # nearest = points.iloc[nearIndex]['geometry'].values[0]
+        # # uni = pointsCorresp['geometry'].unary_union
+        uni = points['geometry'].unary_union
+        # # Calcul du point le plus proche
         nearest = nearest_points(point, uni)
         # Comparaison de la distance du point le plus proche à la distance minimale
         if len(nearest) == 0:
@@ -52,7 +122,7 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
 
     # Création de la couche de sortie
     #poly = gpd.read_file(input)
-    sample = gpd.GeoDataFrame(columns=['geometry', 'id', 'Zone'])
+    sample = gpd.GeoDataFrame()
     sample.crs = epsg
 
     # On itère dans la couche en entrée
@@ -60,7 +130,18 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
         # Extraction de la géométrie et des limites de la couche
         geom = row['geometry']
         bbox = geom.bounds
-        #index = sample.sindex
+        height = bbox[3] - bbox[1]
+        width = bbox[2] - bbox[0]
+
+        # Subdivision du polygone en plus petits
+        liste_subPoly = katana(geom, 1000)
+        subPoly = gpd.GeoDataFrame()
+        subPoly.crs = epsg
+        subPoly['geometry'] = liste_subPoly
+
+        # On crée un index spatial sur la couche des subdivision
+        indexSub = subPoly.sindex
+
         nPoints = 0
         nIterations = 0
         # Nombre d'itération maximal à faire avant d'arrêter
@@ -68,26 +149,28 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
 
         random.seed()
         pointId = 0
+        liste_points = []
 
         # Tant que le nombre d'itération maximal ou le nombre de points spécifié n'est pas atteint
         while nIterations < maxIterations and nPoints < value:
 
             # On génère un point aléatoire dans les limites de la couche en entrée
-            height = bbox[3] - bbox[1]
-            width = bbox[2] - bbox[0]
             rx = bbox[0] + width * random.random()
             ry = bbox[1] + height * random.random()
 
             p = Point(rx, ry)
 
-            # On vérifie si le point est contenu dans la couche en entrée et si la distance minimale est respectée
-            if p.within(geom) and (not minDistance or check_min_distance(p, minDistance, sample)):
-                    # On ajoute le point à la couche de sortie
-                    sample.loc[nPoints, 'geometry'] = p
-                    sample.loc[nPoints, 'id'] = pointId
-                    sample.loc[nPoints, 'Zone'] = zone
-                    nPoints += 1
-                    pointId += 1
+            # On fait la liste des index qui qui touche au point
+            intersect_possible = list(indexSub.intersection(p.bounds))
+            if len(intersect_possible) > 0:
+
+                # On extrait le polygone correspondant dans la couche des subdivisions
+                polyCorresp = subPoly.iloc[intersect_possible]['geometry'].values[0]
+
+                # On vérifie si le point est contenu dans le polygone et si la distance minimale est respectée
+                if p.within(polyCorresp) and (not minDistance or check_min_distance(p, minDistance, liste_points)):
+                    # On ajoute le point à la liste de sortie
+                    liste_points.append(p)
             # On incrémente le nombre d'itération
             nIterations += 1
             if nIterations % 1000 == 0:
@@ -97,6 +180,8 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
         if nPoints < value:
             print(sample)
             print("Le nombre de points voulu n'a pas pu être généré. Nombre maximal d'itération atteint")
+        sample.loc['geometry'] = liste_points
+        sample.loc['Zone'] = zone
 
     return sample
 
@@ -128,10 +213,11 @@ def raster_calculation(path_raster):
     # Lecture du raster
     mnt = gdal.Open(path_raster)
     b1 = mnt.GetRasterBand(1)
+    nodata = b1.GetNoDataValue()
     # Transformation en array
     arr = b1.ReadAsArray()
     # Remplacement des valeurs valides par 0
-    arr[(arr >= 0)] = 0
+    arr[(arr != nodata)] = 0
     return arr
 
 
@@ -446,9 +532,13 @@ if __name__ == "__main__":
     path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'
     output = r'C:\Users\home\Documents\Documents\APP3\ech_31H02SE.shp'
 
+    import time
+
+    start = time.time()
     # Échantillonnage
     echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=path_metriques,
-                        output=output, nbPoints=2000, minDistance=500)
-
+                        output=output, nbPoints=8000, minDistance=500)
+    end = time.time()
+    print(end-start)
 
 
