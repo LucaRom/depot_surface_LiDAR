@@ -1,7 +1,7 @@
 import geopandas as gpd
 import random
 from fiona.crs import from_epsg
-from shapely.geometry import shape, Point, Polygon
+from shapely.geometry import shape, Point, Polygon, MultiPoint
 from shapely.ops import nearest_points
 import pandas as pd
 import whitebox
@@ -93,7 +93,8 @@ def check_min_distance(point, distance, points):
         # nearIndex = list(pointIndex.nearest(point.bounds))
         # nearest = points.iloc[nearIndex]['geometry'].values[0]
         # # uni = pointsCorresp['geometry'].unary_union
-        uni = points['geometry'].unary_union
+        # uni = MultiPoint(points)
+        uni = points.unary_union
         # # Calcul du point le plus proche
         nearest = nearest_points(point, uni)
         # Comparaison de la distance du point le plus proche à la distance minimale
@@ -122,7 +123,7 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
 
     # Création de la couche de sortie
     #poly = gpd.read_file(input)
-    sample = gpd.GeoDataFrame()
+    sample = gpd.GeoDataFrame(columns=['geometry'])
     sample.crs = epsg
 
     # On itère dans la couche en entrée
@@ -145,11 +146,11 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
         nPoints = 0
         nIterations = 0
         # Nombre d'itération maximal à faire avant d'arrêter
-        maxIterations = value * 50
+        maxIterations = value * 200
 
         random.seed()
         pointId = 0
-        liste_points = []
+        #liste_points = []
 
         # Tant que le nombre d'itération maximal ou le nombre de points spécifié n'est pas atteint
         while nIterations < maxIterations and nPoints < value:
@@ -168,9 +169,15 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
                 polyCorresp = subPoly.iloc[intersect_possible]['geometry'].values[0]
 
                 # On vérifie si le point est contenu dans le polygone et si la distance minimale est respectée
-                if p.within(polyCorresp) and (not minDistance or check_min_distance(p, minDistance, liste_points)):
+                if p.within(polyCorresp) and (not minDistance or check_min_distance(p, minDistance, sample)):
                     # On ajoute le point à la liste de sortie
-                    liste_points.append(p)
+                    # liste_points.append(p)
+
+                    # On ajoute le point dans le dataframe sortant
+                    sample.loc[pointId, 'geometry'] = p
+                    nPoints += 1
+                    pointId += 1
+
             # On incrémente le nombre d'itération
             nIterations += 1
             if nIterations % 1000 == 0:
@@ -180,9 +187,9 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
         if nPoints < value:
             print(sample)
             print("Le nombre de points voulu n'a pas pu être généré. Nombre maximal d'itération atteint")
-        sample.loc['geometry'] = liste_points
-        sample.loc['Zone'] = zone
 
+        # Rajout de l'identifiant de la zone
+        sample['Zone'] = zone
     return sample
 
 
@@ -479,7 +486,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     # Création de la zone extérieure: différence entre le cadre et le buffer clippé
     print('Création zone externe...')
     zone_ext = difference(cadre, buff_clip, epsg)
-    #zone_ext.to_file(r'C:\Users\home\Documents\Documents\APP3\difference.shp')
+    zone_ext.to_file(r'C:\Users\home\Documents\Documents\APP3\difference.shp')
 
     # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
     print('Comparaison...')
@@ -537,7 +544,11 @@ if __name__ == "__main__":
     start = time.time()
     # Échantillonnage
     echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=path_metriques,
-                        output=output, nbPoints=8000, minDistance=500)
+                        output=output, nbPoints=2000, minDistance=500)
+    # path_zone = r'C:\Users\home\Documents\Documents\APP3\difference.shp'
+    # zone = gpd.read_file(path_zone)
+    # ech_diff = echantillon_pixel(poly=zone, minDistance=500, value=143, epsg='EPSG:2145', zone=0)
+    # ech_diff.to_file(r'C:\Users\home\Documents\Documents\APP3\eff_diff.shp')
     end = time.time()
     print(end-start)
 
