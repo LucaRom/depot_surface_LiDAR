@@ -129,6 +129,7 @@ nom_fichier = 'prediction_{}.tif'.format(feuillet)
 
 # # À mettre à la fin d'entrainement modèle
 #print('Fin de l\'entrainement, veuillez fermer les graphiques pour continuer')
-print ('Les paramètres optimaux sont : ' + params_opti)
+print('Les paramètres optimaux sont : ')
+print(params_opti)
 print('Fin du script, veuillez fermer les graphiques pour terminer')
 #plt.show() # Garder les graphiques ouverts jusqu'à la fin si nécessaire
