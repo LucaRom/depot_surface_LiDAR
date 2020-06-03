@@ -24,7 +24,10 @@ from sklearn import metrics
 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
+from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import validation_curve # A mettre dans fonctions modele
 from sklearn.feature_selection import SelectFromModel
+
 from sklearn.utils import resample
 
 def model_plots(test_y, y_pred, clf, test_metriques, metriques):
@@ -52,7 +55,7 @@ def model_plots(test_y, y_pred, clf, test_metriques, metriques):
 
     return accu_mod, plt
 
-def entrainement (inputEch, metriques):
+def entrainement (inputEch, metriques, **kwargs):
     # Pour importer un shapefile
     # Chemin vers le dossier avec les shapefiles d'entrainement
     #folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
@@ -77,7 +80,7 @@ def entrainement (inputEch, metriques):
 
     # Create a Gaussian Classifier
     #clf = RandomForestClassifier(n_estimators = 15000, verbose = 2, oob_score = True, random_state = 42)
-    clf = RandomForestClassifier(n_estimators=500, verbose=2, oob_score=True, random_state=42)
+    clf = RandomForestClassifier(**kwargs, verbose=2, oob_score=True, random_state=42)
 
     # Train the model using the training sets y_pred=clf.predict(X_test)
     clf.fit(train_metriques, train_y)     # Model fit sur 70%
@@ -91,10 +94,91 @@ def entrainement (inputEch, metriques):
     #accu_mod, plt = model_plots(test_y=test_y, y_pred=y_pred, clf=clf, test_metriques=test_metriques, metriques=metriques)
 
     #return clf, plt, accu_mod
-    return clf, accu_mod
+    return clf, accu_mod, train_metriques, train_y, test_metriques, test_y
 
-    #### FIN ENTRAINEMENT MODELE ####
+def HyperTuningGrid(model_base, param_grid, x_train, y_train):
+    # Test pour trouver les meilleurs hyperparamètres avec GridSearchCV
+    CV_clf = GridSearchCV(estimator=model_base, param_grid=param_grid, cv=5, scoring='accuracy', refit=False,
+                          return_train_score=True)
 
+    modele_opti = CV_clf.fit(x_train, y_train)
+    params_opti = CV_clf.best_params_
+
+    ## Results from grid search
+    results = CV_clf.cv_results_
+    means_test = results['mean_test_score']
+    stds_test = results['std_test_score']
+    means_train = results['mean_train_score']
+    stds_train = results['std_train_score']
+
+    ## Getting indexes of values per hyper-parameter
+    masks=[]
+    masks_names= list(CV_clf.best_params_.keys())
+    for p_k, p_v in CV_clf.best_params_.items():
+        masks.append(list(results['param_'+p_k].data==p_v))
+
+    params = CV_clf.param_grid
+
+    ### Optionel pour visualiser les résultats
+    # fig, ax = plt.subplots(1,len(params),sharex='none', sharey='all', figsize=(20,5))
+    # fig.suptitle('Score per parameter')
+    # fig.text(0.04, 0.5, 'Exactitude', va='center', rotation='vertical')
+    # pram_preformace_in_best = {}
+    # for i, p in enumerate(masks_names):
+    #     m = np.stack(masks[:i] + masks[i+1:])
+    #     pram_preformace_in_best
+    #     best_parms_mask = m.all(axis=0)
+    #     best_index = np.where(best_parms_mask)[0]
+    #     x = np.array(params[p])
+    #     y_1 = np.array(means_test[best_index])
+    #     e_1 = np.array(stds_test[best_index])
+    #     y_2 = np.array(means_train[best_index])
+    #     e_2 = np.array(stds_train[best_index])
+    #     ax[i].errorbar(x, y_1, e_1, linestyle='--', marker='o', label='test')
+    #     ax[i].errorbar(x, y_2, e_2, linestyle='-', marker='^',label='train')
+    #     ax[i].set_xlabel(p.upper())
+    #
+    # plt.legend()
+    # plt.show()
+
+    return modele_opti, params_opti
+
+def plot_valid(param_name, param_range, modele, x_train, y_train):
+    train_scores, test_scores = validation_curve(
+                                    modele,
+                                    X = x_train, y = y_train,
+                                    param_name = param_name,
+                                    param_range = param_range,
+                                    scoring='accuracy',
+                                    cv = 5,
+                                    verbose=2)
+
+    train_scores_mean = np.mean(train_scores, axis=1)
+    train_scores_std = np.std(train_scores, axis=1)
+    test_scores_mean = np.mean(test_scores, axis=1)
+    test_scores_std = np.std(test_scores, axis=1)
+
+    plt.figure()  # Crée une nouvelle instance de graphique
+    plt.title("Validation Curve with RF")
+    plt.xlabel(param_name)
+    plt.xlim([min(param_range), max(param_range)])
+    plt.ylabel("Score")
+    plt.ylim(0.0, 1.1)
+    lw = 2
+
+    # plt.semilogx(param_range, train_scores_mean, label="Training score",
+    #              color="darkorange", lw=lw)
+    # plt.fill_between(param_range, train_scores_mean - train_scores_std,
+    #                  train_scores_mean + train_scores_std, alpha=0.2,
+    #                  color="darkorange", lw=lw)
+    # plt.semilogx(param_range, test_scores_mean, label="Cross-validation score",
+    #              color="navy", lw=lw)
+    plt.plot(param_range, test_scores_mean)
+    plt.fill_between(param_range, test_scores_mean - test_scores_std,
+                     test_scores_mean + test_scores_std, alpha=0.2,
+                     color="navy", lw=lw)
+    plt.legend(loc="best")
+    plt.show(block=False)
 
 def classification (clf, tiffs_list):
 

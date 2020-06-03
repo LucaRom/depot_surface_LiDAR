@@ -486,7 +486,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     # Création de la zone extérieure: différence entre le cadre et le buffer clippé
     print('Création zone externe...')
     zone_ext = difference(cadre, buff_clip, epsg)
-    zone_ext.to_file(r'C:\Users\home\Documents\Documents\APP3\difference.shp')
+    # zone_ext.to_file(r'C:\Users\home\Documents\Documents\APP3\difference.shp')
 
     # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
     print('Comparaison...')
