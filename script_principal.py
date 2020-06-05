@@ -68,7 +68,7 @@ def mnt_metriques(liste_feuillet, creation):
     return rep_metriques, rep_mnt_buff
 
 
-#### SECTION 2 - Échantillonage par pixel ####
+#### SECTION 2a - Échantillonage par pixel ####
 '''
 À REMPLIR
 '''
@@ -87,9 +87,14 @@ def echant_main(liste_feuillet, creation):
         echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
                             output=echant, nbPoints=2000, minDistance=500)
 
-echant_main(liste_feuillet, creation=False)
+#echant_main(liste_feuillet, creation=False)
 
-#
+
+#### SECTION 3a - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
+'''
+À REMPLIR
+'''
+
 # # Intrants pour l'optimisation des hyperparamètres du modele
 # # Grille de paramètre pour le GridSearchCV
 # # param_grid = {
@@ -98,27 +103,12 @@ echant_main(liste_feuillet, creation=False)
 # #               "max_depth" : [None, 2, 4, 6, 8, 10]
 # #              }
 #
-# # # Intrants pour l'entraînement du modele
-# # metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
-# # inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel'))
-#
-# # # Intrants pour la classification du modèle
-# # Intrants pour la creation des outputs de prédiction (inclut dans la section "classification de modèle"
-# outputdir = os.path.join(root_dir, 'outputs/pixel') # Dossier
-# nom_fichier = 'prediction_{}.tif'.format(feuillet)
-#
-# #### FIN DES INTRANTS ####
-#
-#
-# #### DÉBUT DES TRAITEMENTS ####
-#
-#
 # # # Recherche des paramètres optimaux pour l'entraînement du modèle
 # # # ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG #
 # # # Création du modèle de base
-# # nb_arbre_base = {'n_estimators': 500}
+# # params_base = {'n_estimators': 200}
 # # clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
-# #                                                                                **nb_arbre_base)
+# #                                                                                **params_base)
 # # # Modele d'optimisation avec GridSearchCV
 # # modele_opti, params_opti = HyperTuningGrid(model_base=clf, param_grid=param_grid, x_train=train_metriques, y_train=train_y)
 # # print (params_opti) # Impression des meilleurs résultats basé sur param_grid
@@ -127,24 +117,60 @@ echant_main(liste_feuillet, creation=False)
 # # for key, value in param_grid.items():  # Pour chaque items de la liste des paramètres à optimiser
 # #     plot_valid(param_name=key, param_range=value, modele=clf, x_train=train_metriques, y_train=train_y)
 #
+
+
+#### SECTION 4a - Entraînement du modèle par pixel ####
+'''
+À REMPLIR
+'''
+
+def entrain_main(feuillet):
+    # # Intrants pour l'entraînement du modele
+    metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
+    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
+
+    # Utilise les paramètres optimisés issues de l'étape optimisation
+    params_opti = {'max_depth': 2, 'max_features': 'auto', 'n_estimators': 200}
+    clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
+                                                                                   **params_opti)
+
+    return clf, accu_mod, train_metriques, train_metriques, test_metriques, test_y
+
+for i in liste_feuillet:
+    entrain_main(i)
+
+
 # # Entrainement du modèle et matrice de confusion/importance des métriques
-# # Utilise les paramètres optimisés de l'étape GridSearchCV (variable params_opti)
-# # accuracy_list = []
-# # def entrain_accu_moyenne_super_loop():
-# #     for i in range(10):
-# #         clf, accu_mod = entrainement(inputEch=inputEch, metriques=metriques_pixel)
-# #         accuracy_list.append(accu_mod)
-# #     return clf, accuracy_list
-#
-# # clf, accuracy_list = entrain_accu_moyenne_super_loop()
-# # print(accuracy_list)
-# # print(statistics.mean(accuracy_list))
+# accuracy_list = []
+
+# def entrain_accu_moyenne_super_loop():
+#     for i in range(10):
+#         clf, accu_mod = entrainement(inputEch=inputEch, metriques=metriques_pixel)
+#         accuracy_list.append(accu_mod)
+#     return clf, accuracy_list
+
+# clf, accuracy_list = entrain_accu_moyenne_super_loop()
+# print(accuracy_list)
+# print(statistics.mean(accuracy_list))
+
+
+#### SECTION 5a - Classification par pixel ####
+'''
+À REMPLIR
+'''
+
+# # # Intrants pour la classification du modèle
+# # Intrants pour la creation des outputs de prédiction (inclut dans la section "classification de modèle"
+# outputdir = os.path.join(root_dir, 'outputs/pixel') # Dossier
+# nom_fichier = 'prediction_{}.tif'.format(feuillet)
 #
 # # Classification avec le modèle et création du fichier résultant
 # #classif = classification(clf=clf, rep_metriques=rep_metriques)
 # # creation_output(prediction=classif, outputdir=outputdir, nom_fichier=nom_fichier,
 # #                 inputMet=rep_metriques, tiff_path_list=tiff_path_list)
-#
+
+
+#### A REVOIR???? ####
 # # Suppression des fichiers
 # # for files in os.listdir(rep_mnt_buff):
 # #     path = os.path.join(rep_mnt_buff, files)

@@ -30,7 +30,7 @@ from sklearn.feature_selection import SelectFromModel
 
 from sklearn.utils import resample
 
-def model_plots(test_y, y_pred, clf, test_metriques, metriques):
+def model_plots(test_y, clf, test_metriques, metriques):
     # Matrice de confusion
     #c_matrice = confusion_matrix(test_y, y_pred)
 
@@ -52,8 +52,6 @@ def model_plots(test_y, y_pred, clf, test_metriques, metriques):
     plt.yticks(range(len(indices)), [metriques[i] for i in indices])
     plt.xlabel('Importance relative (%)')
     plt.show(block=False)
-
-    return accu_mod, plt
 
 def entrainement (inputEch, metriques, **kwargs):
     # Pour importer un shapefile
@@ -91,7 +89,7 @@ def entrainement (inputEch, metriques, **kwargs):
     print("Accuracy:", accu_mod)
 
     # Génération des graphiques (Appel de fonction)
-    #accu_mod, plt = model_plots(test_y=test_y, y_pred=y_pred, clf=clf, test_metriques=test_metriques, metriques=metriques)
+    model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
 
     #return clf, plt, accu_mod
     return clf, accu_mod, train_metriques, train_y, test_metriques, test_y
