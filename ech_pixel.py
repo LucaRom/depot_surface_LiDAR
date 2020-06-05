@@ -280,7 +280,7 @@ def creation_raster (inputArray,inputMet):
     band.FlushCache()
     band.SetNoDataValue(-99)
 
-    return image
+    return image, proj
 
 
 def conversion_polygone (dataset, output):
@@ -452,20 +452,13 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
     print('***ÉCHANTILLONNAGE PAR PIXEL***')
 
-    # Lecture de la couche de dépôts et extraction du code EPSG
-    print('Lecture et extraction EPSG...')
-    depot = gpd.read_file(path_depot)
-    epsg = str(depot.crs)
-
-    # Regroupement de la couche de dépôts
-    print('Regroupement couche de dépôts...')
-    depot_reg = dissolve(depot, epsg)
-
     # Multiplier le mnt par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
     print('Multiplication du MNT par 0...')
-    path_couche_memory = "/vsimem/mnt0_poly.shp"
+    #path_couche_memory = "/vsimem/mnt0_poly.shp"
     mnt0_array = raster_calculation(path_mnt)
-    mnt0_raster = creation_raster(mnt0_array, path_mnt)
+    mnt0_raster, proj = creation_raster(mnt0_array, path_mnt)
+    epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
+    print(epsg)
 
     # Conversion du raster du mnt0 en polygone et supression des bordures pour créer le cadre d'échantillonnage
     print('Conversion MNT en polygone...')
@@ -473,22 +466,30 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     conversion_polygone(mnt0_raster, path_couche_memory)
     print('Suppresion des bordures...')
     cadre = delete_border(path_couche_memory)
-    cadre.to_file(r'E:\OneDrive - USherbrooke\001 APP\Programmation\cadre.shp')
+
+    # Lecture de la couche de dépôts et reprojection si nécessaire
+    print('Lecture de la couche de dépôts...')
+    depot = gpd.read_file(path_depot)
+
+    if str(depot.crs) != epsg:
+        print('Reprojection...')
+        depot.crs = epsg
+
+    # Regroupement de la couche de dépôts
+    print('Regroupement couche de dépôts...')
+    depot_reg = dissolve(depot, epsg)
 
     # Création du buffer autour de la couche de dépôts à la valeur de la distance minimale
     print('Création du buffer...')
     buff = creation_buffer(depot_reg, minDistance, epsg, 1, 1)
-    # buff.to_file(r'E:\OneDrive - USherbrooke\001 APP\Programmation\buff.shp')
 
     # # Clip du buffer aux dimension du cadre
     print('Clip du buffer...')
     buff_clip = gpd.clip(buff, cadre)
-    #buff_clip.to_file(r'C:\Users\home\Documents\Documents\APP3\buff_clip.shp')
 
     # Création de la zone extérieure: différence entre le cadre et le buffer clippé
     print('Création zone externe...')
     zone_ext = difference(cadre, buff_clip, epsg)
-    zone_ext.to_file(r'E:\OneDrive - USherbrooke\001 APP\Programmation\zone_ext.shp')
 
     # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
     print('Comparaison...')
