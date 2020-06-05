@@ -180,7 +180,14 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     plt.legend(loc="best")
     plt.show(block=False)
 
-def classification (clf, tiffs_list):
+def classification (clf, rep_metriques):
+    tiff_path_list = os.listdir(rep_metriques)  # Liste des fichiers
+    # On crée une liste avec toutes les images lues
+    tiffs_list = []
+    for i in tiff_path_list:
+        if i.endswith('.tif'):
+            ds = gdal.Open(os.path.join(rep_metriques, i))
+            tiffs_list.append(ds.GetRasterBand(1).ReadAsArray())
 
     # On crée la stack de métrique
     # met_stack = np.stack(tiffs_list)

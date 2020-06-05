@@ -473,20 +473,22 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     conversion_polygone(mnt0_raster, path_couche_memory)
     print('Suppresion des bordures...')
     cadre = delete_border(path_couche_memory)
+    cadre.to_file(r'E:\OneDrive - USherbrooke\001 APP\Programmation\cadre.shp')
 
-    # Création du buffer autour de la couche de dépôts à la valeur de la distance minimale
-    print('Création du buffer...')
-    buff = creation_buffer(depot_reg, minDistance, epsg, 1, 1)
-
-    # Clip du buffer aux dimension du cadre
-    print('Clip du buffer...')
-    buff_clip = gpd.clip(buff, cadre)
-    #buff_clip.to_file(r'C:\Users\home\Documents\Documents\APP3\buff_clip.shp')
+    # # Création du buffer autour de la couche de dépôts à la valeur de la distance minimale
+    # print('Création du buffer...')
+    # buff = creation_buffer(depot_reg, minDistance, epsg, 1, 1)
+    # buff.to_file(r'E:\OneDrive - USherbrooke\001 APP\Programmation\buff.shp')
+    #
+    # # Clip du buffer aux dimension du cadre
+    # print('Clip du buffer...')
+    # buff_clip = gpd.clip(buff, cadre)
+    # #buff_clip.to_file(r'C:\Users\home\Documents\Documents\APP3\buff_clip.shp')
 
     # Création de la zone extérieure: différence entre le cadre et le buffer clippé
     print('Création zone externe...')
-    zone_ext = difference(cadre, buff_clip, epsg)
-    # zone_ext.to_file(r'C:\Users\home\Documents\Documents\APP3\difference.shp')
+    zone_ext = difference(cadre, depot_reg, epsg)
+    zone_ext.to_file(r'E:\OneDrive - USherbrooke\001 APP\Programmation\zone_ext.shp')
 
     # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
     print('Comparaison...')
@@ -523,6 +525,8 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     # Combinaison des deux zones
     print('Combinaison des échantillons...')
     ech_total = gpd.GeoDataFrame(pd.concat([ech_petite_zone, ech_grande_zone], ignore_index=True), crs=epsg)
+    if not os.path.exists(output):
+        os.makedirs(output)
     ech_total.to_file(output)
 
     # Extraction des valeurs des métriques
