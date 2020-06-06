@@ -101,7 +101,7 @@ def creation_buffer_raster(input_raster, input_mosaic, distance, epsg, output):
     mnt0 = raster_calculation(input_raster)
 
     # Création d'un raster en mémoire
-    mnt0_raster = creation_raster(mnt0, input_raster)
+    mnt0_raster, proj_mnt0 = creation_raster(mnt0, input_raster)
 
     # Conversion en polygone dans un couche en mémoire et suppression des bordures
     path_couche_memory = "/vsimem/mnt0_poly.shp"
