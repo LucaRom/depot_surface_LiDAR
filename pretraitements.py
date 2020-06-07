@@ -175,11 +175,11 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
     creation_buffer_raster(path_feuillet, mosaique, distance_buffer, epsg, raster_buffer)
     #
     # Suppression des fichiers temporaires (mnt rééchantillonnés, mosaique)
-    # print('Suppression des fichiers temporaires...')
-    # for files in liste_resample:
-    #     if feuillet not in files:
-    #         os.remove(files)
-    # os.remove(mosaique)
+    print('Suppression des fichiers temporaires...')
+    for files in liste_resample:
+        if feuillet not in files:
+            os.remove(files)
+    os.remove(mosaique)
 
     print('Terminé')
 
