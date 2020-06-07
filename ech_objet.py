@@ -116,11 +116,11 @@ def echantillon_objet(path_depot, segmentation):
     return segmentation
 
 
-def main():
+def echantillonnage_obj(path_metriques, path_segmentation, path_depot):
 
     # Statistiques zonales
     print('Calcul des statistiques zonales...')
-    seg_stats = stats_zonales(path_metriques=path_met, path_segmentation=path_segmentation)
+    seg_stats = stats_zonales(path_metriques=path_metriques, path_segmentation=path_segmentation)
 
     # Échantillonnage
     print('Échantillonnage...')
@@ -132,11 +132,12 @@ def main():
     print('Terminé')
 
 
-#### INITIATION DU SCRIPT ####
-if __name__ == "__main__":
-    set_root_chm()
-    set_chemins()
-    main()
+# #### INITIATION DU SCRIPT ####
+# if __name__ == "__main__":
+#
+#     set_root_chm()
+#     set_chemins()
+#     echantillonnage_obj()
 
 
 
