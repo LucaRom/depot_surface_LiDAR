@@ -1,16 +1,18 @@
-# import geopandas as gpd
+import geopandas as gpd
 # import random
 # from fiona.crs import from_epsg
 # from shapely.geometry import shape, Point, Polygon
 # from shapely.ops import nearest_points
 # import pandas as pd
-#import whitebox
+import whitebox
 # import glob
-from fonctions_metriques import Downslope_Ind, SCA, textures_glcm, AverNormVectAngDev
+from fonctions_metriques import Downslope_Ind, SCA, textures_glcm, AverNormVectAngDev, breachDepressionLeastCost
 from pretraitements import resampling_cubic_spline
 from osgeo import gdal
 
 path = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\31H02NE_buffer.tif'
+mosaic = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\31H02NE_mosaique.tif'
+mosaic_resample = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\31H02NE_mosaique_resamp.tif'
 DI = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\test_dslp_ind.tif'
 sca = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\test_sca.tif'
 buff50 = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\31H02NE_buffer_50.tif'
@@ -23,13 +25,60 @@ path_r = r"C:\Program Files\R\R-3.6.3\bin\Rscript.exe"
 path_script = r"C:\Users\home\Documents\Documents\APP2\haralick.R"
 moy = r'C:\Users\home\Documents\Documents\APP3\metriques\31H02\31H02NE\MeaH_GLCM_31H02NE.tif'
 anvad = r'C:\Users\home\Documents\Documents\APP3\mnt_buffer\anvad.tif'
-#resampling_cubic_spline(path, buff50, 2)
+
+shp = gpd.read_file(r'C:\Users\home\Documents\Documents\APP2\Depots_31H\Depots_31H\zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp')
+data = gpd.read_file(gpd.datasets.get_path("naturalearth_cities"))
+
+crs = data.crs
+data.crs = 'epsg:2950'
+print(type(data.crs))
+
+
+# ### Extract value metriques##
+# from ech_pixel import extract_value_metrique
+# path_ech = r'C:\Users\home\Documents\Documents\APP3\echantillonnage\ech_SE.shp'
+# path_met = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\tiffs\31H02SE'
+# extract_value_metrique(path_ech, path_met)
+
+# ### ELEVATION ABOVE STREAM###
+# import whitebox
+# import os
+#
+# # def hand(dem, stream, output):
+# #     wbt = whitebox.WhiteboxTools()
+# #     RUST_BACKTRACE = 1
+# #
+# #     # Création des répertoire de sortie
+# #     path = os.path.dirname(dem)
+# #     if not os.path.exists(os.path.dirname(output)):
+# #         os.makedirs(os.path.dirname(output))
+# #
+# #     # Répertoire de travail
+# #     wbt.set_working_dir(path)
+# #     wbt.verbose = False
+# #
+# #     # Création du Relative TPI
+# #     print('Création du HAND...')
+# #     wbt.elevation_above_stream(dem=dem, streams=stream, output=output)
+# #     print('Terminé')
+# #     print()
+#
+# path_dem = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\MNT\resample\31H02\31H02NE_buffer.tif'
+# path_stream = r'C:\Users\home\Documents\Documents\APP3\hydro\31H02NE_hydro_raster.tif'
+# mnt_breach = r'C:\Users\home\Documents\Documents\APP3\hydro\31H02NE_breach.tif'
+# output = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\tiffs\31H02NE\hand_WB_31H02NE.tif'
+#
+# breachDepressionLeastCost(path_dem, mnt_breach, 40, True)
+# wbt = whitebox.WhiteboxTools()
+# wbt.elevation_above_stream(mnt_breach,path_stream,output)
+
+
 
 # textures_glcm(path_r=path_r, path_script=path_script, input=buff50, output=mean, metrique='1', kernel='3')
 # textures_glcm(path_r=path_r, path_script=path_script, input=buff50, output=cor, metrique='2', kernel='3')
 # textures_glcm(path_r=path_r, path_script=path_script, input=buff50, output=cont, metrique='3', kernel='3')
 
-AverNormVectAngDev(path, anvad, 40)
+#AverNormVectAngDev(path, anvad, 40)
 
 # data = gdal.Open(path)
 # b = data.GetRasterBand(1)
@@ -916,7 +965,7 @@ AverNormVectAngDev(path, anvad, 40)
 # if __name__ == "__main__":
 #
 #     # Chemins des couches du MNT et de la couche de dépôts
-#     path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp'
+#     path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zones_depots_glaciolacustres_31H02NE_MTM8.shp'
 #     path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02NE_5x5.tif'
 #     path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02NE'
 #     output = r'C:\Users\home\Documents\Documents\APP3\ech_total.shp'
