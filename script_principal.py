@@ -14,7 +14,7 @@ root_dir = os.path.abspath(os.path.dirname(__file__))
 path_r = r"E:\Program Files\R\R-3.6.1\bin\Rscript.exe"  # Chemin vers l'application 'Rscript.exe' de l'ordinateur
 
 # Données initiales à changer par l'utilisateur
-liste_feuillet = ['32D06NE']  # Entrée la liste des feuillets désiré, n'en mettre qu'un seul pour un feuillet.
+#liste_feuillet = ['32D06NE', '32D06SE']  # Entrée la liste des feuillets désiré, n'en mettre qu'un seul pour un feuillet.
 
 
 #### SECTION 1 - Production des métriques ####
@@ -92,56 +92,79 @@ def echant_main(liste_feuillet, creation):
 
 #### SECTION 3a - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
 '''
+Recherche des paramètres optimaux pour l'entraînement du modèle
+ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG !!!
+
+
 À REMPLIR
 '''
 
-# # Intrants pour l'optimisation des hyperparamètres du modele
-# # Grille de paramètre pour le GridSearchCV
-# # param_grid = {
-# #               "n_estimators": [200, 500, 800, 1000, 5000, 10000],
-# #               "max_features": ['auto', 'sqrt', 'log2'],
-# #               "max_depth" : [None, 2, 4, 6, 8, 10]
-# #              }
-#
-# # # Recherche des paramètres optimaux pour l'entraînement du modèle
-# # # ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG #
-# # # Création du modèle de base
-# # params_base = {'n_estimators': 200}
-# # clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
-# #                                                                                **params_base)
-# # # Modele d'optimisation avec GridSearchCV
-# # modele_opti, params_opti = HyperTuningGrid(model_base=clf, param_grid=param_grid, x_train=train_metriques, y_train=train_y)
-# # print (params_opti) # Impression des meilleurs résultats basé sur param_grid
-# #
-# # # Impression des courbes de validation pour chaque hyperparamètre
-# # for key, value in param_grid.items():  # Pour chaque items de la liste des paramètres à optimiser
-# #     plot_valid(param_name=key, param_range=value, modele=clf, x_train=train_metriques, y_train=train_y)
-#
+def gridSearch_params_opti(inputEch, metriques_pixel):
+    # Intrants pour l'optimisation des hyperparamètres du modele
+    # Grille de paramètre pour le GridSearchCV
+    param_grid = {
+                  "n_estimators": [200, 500, 800, 1000, 5000, 10000],
+                  "max_features": ['auto', 'sqrt', 'log2'],
+                  "max_depth" : [None, 2, 4, 6, 8, 10]
+                 }
+    # Création du modèle de base
+    params_base = {'n_estimators': 200}
+    clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
+                                                                                   **params_base)
+    # Modele d'optimisation avec GridSearchCV
+    modele_opti, params_opti = HyperTuningGrid(model_base=clf, param_grid=param_grid, x_train=train_metriques, y_train=train_y)
+    print (params_opti) # Impression des meilleurs résultats basé sur param_grid
+
+    return params_opti
 
 
-#### SECTION 4a - Entraînement du modèle par pixel ####
+# # Impression des courbes de validation pour chaque hyperparamètre
+# for key, value in param_grid.items():  # Pour chaque items de la liste des paramètres à optimiser
+#     plot_valid(param_name=key, param_range=value, modele=clf, x_train=train_metriques, y_train=train_y)
+
+
+
+#### SECTION 4a - Entraînement du modèle par pixel  ####
 '''
 À REMPLIR
+avec matrice de confusion et importance des métriques
 '''
 
-def entrain_main(feuillet):
+def entrain_main(feuillet, opti=False):
     # # Intrants pour l'entraînement du modele
     metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
+    #metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
     inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
+    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-7:-2]))
 
-    # Utilise les paramètres optimisés issues de l'étape optimisation
-    params_opti = {'max_depth': 2, 'max_features': 'auto', 'n_estimators': 200}
+    if opti is True:
+        print('Début de GridSearchCV pour trouver les paramètres optimaux')
+        params_opti = gridSearch_params_opti(inputEch=inputEch, metriques_pixel=metriques_pixel)
+        print('Fin du GridSearchCV')
+    else :
+        # Utilise les paramètres optimisés issues de l'étape optimisation
+        params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 200}
+
+    print('Début de l\'entrainement du modèle')
     clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
-                                                                                   **params_opti)
+                                                                                   outputMod=outputMod, **params_opti)
+    print('Fin de l\'entrainement du modèle en utilisant les paramètres :')
+    print(params_opti)
 
-    return clf, accu_mod, train_metriques, train_metriques, test_metriques, test_y
+    return clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y
 
-for i in liste_feuillet:
-    entrain_main(i)
-
-
-# # Entrainement du modèle et matrice de confusion/importance des métriques
+# for i in liste_feuillet:
+#     echant_main(liste_feuillet, creation=False)
+#
 # accuracy_list = []
+# for i in range(10):
+#     clf, accu_mod, train_metriques, train_y, test_metriques, test_y =  entrain_main(liste_feuillet[0])
+#     accuracy_list.append(accu_mod)
+#
+# print(accuracy_list)
+# print(statistics.mean(accuracy_list))
+# # #
+#
 
 # def entrain_accu_moyenne_super_loop():
 #     for i in range(10):
@@ -193,3 +216,33 @@ for i in liste_feuillet:
 #
 # # Classements
 # liste_feuillet : []
+
+#### SECTION 6 - Exemple d'utilisation ####
+'''
+1. Fonction 'echant_main(liste_feuillet, creation)'
+    - Création des métriques et de l'échantillonage pour entrainter le modèle
+    - Si les métriques ont déjà été produites, mettre le paramètre "creation" à 'false pour ne créer que les 
+      échantillonages
+    - Le paramètre 'creation' appelle la fonction 'mnt_metriques(liste_feuillet, creation)' qui pourrait être utilisée
+      seule si désirée. Mais nous conseillons de toujours l'utiliser avec l'échantillonage pour éviter les erreurs/confusions.
+
+2.  Fonction 'entrain_main(feuillet, opti=False)'
+    - Creation du modèle 
+
+
+À compléter
+'''
+
+# # Commencer par déterminer les feuillets que l'on désire traiter
+# liste_feuillet = ['32D01NO', '32D01SO']
+#
+# echant_main(liste_feuillet, creation=True)
+#
+
+# Entrainement du modèle
+entrain_main('31H02NE', opti=False)
+
+# # Pour la classification
+# # Lancer la classification
+# # spécifier le fichier à classifier????
+# classification ('31H02', rep_metriques)
