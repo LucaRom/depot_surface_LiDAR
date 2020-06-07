@@ -181,16 +181,48 @@ def entrain_main(feuillet, opti=False):
 '''
 À REMPLIR
 '''
+def class_main(feuillet, num_mod):
+    # # Intrants pour la classification du modèle
+    mod_path = os.path.join(root_dir, 'inputs/modeles')              # Chemin vers le dossier des modèles
+    rep_metriques = os.path.join(root_dir, 'inputs/tiffs', feuillet) # Chemin vers le dossier des métriques
+    nom_fichier = 'prediction_{}.tif'.format(feuillet)               # Nom du fichier à sauvegarder
+    outputdir = os.path.join(root_dir, 'outputs/pixel')              # Dossier output du .shp prédit
 
-# # # Intrants pour la classification du modèle
-# # Intrants pour la creation des outputs de prédiction (inclut dans la section "classification de modèle"
-# outputdir = os.path.join(root_dir, 'outputs/pixel') # Dossier
-# nom_fichier = 'prediction_{}.tif'.format(feuillet)
+    # Classification avec le modèle et création du fichier résultant
+    classif, tiff_path_list = classification(num_mod=num_mod, mod_path=mod_path, rep_metriques=rep_metriques)
+    creation_output(prediction=classif, outputdir=outputdir, nom_fichier=nom_fichier,
+                    inputMet=rep_metriques, tiff_path_list=tiff_path_list)
+
+#### SECTION 6 - Exemple d'utilisation ####
+'''
+1. Fonction 'echant_main(liste_feuillet, creation)'
+    - Création des métriques et de l'échantillonage pour entrainter le modèle
+    - Si les métriques ont déjà été produites, mettre le paramètre "creation" à 'false pour ne créer que les 
+      échantillonages
+    - Le paramètre 'creation' appelle la fonction 'mnt_metriques(liste_feuillet, creation)' qui pourrait être utilisée
+      seule si désirée. Mais nous conseillons de toujours l'utiliser avec l'échantillonage pour éviter les erreurs/confusions.
+
+2.  Fonction 'entrain_main(feuillet, opti=False)'
+    - Creation du modèle 
+
+
+À compléter
+'''
+
+# # Commencer par déterminer les feuillets que l'on désire traiter
+# liste_feuillet = ['32D01NO', '32D01SO']
 #
-# # Classification avec le modèle et création du fichier résultant
-# #classif = classification(clf=clf, rep_metriques=rep_metriques)
-# # creation_output(prediction=classif, outputdir=outputdir, nom_fichier=nom_fichier,
-# #                 inputMet=rep_metriques, tiff_path_list=tiff_path_list)
+# echant_main(liste_feuillet, creation=True)
+#
+
+# Entrainement du modèle
+#entrain_main('31H02NE', opti=False)
+
+# Classification d'un feuillet
+class_main(feuillet='31H02SE', num_mod='31H02')
+
+
+
 
 
 #### A REVOIR???? ####
@@ -216,33 +248,3 @@ def entrain_main(feuillet, opti=False):
 #
 # # Classements
 # liste_feuillet : []
-
-#### SECTION 6 - Exemple d'utilisation ####
-'''
-1. Fonction 'echant_main(liste_feuillet, creation)'
-    - Création des métriques et de l'échantillonage pour entrainter le modèle
-    - Si les métriques ont déjà été produites, mettre le paramètre "creation" à 'false pour ne créer que les 
-      échantillonages
-    - Le paramètre 'creation' appelle la fonction 'mnt_metriques(liste_feuillet, creation)' qui pourrait être utilisée
-      seule si désirée. Mais nous conseillons de toujours l'utiliser avec l'échantillonage pour éviter les erreurs/confusions.
-
-2.  Fonction 'entrain_main(feuillet, opti=False)'
-    - Creation du modèle 
-
-
-À compléter
-'''
-
-# # Commencer par déterminer les feuillets que l'on désire traiter
-# liste_feuillet = ['32D01NO', '32D01SO']
-#
-# echant_main(liste_feuillet, creation=True)
-#
-
-# Entrainement du modèle
-entrain_main('31H02NE', opti=False)
-
-# # Pour la classification
-# # Lancer la classification
-# # spécifier le fichier à classifier????
-# classification ('31H02', rep_metriques)
