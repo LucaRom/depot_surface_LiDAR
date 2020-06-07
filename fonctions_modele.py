@@ -39,8 +39,8 @@ def model_plots(test_y, clf, test_metriques, metriques):
                                  cmap=plt.cm.Blues,
                                  values_format='d')
     disp.ax_.set_title('Matrice de confusion à 12 métriques')
-    plt.xlabel('Réel')
-    plt.ylabel('Prédit')
+    plt.xlabel('Prédit')
+    plt.ylabel('Réel')
 
     # Importances des metriques
     importances = clf.feature_importances_
@@ -74,12 +74,11 @@ def entrainement (inputEch, metriques, outputMod, **kwargs):
     X_metriques = new_shp[metriques]
 
     # Séparation des données en données d'entrainement et données de tests
-    #train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size = 0.30, random_state = 42)
-    train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size=0.30)
+    train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size=0.30, random_state = 22)
 
     # Create a Gaussian Classifier
     #clf = RandomForestClassifier(n_estimators = 15000, verbose = 2, oob_score = True, random_state = 42)
-    clf = RandomForestClassifier(**kwargs, verbose=2, oob_score=True, random_state=42)
+    clf = RandomForestClassifier(verbose=2, oob_score=True, random_state=42, **kwargs)
 
     # Train the model using the training sets y_pred=clf.predict(X_test)
     clf.fit(train_metriques, train_y)     # Model fit sur 70%
@@ -101,7 +100,7 @@ def entrainement (inputEch, metriques, outputMod, **kwargs):
 
 def HyperTuningGrid(model_base, param_grid, x_train, y_train):
     # Test pour trouver les meilleurs hyperparamètres avec GridSearchCV
-    CV_clf = GridSearchCV(estimator=model_base, param_grid=param_grid, cv=5, scoring='accuracy', refit=False,
+    CV_clf = GridSearchCV(estimator=model_base, param_grid=param_grid, cv=5, scoring='accuracy',
                           return_train_score=True)
 
     modele_opti = CV_clf.fit(x_train, y_train)
@@ -177,9 +176,9 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     # plt.semilogx(param_range, test_scores_mean, label="Cross-validation score",
     #              color="navy", lw=lw)
     plt.plot(param_range, test_scores_mean)
-    plt.fill_between(param_range, test_scores_mean - test_scores_std,
-                     test_scores_mean + test_scores_std, alpha=0.2,
-                     color="navy", lw=lw)
+    # plt.fill_between(param_range, test_scores_mean - test_scores_std,
+    #                  test_scores_mean + test_scores_std, alpha=0.2,
+    #                  color="navy", lw=lw)
     plt.legend(loc="best")
     plt.show(block=False)
 

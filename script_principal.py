@@ -99,7 +99,7 @@ ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG !!!
 À REMPLIR
 '''
 
-def gridSearch_params_opti(inputEch, metriques_pixel):
+def gridSearch_params_opti(inputEch, metriques_pixel, outputMod):
     # Intrants pour l'optimisation des hyperparamètres du modele
     # Grille de paramètre pour le GridSearchCV
     param_grid = {
@@ -110,7 +110,7 @@ def gridSearch_params_opti(inputEch, metriques_pixel):
     # Création du modèle de base
     params_base = {'n_estimators': 200}
     clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
-                                                                                   **params_base)
+                                                                                   outputMod=outputMod, **params_base)
     # Modele d'optimisation avec GridSearchCV
     modele_opti, params_opti = HyperTuningGrid(model_base=clf, param_grid=param_grid, x_train=train_metriques, y_train=train_y)
     print (params_opti) # Impression des meilleurs résultats basé sur param_grid
@@ -139,11 +139,11 @@ def entrain_main(feuillet, opti=False):
 
     if opti is True:
         print('Début de GridSearchCV pour trouver les paramètres optimaux')
-        params_opti = gridSearch_params_opti(inputEch=inputEch, metriques_pixel=metriques_pixel)
+        params_opti = gridSearch_params_opti(inputEch=inputEch, metriques_pixel=metriques_pixel, outputMod=outputMod)
         print('Fin du GridSearchCV')
     else :
         # Utilise les paramètres optimisés issues de l'étape optimisation
-        params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 200}
+        params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 5000}
 
     print('Début de l\'entrainement du modèle')
     clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
@@ -216,12 +216,30 @@ def class_main(feuillet, num_mod):
 #
 
 # Entrainement du modèle
-#entrain_main('31H02NE', opti=False)
+#entrain_main('32D01NO', opti=True)
 
 # Classification d'un feuillet
-class_main(feuillet='31H02SE', num_mod='31H02')
+#class_main(feuillet='31H02SE', num_mod='31H02')
+# # Intrants pour l'entraînement du modele
+feuillet = '32D01SO'
+metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
+# metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
+inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
+outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-7:-2]))
 
+param_grid = {
+              "n_estimators": [200, 500, 800, 1000, 5000, 10000],
+              "max_features": ['auto', 'sqrt', 'log2'],
+              "max_depth" : [None, 2, 4, 6, 8, 10]
+             }
+# Création du modèle de base
+params_base = {'n_estimators': 200}
+clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(inputEch=inputEch, metriques=metriques_pixel,
+                                                                                   outputMod=outputMod, **params_base)
 
+# # Impression des courbes de validation pour chaque hyperparamètre
+param_range = [500, 1000]
+plot_valid(param_name='n_estimators', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
 
 
 
