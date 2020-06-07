@@ -221,7 +221,7 @@ def class_main(feuillet, num_mod):
 # Classification d'un feuillet
 #class_main(feuillet='31H02SE', num_mod='31H02')
 # # Intrants pour l'entraînement du modele
-feuillet = '32D01SO'
+feuillet = '31H02NE'
 metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
 # metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
 inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
@@ -238,8 +238,13 @@ clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(i
                                                                                    outputMod=outputMod, **params_base)
 
 # # Impression des courbes de validation pour chaque hyperparamètre
-param_range = [500, 1000]
-plot_valid(param_name='n_estimators', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
+param_range = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+
+#param_range.append()
+#param_range.append(None)
+#param_range = [200, 500, 800, 1000, 5000, 10000]
+#param_range = ['auto', 'sqrt', 'log2']
+plot_valid(param_name='max_depth', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
 
 
 

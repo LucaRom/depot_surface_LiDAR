@@ -165,7 +165,8 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     plt.xlabel(param_name)
     plt.xlim([min(param_range), max(param_range)])
     plt.ylabel("Score")
-    plt.ylim(0.0, 1.1)
+    plt.ylim(0.65, 0.75)
+
     lw = 2
 
     # plt.semilogx(param_range, train_scores_mean, label="Training score",
@@ -175,11 +176,11 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     #                  color="darkorange", lw=lw)
     # plt.semilogx(param_range, test_scores_mean, label="Cross-validation score",
     #              color="navy", lw=lw)
-    plt.plot(param_range, test_scores_mean)
+    plt.plot(param_range, test_scores_mean, label="Score d'exactitude")
     # plt.fill_between(param_range, test_scores_mean - test_scores_std,
     #                  test_scores_mean + test_scores_std, alpha=0.2,
     #                  color="navy", lw=lw)
-    plt.legend(loc="best")
+    plt.legend(loc="lower right")
     plt.show(block=False)
 
 def classification (num_mod, mod_path, rep_metriques):
