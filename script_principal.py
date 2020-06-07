@@ -3,7 +3,7 @@ from pretraitements import pretraitements
 from production_metriques import creation_metriques
 from ech_pixel import echantillonnage_pix
 from fonctions_modele import entrainement, classification, creation_output, HyperTuningGrid, plot_valid
-
+from ech_objet import echantillonnage_obj
 import os
 import matplotlib.pyplot as plt
 from osgeo import gdal
@@ -14,7 +14,7 @@ root_dir = os.path.abspath(os.path.dirname(__file__))
 path_r = r"E:\Program Files\R\R-3.6.1\bin\Rscript.exe"  # Chemin vers l'application 'Rscript.exe' de l'ordinateur
 
 # Données initiales à changer par l'utilisateur
-#liste_feuillet = ['32D06NE', '32D06SE']  # Entrée la liste des feuillets désiré, n'en mettre qu'un seul pour un feuillet.
+liste_feuillet = ['32D06NE', '32D06SE']  # Entrée la liste des feuillets désiré, n'en mettre qu'un seul pour un feuillet.
 
 
 #### SECTION 1 - Production des métriques ####
@@ -73,21 +73,34 @@ def mnt_metriques(liste_feuillet, creation):
 À REMPLIR
 '''
 
-def echant_main(liste_feuillet, creation):
+def echant_main(liste_feuillet, creation, approche):
     rep_metriques, rep_mnt_buff = mnt_metriques(liste_feuillet, creation) # Appel de variables de la SECTION 1
     for i in liste_feuillet:
         feuillet = i
 
-        # Intrants pour l'échantillonnage par pixel
+        # Intrants communs aux deux approches
         path_depot = os.path.join(root_dir, 'inputs/depots', feuillet, 'zones_depots_glaciolacustres_{}.shp'.format(feuillet))  # Chemins des couches du MNT et de la couche de dépôts
         path_mnt = os.path.join(rep_mnt_buff, 'MNT_{}_resample.tif'.format(feuillet))
-        echant = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel', feuillet[:-2], 'ech_{}.shp'.format(feuillet)))
 
-        # Échantillonnage par pixel
-        echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
-                            output=echant, nbPoints=2000, minDistance=500)
+        if approche == 'pixel':
+            # Intrants pour l'échantillonnage par pixel
+            echant = os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel', feuillet[:-2], 'ech_{}.shp'.format(feuillet))
 
-#echant_main(liste_feuillet, creation=False)
+            # Échantillonnage par pixel
+            echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
+                                output=echant, nbPoints=2000, minDistance=500)
+        elif approche == 'objet':
+            # Intrant pour l'échantillonnage par objet
+            path_segmentation = os.path.join(root_dir, 'inputs/segmentation', feuillet[:-2], 'segmentation_{}.shp'.format(feuillet))
+
+            # Échantillonnage par objet
+            echantillonnage_obj(path_metriques=rep_metriques, path_segmentation=path_segmentation, path_depot=path_depot)
+
+
+
+echant_main(liste_feuillet, creation=False, approche='objet')
+
+
 
 
 #### SECTION 3a - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
@@ -238,13 +251,13 @@ clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement(i
                                                                                    outputMod=outputMod, **params_base)
 
 # # Impression des courbes de validation pour chaque hyperparamètre
-param_range = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+#param_range = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
 
 #param_range.append()
 #param_range.append(None)
-#param_range = [200, 500, 800, 1000, 5000, 10000]
+param_range = [200, 500, 800, 1000, 5000, 10000]
 #param_range = ['auto', 'sqrt', 'log2']
-plot_valid(param_name='max_depth', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
+plot_valid(param_name='n_estimators', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
 
 
 
