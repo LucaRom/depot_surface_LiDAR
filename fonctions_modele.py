@@ -183,8 +183,8 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     plt.legend(loc="best")
     plt.show(block=False)
 
-def classification (num_mod, rep_metriques):
-    modele_joblib = joblib.load(os.path.join(root_dir, 'inputs/modele', '{}.pk1'.format(num_mod))) # Import du modèle sauvegardé
+def classification (num_mod, mod_path, rep_metriques):
+    modele_joblib = joblib.load(os.path.join(mod_path, '{}.pkl'.format(num_mod))) # Import du modèle sauvegardé
     tiff_path_list = os.listdir(rep_metriques)  # Liste des fichiers
 
     # On crée une liste avec toutes les images lues
@@ -208,7 +208,7 @@ def classification (num_mod, rep_metriques):
     prediction = np.reshape(prediction, (rows, cols))
     print('Classification terminée.')
 
-    return prediction
+    return prediction, tiff_path_list
 
 #def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start, logger):
 def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list):
