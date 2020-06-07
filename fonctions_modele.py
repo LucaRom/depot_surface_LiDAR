@@ -20,6 +20,7 @@ import pandas as pd
 from datetime import datetime
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.externals import joblib
 from sklearn import metrics
 
 from sklearn.metrics import confusion_matrix
@@ -53,7 +54,7 @@ def model_plots(test_y, clf, test_metriques, metriques):
     plt.xlabel('Importance relative (%)')
     plt.show(block=False)
 
-def entrainement (inputEch, metriques, **kwargs):
+def entrainement (inputEch, metriques, outputMod, **kwargs):
     # Pour importer un shapefile
     # Chemin vers le dossier avec les shapefiles d'entrainement
     #folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
@@ -83,6 +84,10 @@ def entrainement (inputEch, metriques, **kwargs):
     # Train the model using the training sets y_pred=clf.predict(X_test)
     clf.fit(train_metriques, train_y)     # Model fit sur 70%
     y_pred = clf.predict(test_metriques)  # Predicition sur 30%
+
+    # Save the model as a pickle in a file
+    print(inputEch[-5:])
+    joblib.dump(clf, '{}.pkl'.format(outputMod))
 
     # Impression de précision
     accu_mod = metrics.accuracy_score(test_y, y_pred)
@@ -178,8 +183,10 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     plt.legend(loc="best")
     plt.show(block=False)
 
-def classification (clf, rep_metriques):
+def classification (num_mod, rep_metriques):
+    modele_joblib = joblib.load(os.path.join(root_dir, 'inputs/modele', '{}.pk1'.format(num_mod))) # Import du modèle sauvegardé
     tiff_path_list = os.listdir(rep_metriques)  # Liste des fichiers
+
     # On crée une liste avec toutes les images lues
     tiffs_list = []
     for i in tiff_path_list:
@@ -197,7 +204,7 @@ def classification (clf, rep_metriques):
 
     # Prediction du modèle et on le reshape
     print('Début de la prédiction complète. Cette étape peut prendre plusieurs minutes.')
-    prediction = clf.predict(data2d)
+    prediction = modele_joblib.predict(data2d)
     prediction = np.reshape(prediction, (rows, cols))
     print('Classification terminée.')
 
