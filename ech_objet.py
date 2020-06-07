@@ -49,7 +49,7 @@ def set_chemins():
 
     #Chemins de la couche de segmentation et de la couche de dépôts
     path_segmentation = os.path.join(root_dir, 'inputs/segmentations/seg_ecognition_31h02NE_SE/Test2_NE_Clip.shp')
-    path_depot = os.path.join(root_dir, 'inputs/depots/31H02NE/zone_depots_glaciolacustre_31H02NE_MTM8_reg.shp')
+    path_depot = os.path.join(root_dir, 'inputs/depots/31H02NE/zones_depots_glaciolacustres_31H02NE_MTM8.shp')
 
     # Chemin du répertoire contenant les métriques
     path_met = os.path.join(root_dir, 'inputs/tiffs/31H02NE_5m/')
