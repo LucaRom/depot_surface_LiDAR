@@ -2,7 +2,7 @@ import rasterio, os
 from osgeo import gdal, osr
 from rasterio.merge import merge
 from rasterio.mask import mask
-from ech_pixel import raster_calculation, creation_raster, creation_buffer, conversion_polygone, delete_border
+from ech_pixel import creation_buffer, creation_cadre
 import whitebox
 
 
@@ -95,18 +95,10 @@ def clip_raster_to_polygon(input_raster, input_polygon, epsg, output):
         raster.close()
 
 
-def creation_buffer_raster(input_raster, input_mosaic, distance, epsg, output):
+def creation_buffer_raster(input_raster, input_mosaic, distance, output):
 
-    # Transormation du MNT en en valeurs 0 pour simplifier la polygonisation
-    mnt0 = raster_calculation(input_raster)
-
-    # Création d'un raster en mémoire
-    mnt0_raster, proj_mnt0 = creation_raster(mnt0, input_raster)
-
-    # Conversion en polygone dans un couche en mémoire et suppression des bordures
-    path_couche_memory = "/vsimem/mnt0_poly.shp"
-    mnt0_poly = conversion_polygone(mnt0_raster, path_couche_memory)
-    cadre = delete_border(path_couche_memory)
+    # Création du cadre du raster
+    cadre, epsg = creation_cadre(input_raster)
 
     # Création du buffer autour du cadre
     buff = creation_buffer(cadre, distance, epsg, 3, 2)
@@ -172,7 +164,7 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
     if not os.path.exists(rep_raster_buffer):
         os.makedirs(rep_raster_buffer)
     raster_buffer = os.path.join(rep_raster_buffer,'{}_buffer.tif'.format(feuillet))
-    creation_buffer_raster(path_feuillet, mosaique, distance_buffer, epsg, raster_buffer)
+    creation_buffer_raster(path_feuillet, mosaique, distance_buffer, raster_buffer)
     #
     # Suppression des fichiers temporaires (mnt rééchantillonnés, mosaique)
     print('Suppression des fichiers temporaires...')
