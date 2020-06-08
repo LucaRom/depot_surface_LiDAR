@@ -343,7 +343,7 @@ def creation_buffer(geodataframe, distance, epsg, cap_style, join_style):
     buff = gpd.GeoDataFrame(columns=['geometry'])
     buff.crs = epsg
     # Création du buffer sur la couche input et ajout du buffer dans la couche de sortie
-    buff.loc[0, 'geometry'] = geodataframe.loc[0,'geometry'].buffer(distance, 16, cap_style=cap_style, join_style=join_style)
+    buff['geometry'] = geodataframe['geometry'].buffer(distance, cap_style=cap_style, join_style=join_style)
     return buff
 
 
