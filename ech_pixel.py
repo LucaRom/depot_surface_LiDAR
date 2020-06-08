@@ -327,9 +327,14 @@ def delete_border(path_shp):
     df = gpd.read_file(path_shp)
     df['area'] = [i.area for i in df['geometry']]
 
-    # Retrait de l'entité avec la plus petite superficie
-    df = df[df['area'] != df['area'].min()]
-    return df
+    # Création gdf de sortie
+    output = gpd.GeoDataFrame(columns=['geometry'])
+
+    # On garde seulement la plus grande entité et on l'ajoute au gdf de sortie
+    max = df[df['area'] == df['area'].max()]['geometry'].values[0]
+    output.loc[0, 'geometry'] = max
+
+    return output
 
 
 def creation_buffer(geodataframe, distance, epsg, cap_style, join_style):
@@ -438,6 +443,26 @@ def extract_value_metrique(path_couche_point, path_metrique):
     print('Sauvegarde...')
     shp.to_file(path_couche_point)
 
+def creation_cadre(input_raster):
+    '''
+    :param input_raster: Path raster dont on veut extraire le cadre (str)
+    :return: geodataframe de la couche du cadre (Geopandas.GeoDataframe())
+    '''
+    # Multiplier le mnt par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
+    print('Multiplication du MNT par 0...')
+    ras0_array = raster_calculation(input_raster)
+    ras0_raster, proj = creation_raster(ras0_array, input_raster)
+
+    # Extraction su code EPSG de la métrique
+    epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
+
+    # Conversion du raster du mnt0 en polygone et supression des bordures pour créer le cadre d'échantillonnage
+    print('Conversion MNT en polygone...')
+    path_couche_memory = "/vsimem/ras0_poly.shp"
+    conversion_polygone(ras0_raster, path_couche_memory)
+    print('Suppresion des bordures...')
+    cadre = delete_border(path_couche_memory)
+    return cadre, epsg
 
 def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance):
     '''
@@ -452,20 +477,22 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
     print('***ÉCHANTILLONNAGE PAR PIXEL***')
 
-    # Multiplier le mnt par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
-    print('Multiplication du MNT par 0...')
-    #path_couche_memory = "/vsimem/mnt0_poly.shp"
-    mnt0_array = raster_calculation(path_mnt)
-    mnt0_raster, proj = creation_raster(mnt0_array, path_mnt)
-    epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
-    print(epsg)
+    # Création du cadre du MNT
+    print('Création du cadre...')
+    cadre, epsg = creation_cadre(path_mnt)
 
-    # Conversion du raster du mnt0 en polygone et supression des bordures pour créer le cadre d'échantillonnage
-    print('Conversion MNT en polygone...')
-    path_couche_memory = "/vsimem/mnt0_poly.shp"
-    conversion_polygone(mnt0_raster, path_couche_memory)
-    print('Suppresion des bordures...')
-    cadre = delete_border(path_couche_memory)
+    # #path_couche_memory = "/vsimem/mnt0_poly.shp"
+    # mnt0_array = raster_calculation(path_mnt)
+    # mnt0_raster, proj = creation_raster(mnt0_array, path_mnt)
+    # epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
+    # print(epsg)
+    #
+    # # Conversion du raster du mnt0 en polygone et supression des bordures pour créer le cadre d'échantillonnage
+    # print('Conversion MNT en polygone...')
+    # path_couche_memory = "/vsimem/mnt0_poly.shp"
+    # conversion_polygone(mnt0_raster, path_couche_memory)
+    # print('Suppresion des bordures...')
+    # cadre = delete_border(path_couche_memory)
 
     # Lecture de la couche de dépôts et reprojection si nécessaire
     print('Lecture de la couche de dépôts...')
