@@ -9,7 +9,9 @@ from skimage import io
 from osgeo import osr
 from osgeo.gdalnumeric import *
 import geopandas as gpd
+import os
 
+root_dir = os.path.abspath(os.path.dirname(__file__))
 
 def segmentation(input_met, type_seg):
     '''
@@ -71,7 +73,8 @@ def segmentation_main(input_met, type_seg, output):
     conversion_polygone(met0_raster, path_couche_memory)
     print('Suppresion des bordures..')
     cadre = delete_border(path_couche_memory)
-    cadre.to_file( r"C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\segmentations\cadre.shp")
+    cadre.to_file(os.path.join(root_dir, 'inputs/segmentations/cadre.shp'))
+    #cadre.to_file( r"C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\segmentations\cadre.shp")
 
     # Suppression des géométries invalides
     print('Suppression géométries invalides...')
@@ -103,8 +106,10 @@ def segmentation_main(input_met, type_seg, output):
 
 if __name__ == "__main__":
 
-    input_met = r"C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02NE\Pen_WB_31H02NE.tif"
-    output = r"C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\segmentations\segmentation_31H02NE.shp"
+    root_dir = os.path.abspath(os.path.dirname(__file__))
+
+    input_met = os.path.join(root_dir, 'inputs/tiffs/31H02SO/Pen_WB_31H02SO.tif')
+    output = os.path.join(root_dir, 'inputs/segmentation/seg_31H02SO2.tif')
     type_seg = 'watershed'
 
     segmentation_main(input_met=input_met, type_seg=type_seg, output=output)

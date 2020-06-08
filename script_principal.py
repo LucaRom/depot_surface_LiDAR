@@ -294,20 +294,15 @@ def class_main(feuillet, num_mod):
 # echant_main(liste_feuillet, creation=True)
 #
 
-
-
 # Entrainement du modèle
 #entrain_main('32D01NO', '32D01', makeplots=False, replaceMod=False)
 #entrain_main('31H02NE', '31H02', makeplots=True, replaceMod=False)
 
 # Classification d'un feuillet
 #class_main(feuillet='31H02SO', num_mod='31H02')
-
-class_main(feuillet='32D02SE', num_mod='31H02')
-
-class_main(feuillet='31H02SO', num_mod='32D01')
-
-class_main(feuillet='32D02SE', num_mod='32D01')
+#class_main(feuillet='32D02SE', num_mod='31H02')
+#class_main(feuillet='31H02SO', num_mod='32D01')
+#class_main(feuillet='32D02SE', num_mod='32D01')
 
 
 
