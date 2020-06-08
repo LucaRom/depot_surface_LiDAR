@@ -116,7 +116,7 @@ def echantillon_objet(path_depot, segmentation):
     return segmentation
 
 
-def echantillonnage_obj(path_metriques, path_segmentation, path_depot):
+def echantillonnage_obj(path_metriques, path_segmentation, path_depot, output):
 
     # Statistiques zonales
     print('Calcul des statistiques zonales...')
@@ -128,6 +128,8 @@ def echantillonnage_obj(path_metriques, path_segmentation, path_depot):
 
     # On sauvegarde la couche de segmentation avec la colonne des zones et les stats zonales
     print('Sauvegarde...')
+    if not os.path.exists(os.path.dirname(output)):
+        os.makedirs(os.path.dirname(output))
     seg_stats_ech.to_file(output)
     print('Terminé')
 

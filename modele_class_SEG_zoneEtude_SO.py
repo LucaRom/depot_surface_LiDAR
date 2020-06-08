@@ -13,6 +13,8 @@ import numpy as np
 import os
 import pandas as pd
 import seaborn as sns
+from osgeo import gdal
+from gdalconst import *
 
 from datetime import datetime
 from sklearn.model_selection import train_test_split
@@ -22,6 +24,9 @@ from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.feature_selection import SelectFromModel
 from sklearn.utils import resample
+
+
+
 
 # On définit le dossier parent pour le réutiliser dans l'import d'intrants
 root_dir = os.path.abspath(os.path.dirname(__file__))

@@ -16,20 +16,21 @@ from osgeo import gdal
 import osr
 from gdalconst import *
 import pandas as pd
-
 from datetime import datetime
+
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals import joblib
 from sklearn import metrics
-
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import validation_curve # A mettre dans fonctions modele
 from sklearn.feature_selection import SelectFromModel
-
 from sklearn.utils import resample
+
+import seaborn as sns
+
 
 def model_plots(test_y, clf, test_metriques, metriques):
     # Matrice de confusion
@@ -54,11 +55,8 @@ def model_plots(test_y, clf, test_metriques, metriques):
     plt.xlabel('Importance relative (%)')
     plt.show(block=False)
 
-def entrainement (inputEch, metriques, outputMod, **kwargs):
+def entrainement_pix (inputEch, metriques, outputMod, replaceMod, makeplots, **kwargs):
     # Pour importer un shapefile
-    # Chemin vers le dossier avec les shapefiles d'entrainement
-    #folder_path = os.path.join(root_dir, 'inputs/inputs_modele_avril2020')
-
     # # On crée la liste des shapefiles
     files = os.listdir(inputEch)  # Liste des fichiers dans le dossier "folder"
     shp_list = [os.path.join(inputEch, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
@@ -85,15 +83,77 @@ def entrainement (inputEch, metriques, outputMod, **kwargs):
     y_pred = clf.predict(test_metriques)  # Predicition sur 30%
 
     # Save the model as a pickle in a file
-    print(inputEch[-5:])
-    joblib.dump(clf, '{}.pkl'.format(outputMod))
+    if replaceMod is True:
+        print(inputEch[-5:])
+        joblib.dump(clf, '{}.pkl'.format(outputMod))
 
     # Impression de précision
     accu_mod = metrics.accuracy_score(test_y, y_pred)
     print("Accuracy:", accu_mod)
 
     # Génération des graphiques (Appel de fonction)
-    model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
+    if makeplots is True:
+        model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
+
+    #return clf, plt, accu_mod
+    return clf, accu_mod, train_metriques, train_y, test_metriques, test_y
+
+def entrainement_obj (inputEch, outputMod, replaceMod, makeplots, **kwargs):
+    # Pour importer un shapefile
+    # # On crée la liste des shapefiles
+    files = os.listdir(inputEch)  # Liste des fichiers dans le dossier "folder"
+    shp_list = [os.path.join(inputEch, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
+                                                                                   # .shp seulement
+    # On join les fichiers .shp de la liste
+    new_shp_temp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
+                                              ignore_index=True), crs=gpd.read_file(shp_list[0]).crs)
+
+    # On enleve la colonne 'label' et on enleve les rangées 'nulles'
+    del new_shp_temp['label']
+    new_shp_temp = new_shp_temp.dropna()
+
+    df_majority = new_shp_temp[new_shp_temp.Zone == 0]
+    df_minority = new_shp_temp[new_shp_temp.Zone == 1]
+
+    # Downsample majority class
+    df_majority_downsampled = resample(df_majority,
+                                       replace=False,  # sample without replacement
+                                       n_samples=len(df_minority),  # to match minority class
+                                       random_state=123)  # reproducible results
+
+    # Combine minority class with downsampled majority class
+    new_shp = pd.concat([df_majority_downsampled, df_minority])
+
+    # On choisi la colonne de que l'on veut prédire (ici le type de dépots)
+    y_depots = new_shp.Zone
+
+    # On definit les métriques sur lesquels on veut faire l'analyse
+    metriques = list(new_shp.iloc[:,4:75])
+    X_metriques = new_shp[metriques]
+
+    # Séparation des données en données d'entrainement et données de tests
+    train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size=0.30,
+                                                                        random_state=42)
+
+    # Create a Gaussian Classifier
+    clf = RandomForestClassifier(verbose=2, oob_score=True, random_state=42, **kwargs)
+
+    # Train the model using the training sets y_pred=clf.predict(X_test)
+    clf.fit(train_metriques, train_y)     # Model fit sur 70%
+    y_pred = clf.predict(test_metriques)  # Predicition sur 30%
+
+    # Save the model as a pickle in a file
+    if replaceMod is True:
+        print(inputEch[-5:])
+        joblib.dump(clf, '{}_{}.pkl'.format(outputMod, 'obj'))
+
+    # Impression de précision
+    accu_mod = metrics.accuracy_score(test_y, y_pred)
+    print("Accuracy:", accu_mod)
+
+    # Génération des graphiques (Appel de fonction)
+    if makeplots is True:
+        model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
 
     #return clf, plt, accu_mod
     return clf, accu_mod, train_metriques, train_y, test_metriques, test_y
