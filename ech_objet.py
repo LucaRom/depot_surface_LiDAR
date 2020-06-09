@@ -142,7 +142,17 @@ def selection_poly_cadre(path_segmentation, path_met_cadre):
     return seg_cadre
 
 
-def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation, path_depot, output):
+def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation,output, path_depot=None):
+    '''
+    :param path_metriques: Chemin du répertoire contenant les métriques (.tif) pour calculer les statistiques (str)
+    :param path_met_cadre: chemin du Raster de référence pour créer le cadre d'échantillonnage (str)
+    :param path_segmentation: Chemin du fichier .shp de la segmentation (str)
+    :param output: Chemin du fichier de sortie (str)
+    :param path_depot: Chemin de la couche de dépôts (.shp) pour identifier les polygones in/ext des dépôts
+                       Si laissé par défaut, seules les statistiques de zones seront créées sans la colonne Zone.
+    :return: Couche polygonale de segmentation incluant les statistiques de zones pour chaque métriques contenues dans
+             le répertoire 'path_métriques'.
+    '''
 
     # Sélection des polygones à l'intérieur de la superficie d'échantillonnage
     print("Sélection des polygones à l'intérieur du cadre...")
@@ -154,15 +164,23 @@ def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation, path_
     print('Calcul des statistiques zonales...')
     seg_stats = stats_zonales(path_metriques=path_metriques, path_segmentation=path_seg_cadre)
 
-    # Échantillonnage
-    print('Échantillonnage...')
-    seg_stats_ech = echantillon_objet(path_depot=path_depot, segmentation=seg_stats)
+    # Échantillonnage si spécifié
+    if path_depot is not None:
+        print('Échantillonnage...')
+        seg_stats_ech = echantillon_objet(path_depot=path_depot, segmentation=seg_stats)
 
-    # On sauvegarde la couche de segmentation avec la colonne des zones et les stats zonales
-    print('Sauvegarde...')
-    if not os.path.exists(os.path.dirname(output)):
-        os.makedirs(os.path.dirname(output))
-    seg_stats_ech.to_file(output)
+        # On sauvegarde la couche de segmentation avec la colonne des zones et les stats zonales
+        print('Sauvegarde...')
+        if not os.path.exists(os.path.dirname(output)):
+            os.makedirs(os.path.dirname(output))
+        seg_stats_ech.to_file(output)
+    else:
+        # On sauvegarde la couche de segmentation seulement avec les stats zonales
+        print('Sauvegarde...')
+        if not os.path.exists(os.path.dirname(output)):
+            os.makedirs(os.path.dirname(output))
+        seg_stats.to_file(output)
+
     print('Terminé')
 
 
