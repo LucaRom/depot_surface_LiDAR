@@ -143,6 +143,16 @@ def selection_poly_cadre(path_segmentation, path_met_cadre):
 
 
 def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation,output, path_depot=None):
+    '''
+    :param path_metriques: Chemin du répertoire contenant les métriques (.tif) pour calculer les statistiques (str)
+    :param path_met_cadre: chemin du Raster de référence pour créer le cadre d'échantillonnage (str)
+    :param path_segmentation: Chemin du fichier .shp de la segmentation (str)
+    :param output: Chemin du fichier de sortie (str)
+    :param path_depot: Chemin de la couche de dépôts (.shp) pour identifier les polygones in/ext des dépôts
+                       Si laissé par défaut, seules les statistiques de zones seront créées sans la colonne Zone.
+    :return: Couche polygonale de segmentation incluant les statistiques de zones pour chaque métriques contenues dans
+             le répertoire 'path_métriques'.
+    '''
 
     # Sélection des polygones à l'intérieur de la superficie d'échantillonnage
     print("Sélection des polygones à l'intérieur du cadre...")
