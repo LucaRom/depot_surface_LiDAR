@@ -1,4 +1,4 @@
-from ech_pixel import creation_raster, conversion_polygone, raster_calculation, delete_border, creation_buffer
+from ech_pixel import creation_cadre, creation_raster, conversion_polygone, creation_buffer
 import osr
 import numpy as np
 from skimage.color import rgb2gray
@@ -9,9 +9,7 @@ from skimage import io
 from osgeo import osr
 from osgeo.gdalnumeric import *
 import geopandas as gpd
-import os
 
-root_dir = os.path.abspath(os.path.dirname(__file__))
 
 def segmentation(input_met, type_seg):
     '''
@@ -61,20 +59,10 @@ def segmentation_main(input_met, type_seg, output):
     path_seg_poly = "/vsimem/seg.shp"
     conversion_polygone(dataset=ras, output=path_seg_poly)
 
-    # Multiplier la métrique par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
-    print('Multiplication de la métrique par 0...')
-    met0_array = raster_calculation(input_met)
-    met0_raster, proj = creation_raster(met0_array, input_met )
-    epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
+    # Création du cadre du raster input
+    print('Création du cadre...')
+    cadre, epsg = creation_cadre(input_met)
 
-    # Conversion du raster du métrique en polygone et supression des bordures pour créer le cadre valide
-    print('Conversion métrique en polygone...')
-    path_couche_memory = "/vsimem/met0_poly.shp"
-    conversion_polygone(met0_raster, path_couche_memory)
-    print('Suppresion des bordures..')
-    cadre = delete_border(path_couche_memory)
-    cadre.to_file(os.path.join(root_dir, 'inputs/segmentations/cadre.shp'))
-    #cadre.to_file( r"C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\segmentations\cadre.shp")
 
     # Suppression des géométries invalides
     print('Suppression géométries invalides...')
@@ -85,7 +73,7 @@ def segmentation_main(input_met, type_seg, output):
         if col == 'FID':
             del seg_poly_rep[col]
 
-    # On crée un nouveau dataframe avec les polygones étant contenus dans la segmentation
+    # On sélectionne seulement les polygones à l'intérieur du cadre
     print('Suppression des polygones en dehors du cadre...')
     geom_cadre = cadre.loc[0, 'geometry']
     seg_clip = gpd.GeoDataFrame(columns=['geometry'])
@@ -106,10 +94,9 @@ def segmentation_main(input_met, type_seg, output):
 
 if __name__ == "__main__":
 
-    root_dir = os.path.abspath(os.path.dirname(__file__))
-
-    input_met = os.path.join(root_dir, 'inputs/tiffs/31H02SO/Pen_WB_31H02SO.tif')
-    output = os.path.join(root_dir, 'inputs/segmentations/seg_31H02SO.shp')
+    input_met = r"C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\tiffs\31H02SO\Pen_WB_31H02SO.tif"
+    input_tif_cadre = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\MNT\resample\MNT_31H02SO_resample.tif'
+    output = r"C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\segmentations\segmentation_31H02SO.shp"
     type_seg = 'watershed'
 
-    segmentation_main(input_met=input_met, type_seg=type_seg, output=output)
+    segmentation_main(input_met=input_met, type_seg=type_seg,  output=output)
