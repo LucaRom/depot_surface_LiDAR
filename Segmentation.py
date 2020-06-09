@@ -109,7 +109,7 @@ if __name__ == "__main__":
     root_dir = os.path.abspath(os.path.dirname(__file__))
 
     input_met = os.path.join(root_dir, 'inputs/tiffs/31H02SO/Pen_WB_31H02SO.tif')
-    output = os.path.join(root_dir, 'inputs/segmentation/seg_31H02SO2.tif')
+    output = os.path.join(root_dir, 'inputs/segmentations/seg_31H02SO.shp')
     type_seg = 'watershed'
 
     segmentation_main(input_met=input_met, type_seg=type_seg, output=output)
