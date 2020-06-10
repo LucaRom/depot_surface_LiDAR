@@ -464,7 +464,8 @@ def creation_cadre(input_raster):
     cadre = delete_border(path_couche_memory)
     return cadre, epsg
 
-def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance, path_zone_dev):
+
+def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance):
     '''
     :param path_depot: Chemin de la couche de dépôts (str)
     :param path_mnt: Chemin du MNT à échantillonner (str)
