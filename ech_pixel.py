@@ -464,7 +464,7 @@ def creation_cadre(input_raster):
     cadre = delete_border(path_couche_memory)
     return cadre, epsg
 
-def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance):
+def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance, path_zone_dev):
     '''
     :param path_depot: Chemin de la couche de dépôts (str)
     :param path_mnt: Chemin du MNT à échantillonner (str)
@@ -518,6 +518,22 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     print('Création zone externe...')
     zone_ext = difference(cadre, buff_clip, epsg)
 
+    # ##########################################################################
+    # # SOUSTRACTION DES ZONES ANTHROPIQUES À LA ZONE EXT ET AUX ZONES DE DÉPÔTS
+    # # Regroupement des zones anthropiques
+    # print('Regroupement des zones anthropiques...')
+    # zone_dev = gpd.read_file(path_zone_dev)
+    # zone_dev_reg = dissolve(zone_dev, epsg)
+    #
+    # # Différence des zones anthropiques à la zone extérieure
+    # print('Différence zones anthropiques à la zone extérieure...')
+    # zone_ext = difference(zone_ext, zone_dev_reg, epsg)
+    #
+    # # Différence des zones anthropiques aux zones dépôts
+    # print('Différence zones anthropiques aux zones de dépôts...')
+    # depot_reg = difference(depot_reg, zone_dev_reg, epsg)
+    # ##########################################################################
+
     # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
     print('Comparaison...')
     plus_petite_zone = None
@@ -566,17 +582,18 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 if __name__ == "__main__":
 
     # Chemins des couches du MNT et de la couche de dépôts
-    path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zones_depots_glaciolacustres_31H02SE_MTM8.shp'
-    path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02SE_5x5.tif'
-    path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'
-    output = r'C:\Users\home\Documents\Documents\APP3\ech_31H02SE.shp'
+    path_depot = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\depots\31H02NE\zones_depots_glaciolacustres_31H02NE.shp'
+    path_mnt = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\Backup\MNT_31H02NE_resample.tif'
+    path_metriques = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\tiffs\31H02NE'
+    output = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\ech_entrainement_mod\pixel\31H02_no_anth\ech_31H02NE.shp'
+    path_zone_dev = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\zone_developpees\31H02\zone_dev_31H02NE.shp'
 
     import time
 
     start = time.time()
     # Échantillonnage
     echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=path_metriques,
-                        output=output, nbPoints=2000, minDistance=500)
+                        output=output, nbPoints=2000, minDistance=500, path_zone_dev=path_zone_dev)
     # path_zone = r'C:\Users\home\Documents\Documents\APP3\difference.shp'
     # zone = gpd.read_file(path_zone)
     # ech_diff = echantillon_pixel(poly=zone, minDistance=500, value=143, epsg='EPSG:2145', zone=0)
