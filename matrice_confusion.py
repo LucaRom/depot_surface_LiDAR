@@ -16,6 +16,7 @@ import geopandas as gpd
 import pandas as pd
 import seaborn as sn
 import matplotlib.pyplot as plt
+from matplotlib.ticker import FuncFormatter
 
 root_dir = os.path.abspath(os.path.dirname(__file__))
 
@@ -99,9 +100,9 @@ def creation_raster (inputArray,inputMet, drv, output):
 #     mnt_resample = os.path.join(root_dir, 'Backup/MNT_{}_resample.tif'.format(feuillet))
 #     print(mnt_resample)
 #     creation_raster(data_array, mnt_resample, 'GTiff', output_epsg)
-#
-#     output_clip = os.path.join(path_output, '{}_clip.tif'.format(name[:-4]))
-#     clip_final(output_epsg, output_clip)
+# #
+# #     output_clip = os.path.join(path_output, '{}_clip.tif'.format(name[:-4]))
+# #     clip_final(output_epsg, output_clip)
 
 
 #path_data = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\fichiers_outputs\pred_pixel'
@@ -113,7 +114,9 @@ def creation_raster (inputArray,inputMet, drv, output):
 def creation_matrice_confusion(path_raster, path_depot):
 
     name = os.path.basename(path_raster)
-    feuillet = name.split('_')[1]
+    name_split = name.split('_')
+    feuillet = name_split[1]
+    modele = name_split[2]
     path_depot_feuillet = os.path.join(path_depot, feuillet,  'zones_depots_glaciolacustres_{}.shp'.format(feuillet))
 
     # création du cadre
@@ -146,24 +149,39 @@ def creation_matrice_confusion(path_raster, path_depot):
            [no_0_pred_int, no_1_pred_int]]
     matrice_data = pd.DataFrame(arr, index=['0', '1'], columns=['0', '1'])
 
+    comma_fmt = FuncFormatter(lambda x, p: format(int(x), ','))
     sn.set(font_scale=1.2)  # for label size
-    sn.heatmap(matrice_data,
+    matrice = sn.heatmap(matrice_data,
                annot=True,
                annot_kws={"size": 14}, # font size
                cmap=plt.cm.Blues,
-               fmt = 'd'
+               fmt = 'd',
+               cbar_kws={'format':comma_fmt}
                )
-    plt.title('{} - {}'.format(feuillet, exact_glob))
+    for t in matrice.texts:
+        t.set_text('{:,d}'.format(int(t.get_text())))
+    plt.title('{} - Modèle {}\n{}'.format(feuillet, modele, exact_glob))
     plt.xlabel('Prédit')
     plt.ylabel('Réel')
     plt.show()
 
 
-path_data = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\fichiers_outputs\pred_pixel'
+path_data = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\outputs\pixel\prediction_31H02SO_31H02_no_anth_no_anth.tif'
+output_epsg = os.path.join(os.path.dirname(path_data), 'pred_31H02SO_31H02_noAnth.tif')
 path_depot = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\depots'
-liste_clip = glob.glob(os.path.join(path_data, '*clip.tif'))
+output_clip = os.path.join(os.path.dirname(path_data), 'pred_31H02SO_31H02_noAnth_clip.tif')
 
-for clip in liste_clip:
-    creation_matrice_confusion(clip, path_depot)
-
+# feuillet = os.path.basename(path_data).split('_')[1]
+# name = os.path.basename(path_data)
+# mod = os.path.basename(path_data).split('_')[2][:-4]
+# data = gdal.Open(path_data)
+# nd = data.GetRasterBand(1).GetNoDataValue()
+# data_array = data.GetRasterBand(1).ReadAsArray()
+#
+# mnt_resample = os.path.join(root_dir, 'Backup/MNT_{}_resample.tif'.format(feuillet))
+# print(mnt_resample)
+# creation_raster(data_array, mnt_resample, 'GTiff', output_epsg)
+#
+# clip_final(output_epsg, output_clip)
+# creation_matrice_confusion(output_clip, path_depot)
 
