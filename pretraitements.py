@@ -76,11 +76,11 @@ def getFeatures(gdf):
     return [json.loads(gdf.to_json())['features'][0]['geometry']]
 
 
-def clip_raster_to_polygon(input_raster, input_polygon, epsg, output):
+def clip_raster_to_polygon(input_raster, input_polygon, epsg, nodata, output):
 
     with rasterio.open(input_raster) as raster:
         coords = getFeatures(input_polygon)
-        out_img, out_transform = mask(dataset=raster, shapes=coords, crop=True)
+        out_img, out_transform = mask(dataset=raster, shapes=coords, nodata=nodata, crop=True)
         out_meta = raster.meta.copy()
         out_meta.update({"driver": "GTiff",
                          "height": out_img.shape[1],
@@ -98,13 +98,13 @@ def clip_raster_to_polygon(input_raster, input_polygon, epsg, output):
 def creation_buffer_raster(input_raster, input_mosaic, distance, output):
 
     # Création du cadre du raster
-    cadre, epsg = creation_cadre(input_raster)
+    cadre, epsg, nodata = creation_cadre(input_raster)
 
     # Création du buffer autour du cadre
     buff = creation_buffer(cadre, distance, epsg, 3, 2)
 
     #Clip de la mosaique au buffer
-    clip_raster_to_polygon(input_mosaic, buff, epsg, output)
+    clip_raster_to_polygon(input_mosaic, buff, epsg, nodata, output)
 
 
 
