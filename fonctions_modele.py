@@ -270,7 +270,7 @@ def classification (num_mod, mod_path, rep_metriques):
 
     return prediction, tiff_path_list
 
-#def creation_output (prediction, outputdir, nom_fichier, inputMet, tiff_path_list, start, logger):
+
 def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list):
     # On crée une image GEOTIFF en sortie
     #logger.info('Création du fichier de sortie {}'.format(os.path.join(outputdir, nom_fichier)))
@@ -290,37 +290,25 @@ def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list
 
     # J'extrais les paramètres d'une métriques pour le positionnement du fichier sortant
     data = gdal.Open(os.path.join(inputMet, tiff_path_list[0]))
-
-    # J'applique les paramètres de positionnement
     geoTransform = data.GetGeoTransform()
+    proj = data.GetProjection()
+    nodata = data.GetRasterBand(1).GetNoDataValue()
     data = None # On vide la mémoire
 
-    # On donne la coordonnée d'origine de l'image raster tiré d'une des métriques
-    image.SetGeoTransform(geoTransform)
-
-    # je cherche la bande 1
-    band = image.GetRasterBand(1)
-
     # Je remets la matrice en 2 dimension
-    # result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
-    result1 = prediction.reshape(prediction.shape[0], prediction.shape[1])
+    result1=prediction.reshape(prediction.shape[0], prediction.shape[1])
 
-    # j'écris la matrice dans la bande
-    # band.WriteArray(result1, 0, 0)
-    band.WriteArray(prediction, 0, 0)
+    # On écrit la matrice dans la bande
+    image.GetRasterBand(1).WriteArray(prediction, 0, 0)
 
-    # Je définis la projection
-    outRasterSRS = osr.SpatialReference()
-    outRasterSRS.ImportFromEPSG(2950)
+    # On donne les paramètres de la métrique à l'image sortante
+    image.GetRasterBand(1).SetNoDataValue(nodata)
+    image.SetProjection(proj)
+    image.SetGeoTransform(geoTransform)
+    image.FlushCache()
 
-    image.SetProjection(outRasterSRS.ExportToWkt())
-
-    # je vide la cache
-    band.FlushCache()
-    band.SetNoDataValue(-99)
     # j'efface ma matrice
     del prediction
-    del band
     del image
 
     print('Fin de l\'enregistrement du fichier raster')

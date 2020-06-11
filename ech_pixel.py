@@ -245,42 +245,27 @@ def creation_raster (inputArray,inputMet):
 
     # je déclare mon image
     # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
-    image = driver.Create('MEM',cols, rows, 1, GDT_Float64)
+    image = driver.Create('MEM',cols, rows, 1, gdal.GDT_Float64)
 
     # J'extrais les paramètres d'une métriques pour le positionnement du fichier sortant
     data = gdal.Open(inputMet)
-
-    # J'applique les paramètres de positionnement
     geoTransform = data.GetGeoTransform()
-
-    # On va chercher la projection
     proj = data.GetProjection()
+    nodata = data.GetRasterBand(1).GetNoDataValue()
     data = None # On vide la mémoire
 
-    # On donne la coordonnée d'origine de l'image raster tiré d'une des métriques
-    image.SetGeoTransform(geoTransform)
-
-    # je cherche la bande 1
-    band = image.GetRasterBand(1)
-
-    # Je remets la matrice en 2 dimension
-    # result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
-    #result1 = inputArray.reshape(inputArray.shape[0], inputArray.shape[1])
-
     # j'écris la matrice dans la bande
-    # band.WriteArray(result1, 0, 0)
-    band.WriteArray(inputArray, 0, 0)
+    image.GetRasterBand(1).WriteArray(inputArray, 0, 0)
 
-    # Je définis la projection
-    # outRasterSRS = osr.SpatialReference()
-    # outRasterSRS.ImportFromEPSG(2950)
+    # On donne les paramètres de l'image raster tiré d'une des métriques
+    image.SetGeoTransform(geoTransform)
     image.SetProjection(proj)
+    image.GetRasterBand(1).SetNoDataValue(nodata)
 
     # je vide la cache
-    band.FlushCache()
-    band.SetNoDataValue(-99)
+    image.FlushCache()
 
-    return image, proj
+    return image, proj, nodata
 
 
 def conversion_polygone (dataset, output):
@@ -451,7 +436,7 @@ def creation_cadre(input_raster):
     # Multiplier le mnt par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
     print('Multiplication du MNT par 0...')
     ras0_array = raster_calculation(input_raster)
-    ras0_raster, proj = creation_raster(ras0_array, input_raster)
+    ras0_raster, proj, nodata = creation_raster(ras0_array, input_raster)
 
     # Extraction su code EPSG de la métrique
     epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
@@ -462,7 +447,8 @@ def creation_cadre(input_raster):
     conversion_polygone(ras0_raster, path_couche_memory)
     print('Suppresion des bordures...')
     cadre = delete_border(path_couche_memory)
-    return cadre, epsg
+    return cadre, epsg, nodata
+
 
 def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance):
     '''
@@ -479,7 +465,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
     # Création du cadre du MNT
     print('Création du cadre...')
-    cadre, epsg = creation_cadre(path_mnt)
+    cadre, epsg, nodata = creation_cadre(path_mnt)
 
     # #path_couche_memory = "/vsimem/mnt0_poly.shp"
     # mnt0_array = raster_calculation(path_mnt)
@@ -517,6 +503,22 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     # Création de la zone extérieure: différence entre le cadre et le buffer clippé
     print('Création zone externe...')
     zone_ext = difference(cadre, buff_clip, epsg)
+
+    # ##########################################################################
+    # # SOUSTRACTION DES ZONES ANTHROPIQUES À LA ZONE EXT ET AUX ZONES DE DÉPÔTS
+    # # Regroupement des zones anthropiques
+    # print('Regroupement des zones anthropiques...')
+    # zone_dev = gpd.read_file(path_zone_dev)
+    # zone_dev_reg = dissolve(zone_dev, epsg)
+    #
+    # # Différence des zones anthropiques à la zone extérieure
+    # print('Différence zones anthropiques à la zone extérieure...')
+    # zone_ext = difference(zone_ext, zone_dev_reg, epsg)
+    #
+    # # Différence des zones anthropiques aux zones dépôts
+    # print('Différence zones anthropiques aux zones de dépôts...')
+    # depot_reg = difference(depot_reg, zone_dev_reg, epsg)
+    # ##########################################################################
 
     # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
     print('Comparaison...')
@@ -566,10 +568,11 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 if __name__ == "__main__":
 
     # Chemins des couches du MNT et de la couche de dépôts
-    path_depot = r'C:\Users\home\Documents\Documents\APP2\depots_31H02\zones_depots_glaciolacustres_31H02SE_MTM8.shp'
-    path_mnt = r'C:\Users\home\Documents\Documents\APP2\MNT_31H02SE_5x5.tif'
-    path_metriques = r'C:\Users\home\Documents\Documents\APP2\Metriques\31H02\31H02SE'
-    output = r'C:\Users\home\Documents\Documents\APP3\ech_31H02SE.shp'
+    path_depot = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\depots\31H02NE\zones_depots_glaciolacustres_31H02NE.shp'
+    path_mnt = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\Backup\MNT_31H02NE_resample.tif'
+    path_metriques = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\tiffs\31H02NE'
+    output = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\ech_entrainement_mod\pixel\31H02_no_anth\ech_31H02NE.shp'
+    path_zone_dev = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\zone_developpees\31H02\zone_dev_31H02NE.shp'
 
     import time
 
