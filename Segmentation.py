@@ -46,7 +46,7 @@ def segmentation_main(input_met, type_seg, output):
     :return: Une couche polygonale de la segmentation sans les polygones à l'extérieur du cadre de l'image (.shp)
     '''
 
-    #Segmentation
+    # Segmentation
     print('Segmentation...')
     seg = segmentation(input_met, type_seg)
 
