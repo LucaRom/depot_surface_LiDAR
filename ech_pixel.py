@@ -245,42 +245,27 @@ def creation_raster (inputArray,inputMet):
 
     # je déclare mon image
     # il faut : la taille, le nombre de bandes et le type de données (ce sera des bytes)
-    image = driver.Create('MEM',cols, rows, 1, GDT_Float64)
+    image = driver.Create('MEM',cols, rows, 1, gdal.GDT_Float64)
 
     # J'extrais les paramètres d'une métriques pour le positionnement du fichier sortant
     data = gdal.Open(inputMet)
-
-    # J'applique les paramètres de positionnement
     geoTransform = data.GetGeoTransform()
-
-    # On va chercher la projection
     proj = data.GetProjection()
+    nodata = data.GetRasterBand(1).GetNoDataValue()
     data = None # On vide la mémoire
 
-    # On donne la coordonnée d'origine de l'image raster tiré d'une des métriques
-    image.SetGeoTransform(geoTransform)
-
-    # je cherche la bande 1
-    band = image.GetRasterBand(1)
-
-    # Je remets la matrice en 2 dimension
-    # result1 = resultat.reshape(resultat.shape[1], resultat.shape[2])
-    #result1 = inputArray.reshape(inputArray.shape[0], inputArray.shape[1])
-
     # j'écris la matrice dans la bande
-    # band.WriteArray(result1, 0, 0)
-    band.WriteArray(inputArray, 0, 0)
+    image.GetRasterBand(1).WriteArray(inputArray, 0, 0)
 
-    # Je définis la projection
-    # outRasterSRS = osr.SpatialReference()
-    # outRasterSRS.ImportFromEPSG(2950)
+    # On donne les paramètres de l'image raster tiré d'une des métriques
+    image.SetGeoTransform(geoTransform)
     image.SetProjection(proj)
+    image.GetRasterBand(1).SetNoDataValue(nodata)
 
     # je vide la cache
-    band.FlushCache()
-    band.SetNoDataValue(-99)
+    image.FlushCache()
 
-    return image, proj
+    return image, proj, nodata
 
 
 def conversion_polygone (dataset, output):
@@ -451,7 +436,7 @@ def creation_cadre(input_raster):
     # Multiplier le mnt par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
     print('Multiplication du MNT par 0...')
     ras0_array = raster_calculation(input_raster)
-    ras0_raster, proj = creation_raster(ras0_array, input_raster)
+    ras0_raster, proj, nodata = creation_raster(ras0_array, input_raster)
 
     # Extraction su code EPSG de la métrique
     epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
@@ -462,7 +447,7 @@ def creation_cadre(input_raster):
     conversion_polygone(ras0_raster, path_couche_memory)
     print('Suppresion des bordures...')
     cadre = delete_border(path_couche_memory)
-    return cadre, epsg
+    return cadre, epsg, nodata
 
 
 def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, minDistance):
@@ -480,7 +465,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
     # Création du cadre du MNT
     print('Création du cadre...')
-    cadre, epsg = creation_cadre(path_mnt)
+    cadre, epsg, nodata = creation_cadre(path_mnt)
 
     # #path_couche_memory = "/vsimem/mnt0_poly.shp"
     # mnt0_array = raster_calculation(path_mnt)
@@ -594,7 +579,7 @@ if __name__ == "__main__":
     start = time.time()
     # Échantillonnage
     echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=path_metriques,
-                        output=output, nbPoints=2000, minDistance=500, path_zone_dev=path_zone_dev)
+                        output=output, nbPoints=2000, minDistance=500)
     # path_zone = r'C:\Users\home\Documents\Documents\APP3\difference.shp'
     # zone = gpd.read_file(path_zone)
     # ech_diff = echantillon_pixel(poly=zone, minDistance=500, value=143, epsg='EPSG:2145', zone=0)
