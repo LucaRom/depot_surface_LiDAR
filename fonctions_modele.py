@@ -36,24 +36,27 @@ def model_plots(test_y, clf, test_metriques, metriques):
     # Matrice de confusion
     #c_matrice = confusion_matrix(test_y, y_pred)
 
-    disp = plot_confusion_matrix(clf, test_metriques, test_y,
-                                 cmap=plt.cm.Blues,
-                                 values_format='d')
-    disp.ax_.set_title('Matrice de confusion à 12 métriques')
-    plt.xlabel('Prédit')
-    plt.ylabel('Réel')
+    # disp = plot_confusion_matrix(clf, test_metriques, test_y,
+    #                              cmap=plt.cm.Blues,
+    #                              values_format='d')
+    # disp.ax_.set_title('Matrice de confusion à 12 métriques')
+    # plt.xlabel('Prédit')
+    # plt.ylabel('Réel')
 
     # Importances des metriques
     importances = clf.feature_importances_
     indices = np.argsort(importances)
+    indices_list = [metriques[i] for i in indices]
 
     # plot them with a horizontal bar chart
-    plt.figure()  # Crée une nouvelle instance de graphique
-    plt.title('Importances des métriques')
-    plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-    plt.yticks(range(len(indices)), [metriques[i] for i in indices])
-    plt.xlabel('Importance relative (%)')
-    plt.show(block=False)
+    # plt.figure()  # Crée une nouvelle instance de graphique
+    # plt.title('Importances des métriques')
+    # plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+    # plt.yticks(range(len(indices)), [metriques[i] for i in indices])
+    # plt.xlabel('Importance relative (%)')
+    # plt.show(block=False)
+
+    return indices_list
 
 def entrainement_pix (inputEch, metriques, outputMod, replaceMod, makeplots, **kwargs):
     # Pour importer un shapefile
@@ -85,7 +88,9 @@ def entrainement_pix (inputEch, metriques, outputMod, replaceMod, makeplots, **k
     # Save the model as a pickle in a file
     if replaceMod is True:
         print(inputEch[-5:])
+        #joblib.dump(clf, '{}.pkl'.format(outputMod))
         joblib.dump(clf, '{}.pkl'.format(outputMod))
+
 
     # Impression de précision
     accu_mod = metrics.accuracy_score(test_y, y_pred)
@@ -93,12 +98,12 @@ def entrainement_pix (inputEch, metriques, outputMod, replaceMod, makeplots, **k
 
     # Génération des graphiques (Appel de fonction)
     if makeplots is True:
-        model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
+       model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
 
     #return clf, plt, accu_mod
     return clf, accu_mod, train_metriques, train_y, test_metriques, test_y
 
-def entrainement_obj (inputEch, outputMod, replaceMod, makeplots, **kwargs):
+def entrainement_obj(inputEch, outputMod, replaceMod, makeplots, **kwargs):
     # Pour importer un shapefile
     # # On crée la liste des shapefiles
     files = os.listdir(inputEch)  # Liste des fichiers dans le dossier "folder"
@@ -109,7 +114,27 @@ def entrainement_obj (inputEch, outputMod, replaceMod, makeplots, **kwargs):
                                               ignore_index=True), crs=gpd.read_file(shp_list[0]).crs)
 
     # On enleve la colonne 'label' et on enleve les rangées 'nulles'
-    del new_shp_temp['label']
+    del_liste_base = ['CorH_media', 'CorH_media', 'CorH_mean', 'CorH_std', 'ANVAD_coun', 'ConH_count', 'CorH_count', 'CVA_count', 'DI_count',
+                      'ED_count', 'MeaH_count', 'PC_count', 'Pen_count', 'SSDN_count', 'TPI_count', 'TWI_count']
+    new_shp_temp = new_shp_temp.drop(del_liste_base, axis=1)
+    print(new_shp_temp.columns)
+    #new_shp_temp = new_shp_temp.drop(del_liste_feat, axis=1)
+    # del new_shp_temp['CorH_media']
+    # del new_shp_temp['CorH_mean']
+    # del new_shp_temp['CorH_std']
+    # del new_shp_temp['ANVAD_coun']
+    # del new_shp_temp['ConH_count']
+    # del new_shp_temp['CorH_count']
+    # del new_shp_temp['CVA_count']
+    # del new_shp_temp['DI_count']
+    # del new_shp_temp['ED_count']
+    # del new_shp_temp['MeaH_count']
+    # del new_shp_temp['PC_count']
+    # del new_shp_temp['Pen_count']
+    # del new_shp_temp['SSDN_count']
+    # del new_shp_temp['TPI_count']
+    # del new_shp_temp['TWI_count']
+    new_shp_temp = new_shp_temp.dropna()
     new_shp_temp = new_shp_temp.dropna()
 
     df_majority = new_shp_temp[new_shp_temp.Zone == 0]
@@ -123,12 +148,16 @@ def entrainement_obj (inputEch, outputMod, replaceMod, makeplots, **kwargs):
 
     # Combine minority class with downsampled majority class
     new_shp = pd.concat([df_majority_downsampled, df_minority])
+    # print(new_shp.columns)
+    # print(len(new_shp.columns))
 
     # On choisi la colonne de que l'on veut prédire (ici le type de dépots)
     y_depots = new_shp.Zone
 
     # On definit les métriques sur lesquels on veut faire l'analyse
-    metriques = list(new_shp.iloc[:,4:75])
+    metriques = list(new_shp.iloc[:, 1:-2])
+    # print(metriques)
+    # print(len(metriques))
     X_metriques = new_shp[metriques]
 
     # Séparation des données en données d'entrainement et données de tests
@@ -145,18 +174,109 @@ def entrainement_obj (inputEch, outputMod, replaceMod, makeplots, **kwargs):
     # Save the model as a pickle in a file
     if replaceMod is True:
         print(inputEch[-5:])
-        joblib.dump(clf, '{}_{}.pkl'.format(outputMod, 'obj'))
+        joblib.dump(clf, '{}_{}_seg.pkl'.format(outputMod, 'obj'))
 
     # Impression de précision
     accu_mod = metrics.accuracy_score(test_y, y_pred)
     print("Accuracy:", accu_mod)
 
     # Génération des graphiques (Appel de fonction)
+    indices = []
     if makeplots is True:
-        model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
+        ind_feats = model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
+        indices.append(ind_feats)
 
     #return clf, plt, accu_mod
     return clf, accu_mod, train_metriques, train_y, test_metriques, test_y
+
+def entrainement_obj_feat(inputEch, outputMod, replaceMod, makeplots, del_liste_feat, **kwargs):
+    # Pour importer un shapefile
+    # # On crée la liste des shapefiles
+    files = os.listdir(inputEch)  # Liste des fichiers dans le dossier "folder"
+    shp_list = [os.path.join(inputEch, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
+                                                                                   # .shp seulement
+    # On join les fichiers .shp de la liste
+    new_shp_temp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
+                                              ignore_index=True), crs=gpd.read_file(shp_list[0]).crs)
+
+    # On enleve la colonne 'label' et on enleve les rangées 'nulles'
+    del_liste_base = ['CorH_media', 'CorH_media', 'CorH_mean', 'CorH_std', 'ANVAD_coun', 'ConH_count', 'CorH_count', 'CVA_count', 'DI_count',
+                       'ED_count', 'MeaH_count', 'PC_count', 'Pen_count', 'SSDN_count', 'TPI_count', 'TWI_count']
+    print(new_shp_temp.columns)
+    new_shp_temp = new_shp_temp.drop(del_liste_base, axis=1)
+    print(new_shp_temp.columns)
+    new_shp_temp = new_shp_temp.drop(del_liste_feat, axis=1)
+    print(new_shp_temp.columns)
+    # del new_shp_temp['CorH_media']
+    # del new_shp_temp['CorH_mean']
+    # del new_shp_temp['CorH_std']
+    # del new_shp_temp['ANVAD_coun']
+    # del new_shp_temp['ConH_count']
+    # del new_shp_temp['CorH_count']
+    # del new_shp_temp['CVA_count']
+    # del new_shp_temp['DI_count']
+    # del new_shp_temp['ED_count']
+    # del new_shp_temp['MeaH_count']
+    # del new_shp_temp['PC_count']
+    # del new_shp_temp['Pen_count']
+    # del new_shp_temp['SSDN_count']
+    # del new_shp_temp['TPI_count']
+    # del new_shp_temp['TWI_count']
+    new_shp_temp = new_shp_temp[new_shp_temp.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
+    new_shp_temp = new_shp_temp.dropna()
+    #new_shp_temp = new_shp_temp.dropna()
+
+    df_majority = new_shp_temp[new_shp_temp.Zone == 0]
+    df_minority = new_shp_temp[new_shp_temp.Zone == 1]
+
+    # Downsample majority class
+    df_majority_downsampled = resample(df_majority,
+                                       replace=False,  # sample without replacement
+                                       n_samples=len(df_minority),  # to match minority class
+                                       random_state=123)  # reproducible results
+
+    # Combine minority class with downsampled majority class
+    new_shp = pd.concat([df_majority_downsampled, df_minority])
+    # print(new_shp.columns)
+    # print(len(new_shp.columns))
+
+    # On choisi la colonne de que l'on veut prédire (ici le type de dépots)
+    y_depots = new_shp.Zone
+
+    # On definit les métriques sur lesquels on veut faire l'analyse
+    metriques = list(new_shp.iloc[:, 1:-2])
+    # print(metriques)
+    # print(len(metriques))
+    X_metriques = new_shp[metriques]
+
+    # Séparation des données en données d'entrainement et données de tests
+    train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size=0.30,
+                                                                        random_state=42)
+
+    # Create a Gaussian Classifier
+    clf = RandomForestClassifier(verbose=2, oob_score=True, random_state=42, **kwargs)
+
+    # Train the model using the training sets y_pred=clf.predict(X_test)
+    clf.fit(train_metriques, train_y)     # Model fit sur 70%
+    y_pred = clf.predict(test_metriques)  # Predicition sur 30%
+
+    # Save the model as a pickle in a file
+    if replaceMod is True:
+        print(inputEch[-5:])
+        joblib.dump(clf, '{}_{}_seg.pkl'.format(outputMod, 'obj'))
+
+    # Impression de précision
+    accu_mod = metrics.accuracy_score(test_y, y_pred)
+    print("Accuracy:", accu_mod)
+
+    # Génération des graphiques (Appel de fonction)
+    indices = []
+    if makeplots is True:
+        ind_feats = model_plots(test_y=test_y, clf=clf, test_metriques=test_metriques, metriques=metriques)
+        indices.append(ind_feats)
+
+    #return clf, plt, accu_mod
+    return clf, accu_mod, train_metriques, train_y, test_metriques, test_y, indices
 
 def HyperTuningGrid(model_base, param_grid, x_train, y_train):
     # Test pour trouver les meilleurs hyperparamètres avec GridSearchCV
@@ -225,7 +345,9 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     plt.xlabel(param_name)
     plt.xlim([min(param_range), max(param_range)])
     plt.ylabel("Score")
-    plt.ylim(0.65, 0.75)
+    plt.ylim(0.65, 0.80)
+    #plt.ylim(min(test_scores_mean)-0.05, max(test_scores_mean)+0.05)
+    print(test_scores_mean)
 
     lw = 2
 
@@ -270,6 +392,44 @@ def classification (num_mod, mod_path, rep_metriques):
 
     return prediction, tiff_path_list
 
+def classification_obj(seg_num, seg_path, mod_path, mod_num, met_seg, output_path):
+    modele_joblib = joblib.load(os.path.join(mod_path, '{}.pkl'.format(mod_num))) # Import du modèle sauvegardé
+
+    seg_stats = os.path.join(seg_path, 'seg_stats_{}.shp'.format(seg_num))
+
+    new_shp_temp = gpd.GeoDataFrame(gpd.read_file(seg_stats))
+
+    # On enleve la colonne 'label' et on enleve les rangées 'nulles'
+    del_liste_base = ['CorH_media', 'CorH_media', 'CorH_mean', 'CorH_std', 'ANVAD_coun', 'ConH_count', 'CorH_count', 'CVA_count', 'DI_count',
+                      'ED_count', 'MeaH_count', 'PC_count', 'Pen_count', 'SSDN_count', 'TPI_count', 'TWI_count']
+    new_shp_temp = new_shp_temp.drop(del_liste_base, axis=1)
+    # print(new_shp_temp.columns)
+    # new_shp_temp = new_shp_temp.drop(del_liste_feat, axis=1)
+    # print(new_shp_temp.columns)
+
+    new_shp_temp = new_shp_temp[new_shp_temp.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
+    new_shp_temp = new_shp_temp.dropna()
+
+    #print(new_shp_temp)
+
+    #new_shp_predict = new_shp_temp[met_seg]
+    #new_shp_temp = new_shp_temp.drop(met_seg, axis=1)
+
+    # new_shp_predict = new_shp_predict[new_shp_predict.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
+    # new_shp_predict = new_shp_predict.dropna()
+
+    #print(new_shp_temp.columns)
+
+    # Prediction du modèle et on le reshape
+    print('Début de la prédiction complète. Cette étape peut prendre plusieurs minutes.')
+    # new_shp_temp['prediction'] = modele_joblib.predict(data2d)
+    # new_shp_temp = np.reshape(prediction, (rows, cols))
+    new_shp_temp['prediction'] = modele_joblib.predict(new_shp_temp[met_seg])
+    print('Classification terminée.')
+
+    new_shp_temp.to_file(os.path.join(output_path, 'prediction_{}_{}.tif'.format(seg_num, mod_num)))
+
+    return new_shp_temp
 
 def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list):
     # On crée une image GEOTIFF en sortie
