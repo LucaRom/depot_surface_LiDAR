@@ -4,6 +4,7 @@ from rasterio.merge import merge
 from rasterio.mask import mask
 from ech_pixel import creation_buffer, creation_cadre
 import whitebox
+import shutil
 
 
 def resampling_cubic_spline(input, output, size):
@@ -128,7 +129,6 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
         resampling_cubic_spline(i, resampled, size_resamp)
         liste_resample.append(resampled)
 
-
     # for i in liste_path_feuillets:
     #     if feuillet in i:
     #         name = '{}_resample.tif'.format(os.path.basename(i)[:-4])
@@ -168,10 +168,16 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
 
     # Suppression des fichiers temporaires (mnt rééchantillonnés, mosaique)
     print('Suppression des fichiers temporaires...')
+    path_backup_resamp = os.path.join(os.path.dirname(rep_output), 'resample', feuillet[:-2], 'MNT_{}_resample.tif'.format(feuillet))
     for files in liste_resample:
         if feuillet not in files:
             os.remove(files)
-    os.remove(mosaique)
+        else:
+            if not os.path.exists(os.path.dirname(path_backup_resamp)):
+                os.makedirs(os.path.dirname(path_backup_resamp))
+            shutil.copy2(files, path_backup_resamp)
+            os.remove(files)
+    #os.remove(mosaique)
 
     print('Terminé')
 
