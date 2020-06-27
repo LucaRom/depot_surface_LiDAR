@@ -186,11 +186,14 @@ def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation,output
 
 # #### INITIATION DU SCRIPT ####
 if __name__ == "__main__":
-
-    path_segmentation = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\segmentation_remi\SegmentationNE.shp'
-    path_metriques = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\tiffs\31H02NE'
-    path_met_cadre = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\Backup\MNT_31H02NE_resample.tif'
-    path_depot = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\depots\31H02NE\zones_depots_glaciolacustres_31H02NE.shp'
+    # path_segmentation = r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\segmentations\seg_31H02SE_sickit_v5000_0_02.shp'
+    path_segmentation = os.path.join(root_dir, 'inputs/segmentations/seg_stats_{}_v2.shp'.format(i))
+    # path_metriques = r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\tiffs\31H02SE'
+    path_metriques = os.path.join(root_dir, 'inputs/tiffs/{}'.format(i))
+    # path_met_cadre = r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\MNT\resample\31H02\MNT_31H02SE_resample.tif'
+    path_met_cadre = os.path.join(root_dir, 'inputs/MNT/resample/{}/MNT_{}_resample.tif'.format(i[:-2], i))
+    # path_depot = r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\depots\31H02SE\zones_depots_glaciolacustres_31H02SE.shp'
+    path_depot = os.path.join(root_dir, 'inputs/depots/{}/zones_depots_glaciolacustres_{}.shp'.format(i, i))
 
     echantillonnage_obj(path_metriques=path_metriques, path_met_cadre=path_met_cadre,
                         path_segmentation=path_segmentation, path_depot=path_depot,
