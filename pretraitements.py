@@ -165,7 +165,7 @@ def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp,
         os.makedirs(rep_raster_buffer)
     raster_buffer = os.path.join(rep_raster_buffer,'{}_buffer.tif'.format(feuillet))
     creation_buffer_raster(path_feuillet, mosaique, distance_buffer, raster_buffer)
-    #
+
     # Suppression des fichiers temporaires (mnt rééchantillonnés, mosaique)
     print('Suppression des fichiers temporaires...')
     for files in liste_resample:
@@ -184,7 +184,7 @@ if __name__ == '__main__':
     #liste_adj = ['31H01SO', '31H02SO', '31H02NO', '31H02NE', '31H01NO', '31H02SE']
     #liste_adj = ['31H02SE', '31H01SO']
     #path_feuillets = r'C:\Users\home\Documents\Documents\APP2\mnt'
-    path_feuillets = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\MNT\originaux'
+    path_feuillets = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\MNT\originaux'
     liste_path = []
     for root, dir, files in os.walk(path_feuillets):
         for i in liste_adj:
