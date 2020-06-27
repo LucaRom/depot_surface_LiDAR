@@ -159,6 +159,7 @@ def entrainement_obj(inputEch, outputMod, replaceMod, makeplots, **kwargs):
     # print(metriques)
     # print(len(metriques))
     X_metriques = new_shp[metriques]
+    print(metriques)
 
     # Séparation des données en données d'entrainement et données de tests
     train_metriques, test_metriques, train_y, test_y = train_test_split(X_metriques, y_depots, test_size=0.30,
@@ -341,11 +342,12 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     test_scores_std = np.std(test_scores, axis=1)
 
     plt.figure()  # Crée une nouvelle instance de graphique
-    plt.title("Validation Curve with RF")
+    plt.title("Exactitude en fonction de la valeur de l'hyperparamètre")
     plt.xlabel(param_name)
     plt.xlim([min(param_range), max(param_range)])
-    plt.ylabel("Score")
-    plt.ylim(0.65, 0.80)
+    plt.ylabel("Exactitude (%)")
+    #plt.ylim(0.65, 0.80)
+    plt.ylim(0.70, 0.85)
     #plt.ylim(min(test_scores_mean)-0.05, max(test_scores_mean)+0.05)
     print(test_scores_mean)
 
@@ -358,7 +360,7 @@ def plot_valid(param_name, param_range, modele, x_train, y_train):
     #                  color="darkorange", lw=lw)
     # plt.semilogx(param_range, test_scores_mean, label="Cross-validation score",
     #              color="navy", lw=lw)
-    plt.plot(param_range, test_scores_mean, label="Score d'exactitude")
+    plt.plot(param_range, test_scores_mean, label="Exactitude")
     # plt.fill_between(param_range, test_scores_mean - test_scores_std,
     #                  test_scores_mean + test_scores_std, alpha=0.2,
     #                  color="navy", lw=lw)
@@ -393,9 +395,11 @@ def classification (num_mod, mod_path, rep_metriques):
     return prediction, tiff_path_list
 
 def classification_obj(seg_num, seg_path, mod_path, mod_num, met_seg, output_path):
-    modele_joblib = joblib.load(os.path.join(mod_path, '{}.pkl'.format(mod_num))) # Import du modèle sauvegardé
+    #modele_joblib = joblib.load(os.path.join(mod_path, '{}.pkl'.format(mod_num))) # Import du modèle sauvegardé
+    modele_joblib = joblib.load(os.path.join(mod_path, '{}.pkl'.format(mod_num)))  # Import du modèle sauvegardé
 
-    seg_stats = os.path.join(seg_path, 'seg_stats_{}.shp'.format(seg_num))
+    #seg_stats = os.path.join(seg_path, 'seg_stats_{}.shp'.format(seg_num))
+    seg_stats = os.path.join(seg_path, '{}.shp'.format(seg_num))
 
     new_shp_temp = gpd.GeoDataFrame(gpd.read_file(seg_stats))
 
@@ -427,7 +431,7 @@ def classification_obj(seg_num, seg_path, mod_path, mod_num, met_seg, output_pat
     new_shp_temp['prediction'] = modele_joblib.predict(new_shp_temp[met_seg])
     print('Classification terminée.')
 
-    new_shp_temp.to_file(os.path.join(output_path, 'prediction_{}_{}.tif'.format(seg_num, mod_num)))
+    new_shp_temp.to_file(os.path.join(output_path, 'prediction_{}_{}.shp'.format(seg_num, mod_num)))
 
     return new_shp_temp
 
