@@ -452,7 +452,7 @@ def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list
     data = gdal.Open(os.path.join(inputMet, tiff_path_list[0]))
     geoTransform = data.GetGeoTransform()
     proj = data.GetProjection()
-    nodata = data.GetRasterBand(1).GetNoDataValue()
+    # nodata = data.GetRasterBand(1).GetNoDataValue()
     data = None # On vide la mémoire
 
     # Je remets la matrice en 2 dimension
@@ -462,7 +462,7 @@ def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list
     image.GetRasterBand(1).WriteArray(prediction, 0, 0)
 
     # On donne les paramètres de la métrique à l'image sortante
-    image.GetRasterBand(1).SetNoDataValue(nodata)
+    image.GetRasterBand(1).SetNoDataValue(255)
     image.SetProjection(proj)
     image.SetGeoTransform(geoTransform)
     image.FlushCache()

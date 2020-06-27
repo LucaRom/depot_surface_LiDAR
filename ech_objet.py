@@ -126,7 +126,7 @@ def selection_poly_cadre(path_segmentation, path_met_cadre):
     seg = gpd.read_file(path_segmentation)
 
     # Création du cadre d'échantillonnage
-    cadre, epsg = creation_cadre(path_met_cadre)
+    cadre, epsg, nodata = creation_cadre(path_met_cadre)
 
     # On sélectionne seulement les polygones à l'intérieur du cadre
     geom_cadre = cadre.loc[0, 'geometry']
@@ -187,10 +187,10 @@ def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation,output
 # #### INITIATION DU SCRIPT ####
 if __name__ == "__main__":
 
-    path_segmentation = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\segmentations\segmentation_31H02SO.shp'
-    path_metriques = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\tiffs\31H02SO'
-    path_met_cadre = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\MNT\resample\MNT_31H02SO_resample.tif'
-    path_depot = r'C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\depots\31H02SO\zones_depots_glaciolacustres_31H02S0.shp'
+    path_segmentation = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\segmentation_remi\SegmentationNE.shp'
+    path_metriques = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\tiffs\31H02NE'
+    path_met_cadre = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\Backup\MNT_31H02NE_resample.tif'
+    path_depot = r'C:\Users\home\Documents\Documents\APP3\depot_surface_LiDAR\inputs\depots\31H02NE\zones_depots_glaciolacustres_31H02NE.shp'
 
     echantillonnage_obj(path_metriques=path_metriques, path_met_cadre=path_met_cadre,
                         path_segmentation=path_segmentation, path_depot=path_depot,
