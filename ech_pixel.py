@@ -57,27 +57,6 @@ def katana(geometry, threshold, count=0):
     return final_result
 
 
-# def check_min_distance(point, distance, points):
-#     '''
-#     :param point: Géométrie à comparer avec la couche Points (shapely.Point)
-#     :param distance: Distance minimale à respecter (int)
-#     :param points: Couche de points à comparer avec la géométrie point (GeoDataframe)
-#     :return: vrai si la distance entre le point et la couche de points est inférieure à la distance minimale
-#     '''
-#     if distance == 0:
-#         return True
-#     if len(points) > 0:
-#         index = rtree.index.Index()
-#         index.insert()
-#         pointIndex = points.sindex
-#         nearIndex = list(pointIndex.nearest(point.bounds))
-#         nearest = points.iloc[nearIndex]['geometry'].values[0]
-#
-#         # Comparaison de la distance du point le plus proche à la distance minimale
-#         if nearest[1].distance(point) < distance:
-#             return False
-#     return True
-
 def check_min_distance(point, distance, points):
     '''
     :param point: Géométrie à comparer avec la couche Points (shapely.Point)
@@ -89,11 +68,6 @@ def check_min_distance(point, distance, points):
         return True
     if len(points) > 0:
         # Union de toutes les géométries de la couche points en multipoint
-        # pointIndex = points.sindex
-        # nearIndex = list(pointIndex.nearest(point.bounds))
-        # nearest = points.iloc[nearIndex]['geometry'].values[0]
-        # # uni = pointsCorresp['geometry'].unary_union
-        # uni = MultiPoint(points)
         uni = points.unary_union
         # # Calcul du point le plus proche
         nearest = nearest_points(point, uni)
