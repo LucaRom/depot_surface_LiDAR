@@ -1,72 +1,16 @@
 import geopandas as gpd
 from rasterstats import zonal_stats
-from datetime import datetime
 import os
-from osgeo import osr
-from ech_pixel import creation_cadre
+#from osgeo import osr
+from ech_pixel import creation_cadre, dissolve
 
-#### DÉFINITION DES FONCTIONS ####
-
-#Regrouper les polygones d'une couche en 1 multipolygone
-def dissolve(geodataframe):
-    if len(geodataframe) > 1:
-        diss = geodataframe.unary_union
-        shpDiss = gpd.GeoDataFrame(columns=['geometry'])
-        shpDiss.loc[0, 'geometry'] = diss
-        return shpDiss
-    return geodataframe
-
-
-# # Import de tous les shapefiles d'un dossier et on les regroupe dans un seul fichier
-# def set_root_chm():
-#     # On définit le dossier parent pour le réutiliser dans l'import d'intrants
-#     global root_dir
-#     root_dir = os.path.abspath(os.path.dirname(__file__))
-#
-#     return root_dir
-
-# def import_merge_seg():
-#     # Chemin vers le dossier avec les shapefiles
-#     folder_path = os.path.join(root_dir, 'inputs/segmentations/seg_Scikit_mai2020_31H02_NE_SE')
-#
-#     # On crée la liste des shapefiles
-#     files = os.listdir(folder_path)  # Liste des fichiers dans le dossier "folder"
-#     shp_list = [os.path.join(folder_path, i) for i in files if i.endswith('.shp')]  # Obtenir une liste des chemins pour
-#                                                                                     # .shp seulement
-#     # On join les fichiers .shp de la liste
-#     new_shp_temp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
-#                                               ignore_index=True), crs=gpd.read_file(shp_list[0]).crs)
-#
-#     return new_shp_temp # Retourne le shapefile
-
-# def set_chemins():
-#
-#     global path_segmentation
-#     global path_depot
-#     global path_met
-#     global output
-#
-#     # On ajoute la date au fichier sortant pour suivre nos tests
-#     date_classi = str(datetime.now().strftime('%Y_%m_%d_%H_%M_%S'))
-#
-#     #Chemins de la couche de segmentation et de la couche de dépôts
-#     path_segmentation = os.path.join(root_dir, 'inputs/segmentations/seg_ecognition_31h02NE_SE/Test2_NE_Clip.shp')
-#     path_depot = os.path.join(root_dir, 'inputs/depots/31H02NE/zones_depots_glaciolacustres_31H02NE_MTM8.shp')
-#
-#     # Chemin du répertoire contenant les métriques
-#     path_met = os.path.join(root_dir, 'inputs/tiffs/31H02NE_5m/')
-#
-#     # path_segmentation = os.path.join(root_dir, 'inputs/segmentations/seg_ecognition_31h02NE_SE/Test2_SE_Clip.shp')
-#     # path_depot = os.path.join(root_dir, 'inputs/depots/31H02SE/zones_depots_glaciolacustres_31H02SE_MTM8.shp')
-#     #
-#     # # Chemin du répertoire contenant les métriques
-#     # path_met = os.path.join(root_dir, 'inputs/tiffs/31H02SE_5m/')
-#
-#     # chemin de la couche de sortie
-#     nom_fichier = 'result_prediction_SEG_ecognition_NE' + date_classi + '.shp'
-#     output = os.path.join(root_dir, 'outputs/Segmentations', nom_fichier)
 
 def stats_zonales(path_metriques, path_segmentation):
+    '''
+    :param path_metriques: chemin du répertoire contenant les métriques sous format .tif (str)
+    :param path_segmentation: chemin de la couche de segmentation sous format .shp (str)
+    :return: La segmentation avec les statistiques zonales de chaque métriques pour chaque polygones (.shp)
+    '''
 
     # On lit la couche de segmentation
     segmentation = gpd.read_file(path_segmentation)
@@ -97,9 +41,12 @@ def stats_zonales(path_metriques, path_segmentation):
     return segmentation
 
 
-
 def echantillon_objet(path_depot, segmentation):
-
+    '''
+    :param path_depot: chemin de la couche de dépôts sous format .shp (str)
+    :param segmentation: chemin de la couche de segmentation sous format .shp (str)
+    :return: La couche de segmentation (.shp) avec une colonne 'Zone' indiquant si le polygone est contenu (1) ou hors (0) des dépôts
+    '''
 
     # on crée les geodataframe pour la couche de dépôts
     depot = gpd.read_file(path_depot)
@@ -121,6 +68,11 @@ def echantillon_objet(path_depot, segmentation):
 
 
 def selection_poly_cadre(path_segmentation, path_met_cadre):
+    '''
+    :param path_segmentation: chemin de la couche de segmentation sous format .shp (str)
+    :param path_met_cadre: chemin du Raster (.tif) de référence pour créer le cadre d'échantillonnage (str)
+    :return: Geodataframe des polygones de la segmentation contenus dans le cadre d'échantillonnage
+    '''
 
     # Lecture de la couche polygonale
     seg = gpd.read_file(path_segmentation)
