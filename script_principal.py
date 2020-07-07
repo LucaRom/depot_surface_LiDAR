@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+
+"""
+Created on Wed Jan 2020
+@authors: David Ethier  david.ethier2@usherbrooke.ca
+          Luca Romanini luca.romanini@usherbrooke.ca
+
+"""
+
 from Download_MNT import download_mnt
 from pretraitements import pretraitements
 from production_metriques import creation_metriques
@@ -464,12 +473,3 @@ class_main(feuillet='32D02SE', num_mod='31H02_32D01')
 # print('Fin du script, veuillez fermer les graphiques pour terminer')
 # #plt.show() # Garder les graphiques ouverts jusqu'à la fin si nécessaire
 #
-# # Échnatillonage
-# # liste_feuillet : [] #liste des feuillets (mettre un seul si un seul, mais laisser une liste
-# #
-# # for i in liste_feuillet:
-# #     fonct_echnatill
-#
-#
-# # Classements
-# liste_feuillet : []

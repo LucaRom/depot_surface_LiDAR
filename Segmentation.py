@@ -1,3 +1,12 @@
+# -*- coding: utf-8 -*-
+
+"""
+Created on Wed Jan 2020
+@authors: David Ethier  david.ethier2@usherbrooke.ca
+          Luca Romanini luca.romanini@usherbrooke.ca
+
+"""
+
 from ech_pixel import creation_cadre, creation_raster, conversion_polygone, creation_buffer
 import osr
 import numpy as np
