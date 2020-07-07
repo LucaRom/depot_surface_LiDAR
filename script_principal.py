@@ -310,7 +310,8 @@ def class_main(feuillet, num_mod):
     mod_path = os.path.join(root_dir, 'inputs/modeles')  # Chemin vers le dossier des modèles
     rep_metriques = os.path.join(root_dir, 'inputs/tiffs', feuillet)  # Chemin vers le dossier des métriques
     nom_fichier = 'prediction_{}_{}.tif'.format(feuillet, num_mod)  # Nom du fichier à sauvegarder
-    outputdir = os.path.join(root_dir, 'outputs/pixel')  # Dossier output du .shp prédit
+    outputdir = os.path.join(root_dir, 'fichiers_outputs/pixel')  # Dossier output du .shp prédit
+    #outputdir = os.path.join(root_dir, 'outputs/pixel')  # A DELETER
 
     # Classification avec le modèle et création du fichier résultant
     classif, tiff_path_list = classification(num_mod=num_mod, mod_path=mod_path, rep_metriques=rep_metriques)
@@ -352,7 +353,8 @@ def class_main(feuillet, num_mod):
 # ICI ICI
 # seg_path = os.path.join(root_dir, 'inputs/segmentations/stats_zonales/31H02')
 # # mod_path = os.path.join(root_dir, 'inputs/modeles')
-# # output_path =  os.path.join(root_dir, 'outputs/objet')
+# # output_path =  os.path.join(root_dir, 'fichiers_outputs/objet')
+# # output_path =  os.path.join(root_dir, 'outputs/objet') # A DELETER
 
 
 # met_seg = ['CorH_max', 'CVA_median', 'SSDN_max', 'ANVAD_medi', 'DI_median', 'Pen_median', 'CVA_min', 'DI_mean', 'ANVAD_max', 'DI_max', 'Pen_mean', 'MeaH_media', 'Pen_max', 'MeaH_max', 'MeaH_mean']
