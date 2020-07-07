@@ -1,18 +1,18 @@
 import geopandas as gpd
 import random
-from fiona.crs import from_epsg
-from shapely.geometry import shape, Point, Polygon, MultiPoint
+#from fiona.crs import from_epsg
+from shapely.geometry import Point, box, Polygon, MultiPolygon, GeometryCollection
 from shapely.ops import nearest_points
 import pandas as pd
 import whitebox
 import glob
 from osgeo import ogr, gdal, osr
 from osgeo.gdalnumeric import *
-from osgeo.gdalconst import *
+#from osgeo.gdalconst import *
 import os
-import rtree
-import numpy as np
-from shapely.geometry import box, Polygon, MultiPolygon, GeometryCollection
+#import rtree
+#import numpy as np
+
 
 
 def katana(geometry, threshold, count=0):
@@ -193,7 +193,7 @@ def echantillon_pixel(poly, minDistance, value, epsg, zone):
     return sample
 
 
-def dissolve(geodataframe, epsg):
+def dissolve(geodataframe):
     '''
     :param geodataframe: Couche vectorielle à regrouper (GeoDataframe)
     :param epsg: Code EPSG à donner à l'output
@@ -201,6 +201,7 @@ def dissolve(geodataframe, epsg):
     '''
     # Si le geodataframe contient plus d'une entité
     if len(geodataframe) > 1:
+        epsg = geodataframe.crs
         # Union de toutes les entités de la couche en 1 Multipolygon
         diss = geodataframe.unary_union
         # Création de la couche de sortie
@@ -490,7 +491,7 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
 
     # Regroupement de la couche de dépôts
     print('Regroupement couche de dépôts...')
-    depot_reg = dissolve(depot, epsg)
+    depot_reg = dissolve(depot)
 
     # Création du buffer autour de la couche de dépôts à la valeur de la distance minimale
     print('Création du buffer...')
