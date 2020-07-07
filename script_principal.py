@@ -188,6 +188,7 @@ def gridSearch_params_opti(zone_feuillets, approche):
     # Optimisation avec GridSearchCV (sickit-learn)
     modele_opti, params_opti = HyperTuningGrid(model_base=clf, param_grid=param_grid, x_train=train_metriques,
                                                y_train=train_y)
+
     #print(params_opti)  # Impression des meilleurs résultats basé sur param_grid
 
     return params_opti
