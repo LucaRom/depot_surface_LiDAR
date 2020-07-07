@@ -10,12 +10,9 @@ import matplotlib.pyplot as plt
 from osgeo import gdal
 import statistics
 
-# Définition du chemin racine du dossier de travail
-root_dir = os.path.abspath(os.path.dirname(__file__))
+# Paramètres initiaux du script
+root_dir = os.path.abspath(os.path.dirname(__file__))   # Définition du chemin racine du dossier de travail
 path_r = r"E:\Program Files\R\R-3.6.1\bin\Rscript.exe"  # Chemin vers l'application 'Rscript.exe' de l'ordinateur
-
-# Données initiales à changer par l'utilisateur
-# liste_feuillet = ['32D06NE', '32D06SE']  # Entrée la liste des feuillets désiré, n'en mettre qu'un seul pour un feuillet.
 
 
 #### SECTION 1 - Production des métriques ####
@@ -32,13 +29,13 @@ NOTES : 1) Le processus peut se faire en boucle sur plusieurs feuillets (ex.: da
            plus d'un feuillet.
            
         2) La fonction nécessite d'appeler "R" pour créer les métriques d'Haralick. Il faut spécifier le chemin de "R" 
-           sur l'ordinateur que vous utilisez. Voir la variable "path_script" dans la fonction.
+           sur l'ordinateur que vous utilisez. Voir la variable "path_r" au début de ce présent script.
        
 '''
 
 def mnt_metriques(liste_feuillet, creation):
     """
-    :param liste_feuillet: Spécifier une liste (ex. liste = [31h02SO, 31H02SE, 31H02NE]) pour créer les métriques sur un
+    :param liste_feuillet: Spécifier une liste (ex. liste = [31H02SE, 31H02NE]) pour créer les métriques sur un
                            ou plusieurs feuillets.
 
     :param creation: Spécifier si la fonction doit créer ou non les fichiers de métriques (utile si appeler dans une autre
@@ -82,11 +79,10 @@ def mnt_metriques(liste_feuillet, creation):
     return rep_metriques, rep_mnt_buff
 
 
-#### SECTION 2a - Échantillonage pixel et objet ####
+#### SECTION 2 - Échantillonage pixel et objet ####
 '''
 À REMPLIR
 '''
-
 
 def echant_main(liste_feuillet, creation, approche):
     rep_metriques, rep_mnt_buff = mnt_metriques(liste_feuillet, creation)  # Appel de variables de la SECTION 1
@@ -135,145 +131,67 @@ def echant_main(liste_feuillet, creation, approche):
 # echant_main(liste_feuillet, creation=False, approche='objet')
 
 
-#### SECTION 3a - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
+#### SECTION 3 - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
 '''
 Cette section contient la fonction qui recherche les paramètres optimaux pour l'entraînement du modèle
 
-Dans l'ordre, le code : 1) Télécharge le MNT du feuillet ciblé ainsi que tous les MNT adjacents
-                        2) Crée une zone tampon autour du feuillet ciblé
-                        3) Produit les métriques en appelant le fichier 'production_metriques.py'
+Dans l'ordre, le code : 1) Définie une liste de valeurs à tester par paramètres spécifié par l'utilisateur
+                        2) Crée un modèle de base défini par l'utilisateur
+                        3) Teste chaque combinaison possible des paramètres
 
-Fichiers produits : Fichier .tif par métrique dans le dossier './inputs/tiffs/no_du_feuillet/'
-
-NOTE : #### ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG !!! ####
-
+Résultats : La variable retourné "params_opti" contient les paramètres optimaux du modèle testé selon les valeurs 
+            utilisées. Peut être utilisé comme paramètre des fonctions d'entraînement (entrain_main_pix, entrain_main_obj).
+                        
+NOTES : #### ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG !!! ####
 '''
 
-'''
-Cette section crée des fichiers pour chaque métriques définies
+def gridSearch_params_opti(zone_feuillets, approche):
+    """
+    :param zone_feuillet: Spécifier la zone d'entraînement contenant tous les fichiers échantillonée (Ex.: 31H02)
+    :param approche: Spécifier s'il s'agit de l'approche pixel ou objet
+    """
+    # Paramètres communs aux deux approches
+    outputMod = os.path.join(root_dir, 'inputs/modeles', zone_feuillets)  # Chemin de sortie pour la sauvegarde du modèle
 
-Dans l'ordre, le code : 1) Télécharge le MNT du feuillet ciblé ainsi que tous les MNT adjacents
-                        2) Crée une zone tampon autour du feuillet ciblé
-                        3) Produit les métriques en appelant le fichier 'production_metriques.py'
+    if approche == 'pixel':
+        # Intrants pour l'échantillonnage par pixel
+        inputEch = os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', zone_feuillets) # Chemin vers les fichiers d'échantillonage du feuillet
+        liste_metriques = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI'] # Liste des métriques utilisés pour l'entraînement
 
-Fichiers produits : Fichier .tif par métrique dans le dossier './inputs/tiffs/no_du_feuillet/'
+    elif approche == 'objet':
+        # Intrants pour l'échantillonnage par pixel
+        inputEch = os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', zone_feuillets)
+        liste_metriques = ['ANVAD_min', 'ANVAD_max', 'ANVAD_medi', 'ANVAD_mean', 'ANVAD_std', 'ConH_min', 'ConH_max',
+                           'ConH_media', 'ConH_mean', 'ConH_std', 'CorH_min', 'CorH_max', 'CVA_min', 'CVA_max',
+                           'CVA_median', 'CVA_mean', 'CVA_std', 'DI_min', 'DI_max', 'DI_median', 'DI_mean', 'DI_std',
+                           'ED_min', 'ED_max', 'ED_median', 'ED_mean', 'ED_std', 'MeaH_min', 'MeaH_max', 'MeaH_media',
+                           'MeaH_mean', 'MeaH_std', 'PC_min', 'PC_max', 'PC_median', 'PC_mean', 'PC_std', 'Pen_min',
+                           'Pen_max', 'Pen_median', 'Pen_mean', 'Pen_std', 'SSDN_min', 'SSDN_max', 'SSDN_media',
+                           'SSDN_mean', 'SSDN_std', 'TPI_min', 'TPI_max', 'TPI_median', 'TPI_mean', 'TPI_std',
+                           'TWI_min', 'TWI_max', 'TWI_median', 'TWI_mean', 'TWI_std']
 
-NOTES : 1) Le processus peut se faire en boucle sur plusieurs feuillets (ex.: dans le cas qu'on voudrait échantilloner sur
-           plus d'un feuillet.
-
-        2) La fonction nécessite d'appeler "R" pour créer les métriques d'Haralick. Il faut spécifier le chemin de "R" 
-           sur l'ordinateur que vous utilisez. Voir la variable "path_script" dans la fonction.
-
-'''
-
-
-
-def gridSearch_params_opti(inputEch, metriques_pixel, outputMod):
-    # Intrants pour l'optimisation des hyperparamètres du modele
-    # Grille de paramètre pour le GridSearchCV
+    # Grille de paramètres pour le GridSearchCV
     param_grid = {
         "n_estimators": [200, 500, 800, 1000, 5000, 10000],
         "max_features": ['auto', 'sqrt', 'log2'],
         "max_depth": [None, 2, 4, 6, 8, 10]
     }
+
     # Création du modèle de base
     params_base = {'n_estimators': 200}
     clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement_pix(inputEch=inputEch,
-                                                                                       metriques=metriques_pixel,
+                                                                                       metriques=liste_metriques,
                                                                                        outputMod=outputMod,
                                                                                        replaceMod=False,
                                                                                        makeplots=False, **params_base)
-    # Modele d'optimisation avec GridSearchCV
+
+    # Optimisation avec GridSearchCV (sickit-learn)
     modele_opti, params_opti = HyperTuningGrid(model_base=clf, param_grid=param_grid, x_train=train_metriques,
                                                y_train=train_y)
-    print(params_opti)  # Impression des meilleurs résultats basé sur param_grid
+    #print(params_opti)  # Impression des meilleurs résultats basé sur param_grid
 
     return params_opti
 
-
-# # Impression des courbes de validation pour chaque hyperparamètre
-# for key, value in param_grid.items():  # Pour chaque items de la liste des paramètres à optimiser
-#     plot_valid(param_name=key, param_range=value, modele=clf, x_train=train_metriques, y_train=train_y)
-
-def vali_plots_pix(feuillet):
-    # # Intrants pour l'entraînement du modele
-    # metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
-    metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
-    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
-    # inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', '{}_no_anth'.format(feuillet[:-2])))
-    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-7:-2]))
-    # outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', '{}_no_anth'.format(feuillet[-7:-2])))
-
-    param_grid = {
-        "n_estimators": [200, 500, 800, 1000, 5000, 10000],
-        "max_features": ['auto', 'sqrt', 'log2'],
-        "max_depth": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-    }
-    # Création du modèle de base
-    params_base = {'n_estimators': 1000}
-    clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement_pix(inputEch=inputEch,
-                                                                                       metriques=metriques_pixel,
-                                                                                       outputMod=outputMod,
-                                                                                       replaceMod=False,
-                                                                                       makeplots=False, **params_base)
-
-    # # Impression des courbes de validation pour chaque hyperparamètre
-
-    # param_range.append()
-    # param_range.append(None)
-
-    param_range = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-    plot_valid(param_name='n_estimators', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
-
-    # param_range = [200, 500, 800, 1000, 5000, 10000]
-    # plot_valid(param_name='n_estimators', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
-
-    # param_range = ['auto', 'sqrt', 'log2']
-    # plot_valid(param_name='max_features', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
-
-
-# vali_plots('31H02NE')
-
-def vali_plots_obj(feuillet):
-    # # Intrants pour l'entraînement du modele
-    # # Intrants pour l'entraînement du modele
-    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/objet/', feuillet[:-2]))
-    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-10:-3]))
-
-    param_grid = {
-        "n_estimators": [200, 500, 800, 1000, 5000, 10000],
-        "max_features": ['auto', 'sqrt', 'log2'],
-        "max_depth": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-    }
-    # Création du modèle de base
-    params_base = {'n_estimators': 1000}
-    clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement_obj(inputEch=inputEch,
-                                                                                       outputMod=outputMod,
-                                                                                       replaceMod=False, makeplots=True,
-                                                                                       **params_base)
-
-    # # Impression des courbes de validation pour chaque hyperparamètre
-
-    # param_range.append()
-    # param_range.append(None)
-
-    # param_range = [200, 500, 800, 1000, 5000, 10000]
-    # plot_valid(param_name='n_estimators', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
-
-    # param_range = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
-    param_range = list(range(2, 21))
-    plot_valid(param_name='max_depth', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
-
-    # param_range = ['auto', 'sqrt', 'log2']
-    # plot_valid(param_name='max_features', param_range=param_range, modele=clf, x_train=train_metriques, y_train=train_y)
-
-
-# del_liste_feat = []
-# for i in range(0,1):
-# del_liste_feat = []
-
-# vali_plots_obj('32D01NO')
-# vali_plots_obj('31H02NE')
 
 #### SECTION 4a - Entraînement du modèle par pixel  ####
 '''
@@ -322,6 +240,12 @@ def entrain_main_pix(feuillet, opti=False, makeplots=False, replaceMod=False):
 
 #entrain_main_pix('31H02_32D01_1', opti=False, makeplots=True, replaceMod=True)
 
+
+#### SECTION 4b - Entraînement du modèle par objet  ####
+'''
+À REMPLIR
+avec matrice de confusion et importance des métriques
+'''
 def entrain_main_obj(feuillet, opti=False, makeplots=False, replaceMod=False):
     # # Intrants pour l'entraînement du modele
     inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/objet/', feuillet[:-2]))
@@ -361,89 +285,8 @@ def entrain_main_obj(feuillet, opti=False, makeplots=False, replaceMod=False):
 
     return clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y
 
-
 # entrain_main_obj('31H02NE', opti='31H02', makeplots=True, replaceMod=True)
 # entrain_main_obj('32D01NO', opti='32D01', makeplots=True, replaceMod=True)
-
-def entrain_main_obj_feats(feuillet, del_liste_feat, opti=False, makeplots=False, replaceMod=False):
-    # # Intrants pour l'entraînement du modele
-    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/objet/', feuillet[:-2]))
-    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-7:-2]))
-
-    ######entrainement_obj(inputEch, outputMod, replaceMod, makeplots, **kwargs)
-
-    if opti is True:
-        print('Début de GridSearchCV pour trouver les paramètres optimaux')
-        params_opti = gridSearch_params_opti(inputEch=inputEch, metriques_pixel=metriques_pixel, outputMod=outputMod)
-        print('Fin du GridSearchCV')
-    elif opti == '31H02':
-        print('Début de l\'entrainement avec les paramètres optimisé pour la zone 31H02')
-        params_opti = {'max_depth': 12, 'max_features': 'auto', 'n_estimators': 1000}
-    elif opti == '32D01':
-        print('Début de l\'entrainement avec les paramètres optimisé pour la zone 32D01')
-        params_opti = {'max_depth': 12, 'max_features': 'auto', 'n_estimators': 1000}
-    else:
-        # Utilise les paramètres optimisés issues de l'étape optimisation
-        params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 200}
-
-    print('Début de l\'entrainement du modèle')
-    # clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement_obj(inputEch=inputEch, outputMod=outputMod,
-    #                                                                                    replaceMod=replaceMod, makeplots=makeplots,
-    #                                                                                    **params_opti)
-
-    # Pour features selections
-    clf, accu_mod, train_metriques, train_y, test_metriques, test_y, indices = entrainement_obj_feat(inputEch=inputEch,
-                                                                                                     outputMod=outputMod,
-                                                                                                     replaceMod=replaceMod,
-                                                                                                     makeplots=makeplots,
-                                                                                                     del_liste_feat=del_liste_feat,
-                                                                                                     **params_opti)
-    print('Fin de l\'entrainement du modèle en utilisant les paramètres :')
-    print(params_opti)
-
-    return clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y, indices
-
-
-# # Pour calculer l'impact d'enlever les métriques sans les faire une par une
-# # # Sort deux listes
-# del_liste_feat = []
-# del_liste_feat = []
-# accu_mod_liste = []
-# for i in range(0,58):
-#     clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y, indices = entrain_main_obj_feats('32D01NO', del_liste_feat=del_liste_feat, opti='32D01', makeplots=True, replaceMod=False)
-#     print(indices)
-#     print(indices[0][0])
-#     del_liste_feat.append(indices[0][0])
-#     print(accu_mod)
-#     accu_mod_liste.append(accu_mod)
-#     print(accu_mod_liste)
-#     print(del_liste_feat)
-
-# del_liste_feat = ['ConH_min', 'CorH_min', 'ConH_media', 'ANVAD_medi', 'ED_min', 'Pen_max', 'PC_mean', 'ConH_max', 'ED_median', 'ANVAD_mean', 'ConH_mean', 'PC_min', 'SSDN_media', 'PC_max', 'DI_min', 'TPI_max', 'PC_median', 'SSDN_min', 'ConH_std', 'Pen_min', 'Pen_mean', 'TWI_mean', 'ANVAD_max', 'ANVAD_std', 'TWI_min', 'SSDN_mean', 'ED_max', 'CVA_mean', 'Pen_std', 'TWI_std', 'DI_max', 'ED_mean', 'TPI_mean']
-# entrain_main_obj_feats('31H02NE', del_liste_feat=del_liste_feat, opti='31H02', makeplots=True, replaceMod=True)
-
-# for i in liste_feuillet:
-#     echant_main(liste_feuillet, creation=False)
-
-# accuracy_list = []
-# for i in range(10):
-#     clf, accu_mod, train_metriques, train_y, test_metriques, test_y =  entrain_main(liste_feuillet[0])
-#     accuracy_list.append(accu_mod)
-#
-# print(accuracy_list)
-# print(statistics.mean(accuracy_list))
-# # #
-#
-
-# def entrain_accu_moyenne_super_loop():
-#     for i in range(10):
-#         clf, accu_mod = entrainement(inputEch=inputEch, metriques=metriques_pixel)
-#         accuracy_list.append(accu_mod)
-#     return clf, accuracy_list
-
-# clf, accuracy_list = entrain_accu_moyenne_super_loop()
-# print(accuracy_list)
-# print(statistics.mean(accuracy_list))
 
 
 #### SECTION 5a - Classification par pixel ####
@@ -565,18 +408,34 @@ met_seg = ['ANVAD_min', 'CorH_max', 'CVA_min', 'CVA_max', 'CVA_median',
 À compléter
 '''
 
-#### EXEMPLE D'UTILISATION DE LA FONCTION DE CRÉATION DES MÉTRIQUES (SECTION 1)
+#### EXEMPLE D'UTILISATION DES FONCTIONS DANS UN "WORKFLOW" COMPLET
 
-#liste_feuillet = ['32D02SE']
-#mnt_metriques(liste_feuillet=liste_feuillet, creation=True)
+#### EX - SECTION 1 - Production des métriques ####
 
+# Commencer par déterminer les feuillets que l'on désire traiter
+liste_feuillet = ['32D02SE'] # Ici on spécifie qu'un seul feuillet, mais plusieurs pourraient être spécifié
 
-# # Commencer par déterminer les feuillets que l'on désire traiter
-# liste_feuillet = ['32D01NO', '32D01']
-#
-# echant_main(liste_feuillet, creation=True, approche='objet')
-#
+#Appel de la fonction et spécification des paramètres
+mnt_metriques(liste_feuillet=liste_feuillet, creation=True) # Ici on spécifie qu'on veut crée ou remplacer les fichiers
+                                                            # de métrique(creation=True).
 
+#### EX - SECTION 2 - Échantillonage pixel et objet #### (À COMPLÉTER)
+
+echant_main(liste_feuillet, creation=True, approche='pixel') # Ici on spécifie qu'on veut crée ou remplacer les fichiers
+                                                            # d'échantillonage (creation=True) et qu'on est dans une
+                                                            # approche par pixel.
+                                                            # La liste des feuillets peut être spécifié si on utilise
+                                                            # la fonction de façon autonome.
+
+#### EX - SECTION 3 - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
+# Cette fonction peut-être utilisé seule, mais sera plus souvent utilisé à l'intérieur de la fonction d'entraînement
+# afin de spécifier les paramètres optimaux de façon automatique.
+
+gridSearch_params_opti(zone_feuillets='31H02', approche='pixel') # Ici on spécifie qu'on veut entraîner le modèle avec
+                                                                 # les échantillons de la zone '31H02' et qu'on utilise
+                                                                 # l'approche par pixel.
+
+#### SECTION 4a - Entraînement du modèle par pixel  ####
 # Entrainement du modèle
 # entrain_main_pix('31H02NE', '31H02', makeplots=True, replaceMod=True)
 # entrain_main('31H02NE', '31H02', makeplots=True, replaceMod=False)
