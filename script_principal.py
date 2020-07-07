@@ -25,15 +25,26 @@ Cette section crée des fichiers pour chaque métriques définies
 Dans l'ordre, le code : 1) Télécharge le MNT du feuillet ciblé ainsi que tous les MNT adjacents
                         2) Crée une zone tampon autour du feuillet ciblé
                         3) Produit les métriques en appelant le fichier 'production_metriques.py'
-
+                        
 Fichiers produits : Fichier .tif par métrique dans le dossier './inputs/tiffs/no_du_feuillet/'
 
-NOTE : Le processus peut se faire en boucle sur plusieurs feuillets (ex.: dans le cas qu'on voudrait échantilloner sur
-       plus d'un feuillet.
+NOTES : 1) Le processus peut se faire en boucle sur plusieurs feuillets (ex.: dans le cas qu'on voudrait échantilloner sur
+           plus d'un feuillet.
+           
+        2) La fonction nécessite d'appeler "R" pour créer les métriques d'Haralick. Il faut spécifier le chemin de "R" 
+           sur l'ordinateur que vous utilisez. Voir la variable "path_script" dans la fonction.
+       
 '''
 
-
 def mnt_metriques(liste_feuillet, creation):
+    """
+    :param liste_feuillet: Spécifier une liste (ex. liste = [31h02SO, 31H02SE, 31H02NE]) pour créer les métriques sur un
+                           ou plusieurs feuillets.
+
+    :param creation: Spécifier si la fonction doit créer ou non les fichiers de métriques (utile si appeler dans une autre
+                    fonction).
+    """
+
     rep_metriques = None
     rep_mnt_buff = None
     for i in liste_feuillet:
@@ -66,15 +77,12 @@ def mnt_metriques(liste_feuillet, creation):
                            size_resamp=size_resamp, rep_output=rep_mnt_buff)
 
             # # Création des métriques
-            # creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
+            creation_metriques(mnt=mntbuff, feuillet=feuillet, rep_output=rep_metriques, path_r=path_r, path_script=path_script)
 
     return rep_metriques, rep_mnt_buff
 
 
-# liste_feuillet = ['32D02SE', '32D01', '32D01NO']
-# mnt_metriques(liste_feuillet=liste_feuillet, creation=True)
-
-#### SECTION 2a - Échantillonage par pixel ####
+#### SECTION 2a - Échantillonage pixel et objet ####
 '''
 À REMPLIR
 '''
@@ -109,6 +117,8 @@ def echant_main(liste_feuillet, creation, approche):
                                 path_segmentation=path_segmentation,
                                 output=output, path_depot=path_depot)
 
+        # Cette section n'inclut pas un "path_depot" quand on appelle la fonction "echantillonage_obj" ce qui ne crée
+        # pas de fichier d'entrainement.
         elif approche == 'objet2':
             # Intrant pour l'échantillonnage par objet
             path_segmentation = os.path.join(root_dir, 'inputs/segmentations', 'seg_{}.shp'.format(feuillet))
@@ -127,12 +137,35 @@ def echant_main(liste_feuillet, creation, approche):
 
 #### SECTION 3a - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
 '''
-Recherche des paramètres optimaux pour l'entraînement du modèle
-ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG !!!
+Cette section contient la fonction qui recherche les paramètres optimaux pour l'entraînement du modèle
 
+Dans l'ordre, le code : 1) Télécharge le MNT du feuillet ciblé ainsi que tous les MNT adjacents
+                        2) Crée une zone tampon autour du feuillet ciblé
+                        3) Produit les métriques en appelant le fichier 'production_metriques.py'
 
-À REMPLIR
+Fichiers produits : Fichier .tif par métrique dans le dossier './inputs/tiffs/no_du_feuillet/'
+
+NOTE : #### ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG !!! ####
+
 '''
+
+'''
+Cette section crée des fichiers pour chaque métriques définies
+
+Dans l'ordre, le code : 1) Télécharge le MNT du feuillet ciblé ainsi que tous les MNT adjacents
+                        2) Crée une zone tampon autour du feuillet ciblé
+                        3) Produit les métriques en appelant le fichier 'production_metriques.py'
+
+Fichiers produits : Fichier .tif par métrique dans le dossier './inputs/tiffs/no_du_feuillet/'
+
+NOTES : 1) Le processus peut se faire en boucle sur plusieurs feuillets (ex.: dans le cas qu'on voudrait échantilloner sur
+           plus d'un feuillet.
+
+        2) La fonction nécessite d'appeler "R" pour créer les métriques d'Haralick. Il faut spécifier le chemin de "R" 
+           sur l'ordinateur que vous utilisez. Voir la variable "path_script" dans la fonction.
+
+'''
+
 
 
 def gridSearch_params_opti(inputEch, metriques_pixel, outputMod):
@@ -253,9 +286,10 @@ def entrain_main_pix(feuillet, opti=False, makeplots=False, replaceMod=False):
     # # Intrants pour l'entraînement du modele
     # metriques_pixel = ['MeaH']
     metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
-    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
-    # inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', '{}_no_anth'.format(feuillet[:-2])))
-    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-7:-2]))
+    #inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
+    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', '31H02_32D01'))
+    #outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-7:-2]))
+    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', '31H02_32D01'))
     # outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', '{}_no_anth'.format(feuillet[-7:-2])))
 
     if opti is True:
@@ -271,7 +305,8 @@ def entrain_main_pix(feuillet, opti=False, makeplots=False, replaceMod=False):
         params_opti = {'max_depth': 4, 'max_features': 'auto', 'n_estimators': 5000}
     else:
         # Utilise les paramètres optimisés issues de l'étape optimisation
-        params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 200}
+        #params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 200}
+        params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 1000}
 
     print('Début de l\'entrainement du modèle')
     clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement_pix(inputEch=inputEch,
@@ -285,6 +320,7 @@ def entrain_main_pix(feuillet, opti=False, makeplots=False, replaceMod=False):
 
     return clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y
 
+#entrain_main_pix('31H02_32D01_1', opti=False, makeplots=True, replaceMod=True)
 
 def entrain_main_obj(feuillet, opti=False, makeplots=False, replaceMod=False):
     # # Intrants pour l'entraînement du modele
@@ -529,6 +565,12 @@ met_seg = ['ANVAD_min', 'CorH_max', 'CVA_min', 'CVA_max', 'CVA_median',
 À compléter
 '''
 
+#### EXEMPLE D'UTILISATION DE LA FONCTION DE CRÉATION DES MÉTRIQUES (SECTION 1)
+
+#liste_feuillet = ['32D02SE']
+#mnt_metriques(liste_feuillet=liste_feuillet, creation=True)
+
+
 # # Commencer par déterminer les feuillets que l'on désire traiter
 # liste_feuillet = ['32D01NO', '32D01']
 #
@@ -540,12 +582,13 @@ met_seg = ['ANVAD_min', 'CorH_max', 'CVA_min', 'CVA_max', 'CVA_median',
 # entrain_main('31H02NE', '31H02', makeplots=True, replaceMod=False)
 
 # Classification d'un feuillet
-# class_main(feuillet='31H02SO', num_mod='31H02_no_anth_no_anth')
+class_main(feuillet='31H02SO', num_mod='31H02_32D01')
+class_main(feuillet='32D02SE', num_mod='31H02_32D01')
 # class_main(feuillet='32D02SE', num_mod='31H02_no_anth_no_anth')
 # class_main(feuillet='31H02SO', num_mod='32D01')
 # class_main(feuillet='32D02SE', num_mod='32D01')
 
-class_main(feuillet='31H02SE', num_mod='32D01')
+#class_main(feuillet='31H02SE', num_mod='32D01')
 
 #### A REVOIR???? ####
 # # Suppression des fichiers
