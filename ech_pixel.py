@@ -406,7 +406,7 @@ def extract_value_metrique(path_couche_point, path_metrique):
 def creation_cadre(input_raster):
     '''
     :param input_raster: Path raster dont on veut extraire le cadre (str)
-    :return: geodataframe de la couche du cadre (Geopandas.GeoDataframe())
+    :return: geodataframe de la couche du cadre du raster en entrée (Geopandas.GeoDataframe())
     '''
     # Multiplier le mnt par 0 pour faciliter la conversion en polygone et création du raster avec le np.array sortant
     print('Multiplication du MNT par 0...')
@@ -442,19 +442,6 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     print('Création du cadre...')
     cadre, epsg, nodata = creation_cadre(path_mnt)
 
-    # #path_couche_memory = "/vsimem/mnt0_poly.shp"
-    # mnt0_array = raster_calculation(path_mnt)
-    # mnt0_raster, proj = creation_raster(mnt0_array, path_mnt)
-    # epsg = 'epsg:{}'.format(osr.SpatialReference(wkt=proj).GetAttrValue('AUTHORITY', 1))
-    # print(epsg)
-    #
-    # # Conversion du raster du mnt0 en polygone et supression des bordures pour créer le cadre d'échantillonnage
-    # print('Conversion MNT en polygone...')
-    # path_couche_memory = "/vsimem/mnt0_poly.shp"
-    # conversion_polygone(mnt0_raster, path_couche_memory)
-    # print('Suppresion des bordures...')
-    # cadre = delete_border(path_couche_memory)
-
     # Lecture de la couche de dépôts et reprojection si nécessaire
     print('Lecture de la couche de dépôts...')
     depot = gpd.read_file(path_depot)
@@ -478,22 +465,6 @@ def echantillonnage_pix(path_depot, path_mnt, path_metriques, output, nbPoints, 
     # Création de la zone extérieure: différence entre le cadre et le buffer clippé
     print('Création zone externe...')
     zone_ext = difference(cadre, buff_clip, epsg)
-
-    # ##########################################################################
-    # # SOUSTRACTION DES ZONES ANTHROPIQUES À LA ZONE EXT ET AUX ZONES DE DÉPÔTS
-    # # Regroupement des zones anthropiques
-    # print('Regroupement des zones anthropiques...')
-    # zone_dev = gpd.read_file(path_zone_dev)
-    # zone_dev_reg = dissolve(zone_dev, epsg)
-    #
-    # # Différence des zones anthropiques à la zone extérieure
-    # print('Différence zones anthropiques à la zone extérieure...')
-    # zone_ext = difference(zone_ext, zone_dev_reg, epsg)
-    #
-    # # Différence des zones anthropiques aux zones dépôts
-    # print('Différence zones anthropiques aux zones de dépôts...')
-    # depot_reg = difference(depot_reg, zone_dev_reg, epsg)
-    # ##########################################################################
 
     # Comparaison de superficie entre les dépôts et la zone extérieure pour fixer la limite du nombre de points
     print('Comparaison...')
