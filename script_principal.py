@@ -270,19 +270,21 @@ def entrain_main_pix(zone_feuillets, opti=False, makeplots=False, replaceMod=Fal
 
 #### SECTION 4b - Entraînement du modèle par objet  ####
 '''
-À REMPLIR
-avec matrice de confusion et importance des métriques
+Cette section est construite de la même façon que l'approche par pixel (Section 4a). Les différences proviennent des 
+fichiers sources d'entraînements qui sont différents (segmentation). Les paramètres optimisés pour chacun des zones
+sont aussi différents.
 '''
-def entrain_main_obj(feuillet, opti=False, makeplots=False, replaceMod=False):
-    # # Intrants pour l'entraînement du modele
-    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/objet/', feuillet[:-2]))
-    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-10:-3]))
 
-    print(inputEch)
+def entrain_main_obj(zone_feuillets, opti=False, makeplots=False, replaceMod=False):
+    # # Intrants pour l'entraînement du modele
+    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/objet/', zone_feuillets))
+    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', zone_feuillets))
+
+    #print(inputEch)
 
     if opti is True:
         print('Début de GridSearchCV pour trouver les paramètres optimaux')
-        params_opti = gridSearch_params_opti(zone_feuillets=feuillet[:-2], approche='objet')
+        params_opti = gridSearch_params_opti(zone_feuillets=zone_feuillets, approche='objet')
         print('Fin du GridSearchCV')
     elif opti == '31H02':
         print('Début de l\'entrainement avec les paramètres optimisé pour la zone 31H02')
@@ -303,12 +305,8 @@ def entrain_main_obj(feuillet, opti=False, makeplots=False, replaceMod=False):
                                                                                        **params_opti)
 
     print('Fin de l\'entrainement du modèle en utilisant les paramètres :')
-    print(params_opti)
 
     return clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y
-
-# entrain_main_obj('31H02NE', opti='31H02', makeplots=True, replaceMod=True)
-# entrain_main_obj('32D01NO', opti='32D01', makeplots=True, replaceMod=True)
 
 
 #### SECTION 5a - Classification par pixel ####
@@ -469,7 +467,10 @@ entrain_main_pix('31H02', opti='31H02', makeplots=True, replaceMod=True) # Ici o
                                                                          # On demande de crée les figures (makeplots=True)
                                                                          # On demande d'enregistrer/remplacer le modèle (replaceMod=True)
 
+#### SECTION 4b - Entraînement du modèle par objet  ####
+# Entrainement du modèle par pixel
 
+entrain_main_obj('31H02', opti='31H02', makeplots=True, replaceMod=True) # Voir commentaires 4a
 
 
 # Classification d'un feuillet
@@ -480,6 +481,11 @@ class_main(feuillet='32D02SE', num_mod='31H02_32D01')
 # class_main(feuillet='32D02SE', num_mod='32D01')
 
 #class_main(feuillet='31H02SE', num_mod='32D01')
+
+
+
+
+
 
 #### A REVOIR???? ####
 # # Suppression des fichiers
