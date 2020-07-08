@@ -446,10 +446,10 @@ mnt_metriques(liste_feuillet=liste_feuillet, creation=True) # Ici on spécifie q
 #### EX - SECTION 2 - Échantillonage pixel et objet #### (À COMPLÉTER)
 
 echant_main(liste_feuillet, creation=True, approche='pixel') # Ici on spécifie qu'on veut crée ou remplacer les fichiers
-                                                            # d'échantillonage (creation=True) et qu'on est dans une
-                                                            # approche par pixel.
-                                                            # La liste des feuillets peut être spécifié si on utilise
-                                                            # la fonction de façon autonome.
+                                                             # d'échantillonage (creation=True) et qu'on est dans une
+                                                             # approche par pixel.
+                                                             # La liste des feuillets peut être spécifié si on utilise
+                                                             # la fonction de façon autonome.
 
 #### EX - SECTION 3 - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
 # Cette fonction peut-être utilisé seule, mais sera plus souvent utilisé à l'intérieur de la fonction d'entraînement
@@ -460,11 +460,17 @@ gridSearch_params_opti(zone_feuillets='31H02', approche='pixel') # Ici on spéci
                                                                  # l'approche par pixel.
 
 #### SECTION 4a - Entraînement du modèle par pixel  ####
-# Entrainement du modèle
-# entrain_main_pix('31H02NE', '31H02', makeplots=True, replaceMod=True)
-# entrain_main('31H02NE', '31H02', makeplots=True, replaceMod=False)
+# Entrainement du modèle par pixel
 
-#entrain_main_pix('31H02_32D01_1', opti=False, makeplots=True, replaceMod=True)
+entrain_main_pix('31H02', opti='31H02', makeplots=True, replaceMod=True) # Ici on spécifie qu'on veut entraîner le modèle avec
+                                                                         # les échantillons de la zone '31H02' et qu'on utilise
+                                                                         # les paramètres optimisés obtenus précédemment pour
+                                                                         # cette même région (opti='31H02').
+                                                                         # On demande de crée les figures (makeplots=True)
+                                                                         # On demande d'enregistrer/remplacer le modèle (replaceMod=True)
+
+
+
 
 # Classification d'un feuillet
 class_main(feuillet='31H02SO', num_mod='31H02_32D01')
