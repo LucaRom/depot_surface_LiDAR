@@ -156,7 +156,7 @@ NOTES : #### ATTENTION CE PROCESSUS PEUT ÊTRE TRÈS LONG !!! ####
 
 def gridSearch_params_opti(zone_feuillets, approche):
     """
-    :param zone_feuillet: Spécifier la zone d'entraînement contenant tous les fichiers échantillonée (Ex.: 31H02)
+    :param zone_feuillets: Spécifier la zone d'entraînement contenant tous les fichiers échantillonée (Ex.: 31H02)
     :param approche: Spécifier s'il s'agit de l'approche pixel ou objet
     """
     # Paramètres communs aux deux approches
@@ -205,37 +205,57 @@ def gridSearch_params_opti(zone_feuillets, approche):
 
 #### SECTION 4a - Entraînement du modèle par pixel  ####
 '''
-À REMPLIR
-avec matrice de confusion et importance des métriques
+Cette section entraîne un modèle de type Random Forest en utilisant les données des métriques échantillonnées pour 
+l'approche par pixel.
+
+Dans l'ordre, le code : 1) Vérifie quels paramètres optimaux utilisés ou, le cas échéant s'il doit faire l'étape 
+                           d'optimisation
+                        2) Crée les figures de matrices de confusion et d'importance des métriques
+                        3) Entraîne le modèle
+                        
+Résultats : - À l'issue de cette étape, un modèle en format .pkl est sauvegardé dans ./inputs/modeles/ pour être utilisé 
+              à l'étape de la classification.
+            - Cette étape produit aussi deux figures : 1) Matrice de confusion 2) Importance des métriques
+
+NOTES : 1) Il est important de lire les détails des paramètres de la fonction au début de cette dernière
+           
+        2) Les métriques utilisés pour le modèle sont inclues dans la fonction et doivent être modifiée manuellement si 
+           besoin.
+       
 '''
 
 
-def entrain_main_pix(feuillet, opti=False, makeplots=False, replaceMod=False):
+def entrain_main_pix(zone_feuillets, opti=False, makeplots=False, replaceMod=False):
+    """
+    :param zone_feuillets: Spécifier la zone d'entraînement contenant tous les fichiers échantillonée (Ex.: 31H02)
+    :param opti: Spécifier le modèle pour lequel les paramètres ont déjà été optimisé (ex.: '31H02'). Si on met la valeur
+                 True, l'algorithme va lancer le processus de recherches de paramètres optimaux et utiliser les résultats
+                 pour entraîner le modèle. ATTENTION, ceci peut-être très long.
+    :param makeplots: Booléen (True/False). Si True, les figures sont produites.
+    :param replaceMod: Booléen (True/False). Si True, le un modèle sera sauvegardé pour cette région. Si un modèle existe
+                       déjà, il sera écrasé.
+    """
     # # Intrants pour l'entraînement du modele
-    # metriques_pixel = ['MeaH']
-    metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI']
-    #inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', feuillet[:-2]))
-    inputEch = os.path.join(os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', '31H02_32D01'))
-    #outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', feuillet[-7:-2]))
-    outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', '31H02_32D01'))
-    # outputMod = os.path.join(os.path.join(root_dir, 'inputs/modeles', '{}_no_anth'.format(feuillet[-7:-2])))
+    metriques_pixel = ['ANVAD', 'ConH', 'CorH', 'CVA', 'DI', 'ED', 'MeaH', 'PC', 'Pen', 'SSDN', 'TPI', 'TWI'] # Liste des métriques utilisés pour l'entraînement
+    inputEch = os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel/', zone_feuillets) # Chemin vers les fichiers d'échantillonage de la zone
+    outputMod = os.path.join(root_dir, 'inputs/modeles', zone_feuillets) # Chemin de sortie pour la sauvegarde du modèle
 
-    if opti is True:
+    if opti is True: # Lance le processus d'optimisation
+        # Utilise les paramètres optimisés issues de l'étape optimisation
         print('Début de GridSearchCV pour trouver les paramètres optimaux')
-        params_opti = gridSearch_params_opti(inputEch=inputEch, metriques_pixel=metriques_pixel, outputMod=outputMod)
+        params_opti = gridSearch_params_opti(zone_feuillets=feuillet[:-2], approche='pixel')
         print('Fin du GridSearchCV')
-    elif opti == '31H02':
+    elif opti == '31H02': # Utilise les paramètres optimaux pour le modèle 31H02 (Fait auparavant)
         print('Début de l\'entrainement avec les paramètres optimisé pour la zone 31H02')
         # params_opti = {'max_depth': 4, 'max_features': 'auto', 'n_estimators': 1000}
         params_opti = {'max_depth': 7, 'max_features': 'auto', 'n_estimators': 1000}
-    elif opti == '32D01':
+    elif opti == '32D01':  # Utilise les paramètres optimaux pour le modèle 32D01 (Fait auparavant)
         print('Début de l\'entrainement avec les paramètres optimisé pour la zone 32D01')
         params_opti = {'max_depth': 4, 'max_features': 'auto', 'n_estimators': 5000}
-    else:
-        # Utilise les paramètres optimisés issues de l'étape optimisation
-        #params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 200}
+    else: # Lance un entraînement avec des paramètres de base, non optimisé.
         params_opti = {'max_depth': None, 'max_features': 'auto', 'n_estimators': 1000}
 
+    # Appel de la fonction d'entraînement pour l'approche par pixel (fonctions_modele.py)
     print('Début de l\'entrainement du modèle')
     clf, accu_mod, train_metriques, train_y, test_metriques, test_y = entrainement_pix(inputEch=inputEch,
                                                                                        metriques=metriques_pixel,
@@ -244,11 +264,8 @@ def entrain_main_pix(feuillet, opti=False, makeplots=False, replaceMod=False):
                                                                                        makeplots=makeplots,
                                                                                        **params_opti)
     print('Fin de l\'entrainement du modèle en utilisant les paramètres :')
-    print(params_opti)
 
     return clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y
-
-#entrain_main_pix('31H02_32D01_1', opti=False, makeplots=True, replaceMod=True)
 
 
 #### SECTION 4b - Entraînement du modèle par objet  ####
@@ -263,14 +280,9 @@ def entrain_main_obj(feuillet, opti=False, makeplots=False, replaceMod=False):
 
     print(inputEch)
 
-    # inputEch = os.path.join(os.path.join(root_dir, 'inputs/segmentations/remise/'))
-    # outputMod = os.path.join(os.path.join(root_dir, 'inputs/segmentations/remise/'))
-
-    ######entrainement_obj(inputEch, outputMod, replaceMod, makeplots, **kwargs)
-
     if opti is True:
         print('Début de GridSearchCV pour trouver les paramètres optimaux')
-        params_opti = gridSearch_params_opti(inputEch=inputEch, metriques_pixel=metriques_pixel, outputMod=outputMod)
+        params_opti = gridSearch_params_opti(zone_feuillets=feuillet[:-2], approche='objet')
         print('Fin du GridSearchCV')
     elif opti == '31H02':
         print('Début de l\'entrainement avec les paramètres optimisé pour la zone 31H02')
@@ -451,6 +463,8 @@ gridSearch_params_opti(zone_feuillets='31H02', approche='pixel') # Ici on spéci
 # Entrainement du modèle
 # entrain_main_pix('31H02NE', '31H02', makeplots=True, replaceMod=True)
 # entrain_main('31H02NE', '31H02', makeplots=True, replaceMod=False)
+
+#entrain_main_pix('31H02_32D01_1', opti=False, makeplots=True, replaceMod=True)
 
 # Classification d'un feuillet
 class_main(feuillet='31H02SO', num_mod='31H02_32D01')
