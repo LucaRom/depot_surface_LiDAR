@@ -135,11 +135,6 @@ def echant_main(liste_feuillet, creation, approche):
                                 path_segmentation=path_segmentation,
                                 output=output)
 
-
-# liste_feuillet = ['31H02SE']
-# echant_main(liste_feuillet, creation=False, approche='objet')
-
-
 #### SECTION 3 - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
 '''
 Cette section contient la fonction qui recherche les paramètres optimaux pour l'entraînement du modèle
@@ -220,7 +215,7 @@ Résultats : - À l'issue de cette étape, un modèle en format .pkl est sauvega
 NOTES : 1) Il est important de lire les détails des paramètres de la fonction au début de cette dernière
            
         2) Les métriques utilisés pour le modèle sont inclues dans la fonction et doivent être modifiée manuellement si 
-           besoin.
+           besoin. 
        
 '''
 
@@ -311,108 +306,86 @@ def entrain_main_obj(zone_feuillets, opti=False, makeplots=False, replaceMod=Fal
 
 #### SECTION 5a - Classification par pixel ####
 '''
-À REMPLIR
+Cette section utilise un modèle entraîné pour faire la prédiction de classe sur un feuillet pour l'approche par pixel.
+
+Dans l'ordre, le code : 1) Importe le modèle désiré
+                        2) Classifie le feuillet
+
+Résultats : - Un fichier .tiff est obtenu dans ./fichiers_outputs/pixel/
+
+NOTES : 1) Pour faire la prédiction d'un feuillet, il faut lancer la fonction "mnt_metriques" (Section 1) auparavant
+        2) IMPORTANT : En tout temps, les métriques du feuillet doivent être les mêmes que lors de l'entraînement du 
+           modèle sélectionné pour la prédiction.
+       
 '''
 
-
 def class_main(feuillet, num_mod):
+    """
+    :param feuillet: Numéro du feuillet à classer (ex. '31H02SO')
+    :param num_mod: Numéro du modèle déjà entraîné provenant du dossier ./inputs/modeles/
+    """
     # # Intrants pour la classification du modèle
-    mod_path = os.path.join(root_dir, 'inputs/modeles')  # Chemin vers le dossier des modèles
+    mod_path = os.path.join(root_dir, 'inputs/modeles')               # Chemin vers le dossier des modèles
     rep_metriques = os.path.join(root_dir, 'inputs/tiffs', feuillet)  # Chemin vers le dossier des métriques
-    nom_fichier = 'prediction_{}_{}.tif'.format(feuillet, num_mod)  # Nom du fichier à sauvegarder
-    outputdir = os.path.join(root_dir, 'fichiers_outputs/pixel')  # Dossier output du .shp prédit
-    #outputdir = os.path.join(root_dir, 'outputs/pixel')  # A DELETER
+    nom_fichier = 'prediction_{}_{}.tif'.format(feuillet, num_mod)    # Nom du fichier à sauvegarder
+    outputdir = os.path.join(root_dir, 'fichiers_outputs/pixel')      # Dossier output du .tif prédit
 
-    # Classification avec le modèle et création du fichier résultant
-    classif, tiff_path_list = classification(num_mod=num_mod, mod_path=mod_path, rep_metriques=rep_metriques)
-    creation_output(prediction=classif, outputdir=outputdir, nom_fichier=nom_fichier,
-                    inputMet=rep_metriques, tiff_path_list=tiff_path_list)
+    # Classification avec le modèle
+    classif, tiff_path_list = classification(num_mod=num_mod, mod_path=mod_path,    # Appel de la fonction de classification
+                                             rep_metriques=rep_metriques)           # (fonctions_modele.py)
 
-
-# def class_main_obj(feuillet, num_mod):
-
-# Pour importer un shapefile
-# # On crée la liste des shapefiles
-# files = os.listdir(inputEch)  # Liste des fichiers dans le dossier "folder"
-# shp_list = [os.path.join(inputEch, i) for i in files if i.endswith('.shp')] # Obtenir une liste des chemins pour
-# .shp seulement
-
-# On join les fichiers .shp de la liste
-# new_shp_temp = gpd.GeoDataFrame(pd.concat([gpd.read_file(i) for i in shp_list],
-#                                           ignore_index=True), crs=gpd.read_file(shp_list[0]).crs)
-#
-# import geopandas as gpd
-# import numpy as np
-#
-# i = r'E:\OneDrive - USherbrooke\001 APP\Programmation\inputs\segmentations\stats_zonales\seg_stats_31H02SO.shp'
-# #new_shp_temp = gpd.GeoDataFrame(gpd.read_file(i) , ignore_index=True)
-#
-# new_shp_temp = gpd.GeoDataFrame(gpd.read_file(i))
-# met_seg = ['CVA_median', 'SSDN_max', 'ANVAD_medi', 'DI_median', 'Pen_median', 'CVA_min', 'DI_mean', 'ANVAD_max', 'DI_max', 'Pen_mean', 'MeaH_media', 'Pen_max', 'MeaH_max', 'MeaH_mean']
-
-# # Prediction complète
-# clf, accu_mod, params_opti, train_metriques, train_metriques, test_metriques, test_y = entrain_main_obj('31H02NE', opti='31H02', makeplots=True, replaceMod=True)
-#
-# new_shp_temp = new_shp_temp[met_seg]
-#
-# new_shp_temp = new_shp_temp[new_shp_temp.replace([np.inf, -np.inf], np.nan).notnull().all(axis=1)]
-# new_shp_temp = new_shp_temp.dropna()
-#
-# new_shp_temp['prediction'] = clf.predict(new_shp_temp)
-
-# ICI ICI
-# seg_path = os.path.join(root_dir, 'inputs/segmentations/stats_zonales/31H02')
-# # mod_path = os.path.join(root_dir, 'inputs/modeles')
-# # output_path =  os.path.join(root_dir, 'fichiers_outputs/objet')
-# # output_path =  os.path.join(root_dir, 'outputs/objet') # A DELETER
+    # Création du fichier sortant '.tif'
+    creation_output(prediction=classif, outputdir=outputdir, nom_fichier=nom_fichier,  # Appel de la fonction de création de fichier
+                    inputMet=rep_metriques, tiff_path_list=tiff_path_list)             # (fonctions_modele.py)
 
 
-# met_seg = ['CorH_max', 'CVA_median', 'SSDN_max', 'ANVAD_medi', 'DI_median', 'Pen_median', 'CVA_min', 'DI_mean', 'ANVAD_max', 'DI_max', 'Pen_mean', 'MeaH_media', 'Pen_max', 'MeaH_max', 'MeaH_mean']
-# met_seg = ['ConH_min', 'CorH_min', 'ED_min', 'ConH_media', 'ConH_max', 'ConH_std', 'ConH_mean', 'ED_std', 'DI_min', 'TPI_std', 'ANVAD_std', 'CVA_std', 'TWI_max', 'TWI_std', 'SSDN_mean', 'TWI_median', 'ED_median', 'SSDN_media', 'CVA_max', 'PC_median', 'TPI_max', 'ED_mean', 'TWI_mean', 'SSDN_std', 'PC_max', 'SSDN_min', 'PC_min', 'ANVAD_min', 'DI_std', 'TPI_mean', 'TWI_min', 'PC_mean', 'ANVAD_mean', 'CVA_mean', 'Pen_min', 'PC_std', 'MeaH_std', 'ED_max', 'TPI_median', 'Pen_std', 'TPI_min']
-# met_seg = ['ANVAD_min', 'ANVAD_max', 'ANVAD_medi', 'ANVAD_mean',
-#        'ANVAD_std', 'ConH_min', 'ConH_max', 'ConH_media', 'ConH_mean',
-#        'ConH_std', 'CorH_min', 'CorH_max', 'CVA_min', 'CVA_max', 'CVA_median',
-#        'CVA_mean', 'CVA_std', 'DI_min', 'DI_max', 'DI_median', 'DI_mean',
-#        'DI_std', 'ED_min', 'ED_max', 'ED_median', 'ED_mean', 'ED_std',
-#        'MeaH_min', 'MeaH_max', 'MeaH_media', 'MeaH_mean', 'MeaH_std', 'PC_min',
-#        'PC_max', 'PC_median', 'PC_mean', 'PC_std', 'Pen_min', 'Pen_max',
-#        'Pen_median', 'Pen_mean', 'Pen_std', 'SSDN_min', 'SSDN_max',
-#        'SSDN_media', 'SSDN_mean', 'SSDN_std', 'TPI_min', 'TPI_max',
-#        'TPI_median', 'TPI_mean', 'TPI_std', 'TWI_min', 'TWI_max', 'TWI_median',
-#        'TWI_mean', 'TWI_std']
+#### SECTION 5b - Classification par objet####
+'''
+Cette section utilise un modèle entraîné pour faire la prédiction de classe sur un feuillet pour l'approche par objet.
 
-### met_seg pour 31H02 ###
-met_seg = ['ANVAD_min', 'CorH_max', 'CVA_min', 'CVA_max', 'CVA_median',
-           'CVA_std', 'DI_median', 'DI_mean', 'DI_std', 'ED_std', 'MeaH_min',
-           'MeaH_max', 'MeaH_media', 'MeaH_mean', 'MeaH_std', 'PC_std',
-           'Pen_median', 'SSDN_max', 'SSDN_std', 'TPI_min', 'TPI_median',
-           'TPI_std', 'TWI_max', 'TWI_median']
+Dans l'ordre, le code : 1) Importe la segmentation du feuillet
+                        2) Importe le modèle désiré
+                        2) Classifie le feuillet
 
-### TOUTES LES MÉTRIQUES pour modèle 32D01 ####
-# met_seg = ['ANVAD_min', 'ANVAD_max', 'ANVAD_medi', 'ANVAD_mean',
-#        'ANVAD_std', 'ConH_min', 'ConH_max', 'ConH_media', 'ConH_mean',
-#        'ConH_std', 'CorH_min', 'CorH_max', 'CVA_min', 'CVA_max', 'CVA_median',
-#        'CVA_mean', 'CVA_std', 'DI_min', 'DI_max', 'DI_median', 'DI_mean',
-#        'DI_std', 'ED_min', 'ED_max', 'ED_median', 'ED_mean', 'ED_std',
-#        'MeaH_min', 'MeaH_max', 'MeaH_media', 'MeaH_mean', 'MeaH_std', 'PC_min',
-#        'PC_max', 'PC_median', 'PC_mean', 'PC_std', 'Pen_min', 'Pen_max',
-#        'Pen_median', 'Pen_mean', 'Pen_std', 'SSDN_min', 'SSDN_max',
-#        'SSDN_media', 'SSDN_mean', 'SSDN_std', 'TPI_min', 'TPI_max',
-#        'TPI_median', 'TPI_mean', 'TPI_std', 'TWI_min', 'TWI_max', 'TWI_median',
-#        'TWI_mean', 'TWI_std']
+Résultats : - Un fichier .sho est obtenu dans ./fichiers_outputs/objet/
 
-# seg_path = os.path.join(root_dir, 'inputs/segmentations')
-# mod_path = os.path.join(root_dir, 'inputs/modeles')
-# output_path =  os.path.join(root_dir, 'outputs/objet')
-#
-# classification_obj(seg_num='seg_stats_31H02SE_v2', seg_path=seg_path, mod_path=mod_path, mod_num='31H02_obj_seg', met_seg=met_seg, output_path=output_path)
+NOTES : 1) Pour faire la prédiction d'un feuillet, il faut lancer la fonction "mnt_metriques" (Section 1) ainsi que 
+            la fonction echant_main avec l'approche par objet (section 2) auparavant.
+        2) IMPORTANT : En tout temps, les métriques spécifiées dans la fonction "met_seg" doivent être les mêmes que 
+           lors de l'entraînement du modèle sélectionné pour la prédiction.
+        3) Cette approche nécessite que la variable met_seg soit définie manuellement selon la sélection des métriques, 
+           mais est automatisé si la combinaison de métrique est constante. 
 
-# seg_path = os.path.join(root_dir, 'inputs/segmentations')
-# mod_path = os.path.join(root_dir, 'inputs/modeles')
-# output_path =  os.path.join(root_dir, 'outputs/objet')
-#
-# classification_obj(seg_num='seg_stats_32D02SE_v2', seg_path=seg_path, mod_path=mod_path, mod_num='31H02_obj_seg', met_seg=met_seg, output_path=output_path)
-#
+'''
+def class_main_obj(seg_num, mod_num):
+    """
+    :param seg_num: Numéro de la segmentation avec statistiques correspondante au feuillet que l'on veut prédire
+    :param mod_num: Numéro du modèle entraîné avec lequel on désir effectuer la prédiction
+    """
+
+    # Définition des métriques utilisées lors de l'entraînement
+    met_seg = ['ANVAD_min', 'ANVAD_max', 'ANVAD_medi', 'ANVAD_mean',
+           'ANVAD_std', 'ConH_min', 'ConH_max', 'ConH_media', 'ConH_mean',
+           'ConH_std', 'CorH_min', 'CorH_max', 'CVA_min', 'CVA_max', 'CVA_median',
+           'CVA_mean', 'CVA_std', 'DI_min', 'DI_max', 'DI_median', 'DI_mean',
+           'DI_std', 'ED_min', 'ED_max', 'ED_median', 'ED_mean', 'ED_std',
+           'MeaH_min', 'MeaH_max', 'MeaH_media', 'MeaH_mean', 'MeaH_std', 'PC_min',
+           'PC_max', 'PC_median', 'PC_mean', 'PC_std', 'Pen_min', 'Pen_max',
+           'Pen_median', 'Pen_mean', 'Pen_std', 'SSDN_min', 'SSDN_max',
+           'SSDN_media', 'SSDN_mean', 'SSDN_std', 'TPI_min', 'TPI_max',
+           'TPI_median', 'TPI_mean', 'TPI_std', 'TWI_min', 'TWI_max', 'TWI_median',
+           'TWI_mean', 'TWI_std']
+
+    # Définition des chemins nécessaires à la fonction
+    seg_path = os.path.join(root_dir, 'inputs/segmentations')         # Chemin vers le dossier des segmentations
+    mod_path = os.path.join(root_dir, 'inputs/modeles')               # Chemin vers les modèles sauvegardés
+    output_path =  os.path.join(root_dir, 'fichiers_outputs/objet')   # Chemin pour enregistrer le shapefile optenu
+
+    # Lancement de la fonction de classification (fonctions_modele.py)
+    classification_obj(seg_num=seg_num, seg_path=seg_path,
+                       mod_path=mod_path, mod_num=mod_num,
+                       met_seg=met_seg, output_path=output_path)
+
 
 #### SECTION 6 - Exemple d'utilisation ####
 '''
@@ -473,18 +446,18 @@ entrain_main_pix('31H02', opti='31H02', makeplots=True, replaceMod=True) # Ici o
 entrain_main_obj('31H02', opti='31H02', makeplots=True, replaceMod=True) # Voir commentaires 4a
 
 
+#### SECTION 5a - Classification par pixel ####
 # Classification d'un feuillet
-class_main(feuillet='31H02SO', num_mod='31H02_32D01')
-class_main(feuillet='32D02SE', num_mod='31H02_32D01')
-# class_main(feuillet='32D02SE', num_mod='31H02_no_anth_no_anth')
-# class_main(feuillet='31H02SO', num_mod='32D01')
-# class_main(feuillet='32D02SE', num_mod='32D01')
-
-#class_main(feuillet='31H02SE', num_mod='32D01')
+class_main(feuillet='31H02SO', num_mod='31H02') # Ici on classifie le feuillet 31H02SO avec le modèle entraîné nommé
+                                                # 31H02. (Les métriques ont été faites auparavant pour le feuillet 31H02SO)
 
 
-
-
+#### SECTION 5a - Classification par pixel ####
+# Classification d'un feuillet
+class_main_obj(seg_num='seg_stats_31H02SE_v2', num_mod='31H02_obj_seg') # Ici on classifie le feuillet segmenté 31H02SE
+                                                                        # avec le modèle par objet de la zone 31H02.
+                                                                        # La segmentation et le calculs des faits
+                                                                        #  auparavant pour le feuillet 31H02SO)
 
 
 #### A REVOIR???? ####
