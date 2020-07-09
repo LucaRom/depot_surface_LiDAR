@@ -28,6 +28,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import validation_curve # A mettre dans fonctions modele
 from sklearn.feature_selection import SelectFromModel
 from sklearn.utils import resample
+from ech_pixel import creation_cadre
+from pretraitements import clip_raster_to_polygon
 
 import seaborn as sns
 
@@ -483,6 +485,25 @@ def creation_output(prediction, outputdir, nom_fichier, inputMet, tiff_path_list
     #elapsed = end - start
     #print("Elapsed time : %.2f s" % (elapsed))
 
+def clip_final(path_feuillet, output):
+    '''
+    :param path_feuillet: No. feuillet avec un buffer à clipper (str)
+    :param output: Chemin du fichier de sortie (str)
+    :return: Clip du feuillet en entrée clippé à la largeur du feuillet original (.tif)
+    '''
+    # Chemin du fichier de calssification dans le répertoire racine
+    feuillet = os.path.basename(path_feuillet).split('_')[1]
+
+    # Chemin du fichier de référence pour clip dans le répertoire racine
+    path_ref = os.path.join(root_dir, 'Backup/MNT_{}_resample.tif'.format(feuillet))
+
+    # Création du cadre pour le clip
+    cadre, epsg, nodata = creation_cadre(path_ref)
+
+    # Clip
+    clip_raster_to_polygon(path_feuillet, cadre, epsg, 255, output)
+    return cadre
+
     #### FIN SCRIPT ET PROJET GEOINFO ####
 
 
@@ -608,6 +629,9 @@ def main():
         sys.exit()
 
     logger.info('Terminé')
+
+
+
 
 
 if __name__ == "__main__":
