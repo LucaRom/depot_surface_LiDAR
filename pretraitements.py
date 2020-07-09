@@ -3,11 +3,16 @@ from osgeo import gdal, osr
 from rasterio.merge import merge
 from rasterio.mask import mask
 from ech_pixel import creation_buffer, creation_cadre
-import whitebox
+#import whitebox
 import shutil
 
 
 def resampling_cubic_spline(input, output, size):
+    '''
+    :param input: Chemin du raster .tif input (str)
+    :param output: Chemin du fichier de sortie (str)
+    :param size: Taille du rééchantillonnage (int)
+    '''
 
     # Création des répertoire de sortie
     head_output = os.path.dirname(output)
@@ -21,8 +26,7 @@ def resampling_cubic_spline(input, output, size):
     proj = dataset.GetProjection()
     crs = osr.SpatialReference()
     crs.ImportFromWkt(proj)
-    #width=largeur / size, height=hauteur / size
-    #targetAlignedPixels=True
+
     # Resampling
     print('Resampling...')
     warp_object = gdal.WarpOptions(xRes=size, yRes=size, targetAlignedPixels=True, resampleAlg=3,
@@ -35,6 +39,12 @@ def resampling_cubic_spline(input, output, size):
 
 
 def creation_mosaique(liste_mnt, output, epsg):
+    '''
+    :param liste_mnt: Liste des chemins des fichiers nécessaires pour la mosaique (list)
+    :param output: Chemin du fichier de sortie (str)
+    :param epsg: Code EPSG de la mosaique en sortie (int)
+    :return:
+    '''
 
     # Création d'une classe de liste pouvant être accédée par un "with"
     class liste_mosaic(list):
@@ -72,31 +82,57 @@ def creation_mosaique(liste_mnt, output, epsg):
 
 
 def getFeatures(gdf):
+    '''
+    :param gdf: Geodataframe en entrée (Geopandas.GeoDataframe)
+    :return: Les entités du gdf en json pour être utilisés par Rasterio
+    '''
     """Function to parse features from GeoDataFrame in such a manner that rasterio wants them"""
     import json
     return [json.loads(gdf.to_json())['features'][0]['geometry']]
 
 
 def clip_raster_to_polygon(input_raster, input_polygon, epsg, nodata, output):
+    '''
+    :param input_raster: Chemin du raster .tif à clipper (str)
+    :param input_polygon: Chemin de la couche polygonale .shp servant de masque pour le clip (str)
+    :param epsg: Code EPSG du raster de sortie (int)
+    :param nodata: Valeur NoData à attribuer au raster de sortie (int, float)
+    :param output: Chemin du fichier de sortie (str)
+    :return: Raster .tif clippé selon la couche polygonale en entrée
+    '''
 
+    # On ouvre la couche raster
     with rasterio.open(input_raster) as raster:
+        # On parcours la couche pour en extraire les entités
         coords = getFeatures(input_polygon)
+        # On clip le raster selon la couche polygonale en entrée
         out_img, out_transform = mask(dataset=raster, shapes=coords, nodata=nodata, crop=True)
+        # On prend les métadonnées du raster en entrée pour le raster en sortie
         out_meta = raster.meta.copy()
+        # On met à jour les métadonnées du raster en sortie avec les paramètres en intrant
         out_meta.update({"driver": "GTiff",
                          "height": out_img.shape[1],
                          "width": out_img.shape[2],
                          "transform": out_transform,
+                         "nodata": nodata,
                          "crs": epsg
                          })
-
+        # Création du fichier de sortie
         with rasterio.open(output, "w", **out_meta) as dest:
             dest.write(out_img)
+            # Fermeture du fichier de sortie
             dest.close()
+        # Fermeture du fichier raster en entrée
         raster.close()
 
 
 def creation_buffer_raster(input_raster, input_mosaic, distance, output):
+    '''
+    :param input_raster: Chemin d'un fichier raster .tif de référence pour en extraire le cadre(str)
+    :param input_mosaic: Chemin de la mosaique .tif à clipper (str)
+    :param distance: Grosseur du buffer désirée (int)
+    :param output: Chemin du fichier output, .tif de la mosaique clippée selon le raster de référence + la distance du buffer
+    '''
 
     # Création du cadre du raster
     cadre, epsg, nodata = creation_cadre(input_raster)
@@ -110,6 +146,14 @@ def creation_buffer_raster(input_raster, input_mosaic, distance, output):
 
 
 def pretraitements(feuillet, liste_path_feuillets, distance_buffer, size_resamp, rep_output):
+    '''
+    :param feuillet: Numéro du feuillet sélectionné ex: 31H02NE (str)
+    :param liste_path_feuillets: Liste des chemins du feuillet slectionné et de tous les feuillets adjacents pour
+           la création d'un mosaique (list)
+    :param distance_buffer: Grosseur du buffer à appliquer sur le raster du feuillet sélectionné (int)
+    :param size_resamp: Taille du rééchantillonnage (int)
+    :param rep_output: Chemin du répertoire de sortie (str)
+    '''
 
     print('***PRÉTRAITEMENTS***')
 
