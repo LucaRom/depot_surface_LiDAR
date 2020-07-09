@@ -8,11 +8,11 @@ Created on Wed Jan 2020
 """
 
 from Download_MNT import download_mnt
-from pretraitements import pretraitements
+from pretraitements import pretraitements, clip_raster_to_polygon
 from production_metriques import creation_metriques
-from ech_pixel import echantillonnage_pix
+from ech_pixel import echantillonnage_pix, creation_cadre
 from fonctions_modele import entrainement_pix, entrainement_obj, entrainement_obj_feat, classification, \
-    classification_obj, creation_output, HyperTuningGrid, plot_valid
+    classification_obj, creation_output, HyperTuningGrid, plot_valid, clip_final
 from ech_objet import echantillonnage_obj
 import os
 import matplotlib.pyplot as plt
@@ -34,7 +34,7 @@ Dans l'ordre, le code : 1) Télécharge le MNT du feuillet ciblé ainsi que tous
                         
 Fichiers produits : Fichier .tif par métrique dans le dossier './inputs/tiffs/no_du_feuillet/'
 
-NOTES : 1) Le processus peut se faire en boucle sur plusieurs feuillets (ex.: dans le cas qu'on voudrait échantilloner sur
+NOTES : 1) Le processus peut se faire en boucle sur plusieurs feuillets (ex.: dans le cas où l'on voudrait échantilloner sur
            plus d'un feuillet.
            
         2) La fonction nécessite d'appeler "R" pour créer les métriques d'Haralick. Il faut spécifier le chemin de "R" 
@@ -47,7 +47,7 @@ def mnt_metriques(liste_feuillet, creation):
     :param liste_feuillet: Spécifier une liste (ex. liste = [31H02SE, 31H02NE]) pour créer les métriques sur un
                            ou plusieurs feuillets.
 
-    :param creation: Spécifier si la fonction doit créer ou non les fichiers de métriques (utile si appeler dans une autre
+    :param creation: Spécifier si la fonction doit créer ou non les fichiers de métriques (utile si appelé dans une autre
                     fonction).
     """
 
@@ -88,12 +88,38 @@ def mnt_metriques(liste_feuillet, creation):
     return rep_metriques, rep_mnt_buff
 
 
+
+
 #### SECTION 2 - Échantillonage pixel et objet ####
 '''
-À REMPLIR
+Cette section effectue un échantillonnage selon l'approche choisie à l'aide des métriques produites à la section 1.
+
+- Approche par pixel:
+    - la fonction echantillonnage_pix() produit un nombre de points aléatoires sur le feuillet. Leur nombre est spécifié
+      par l'argument "nbPoints" et la distance minimale entre les points est spécifiée par l'argument "minDistance"
+- Approche par objet
+    - l'échantillonnage par objet dans la fonction echantillonnage_obj() comprend une segmentation, la production de 
+      statistiques de zones sur la segmentation ainsi que la création d'une colone "Zone" dans la couche de segmentation
+      identifiant les polygone à l'intérieur (1) et les polygones à l'extérieur (0) de la zone de dépôts. 
+      Il peut s'exécuter de 2 façon:
+        - Si l'approche "objet" est spécifiée dans l'argument "approche", l'identification des polygones s'effectue de
+          même que les statistiques de zone
+        - Si l'approche "objet_just_stat" est spécifiée dans l'argument "approche", l'dentification des polygones n'est
+          pas effectuée. Ex: pour prédire avec un modèle existant
+    - la segmentation est préalable à l'échantillonnage. Si l'on souhaite faire l'échantillonnage sur une segmentation 
+      existante, on peut spécifier le chemin dans l'argument "path segmentation" si cet argument n'est pas spécifié,
+      il faut spécifier les arguments "input_met", "markers", "compactness", "output_segmentation" pour créer une nouvelle
+      segmentation.
+      Le script ech_objet.py détaille les spécificités de ces arguments.
+
 '''
 
 def echant_main(liste_feuillet, creation, approche):
+    '''
+    :param liste_feuillet: Liste des numéro de feuillets à échantillonner ex: '31H02NE' (list)
+    :param creation: si True, le téléchargement, les prétraitements et les métriques sont exécutés (bool)
+    :param approche: approche choisie (pixel, objet, objet_just_stats) (str)
+    '''
     rep_metriques, rep_mnt_buff = mnt_metriques(liste_feuillet, creation)  # Appel de variables de la SECTION 1
     for i in liste_feuillet:
         feuillet = i
@@ -103,7 +129,7 @@ def echant_main(liste_feuillet, creation, approche):
             feuillet))  # Chemins des couches du MNT et de la couche de dépôts
         path_mnt = os.path.join(root_dir, 'inputs/MNT/resample', feuillet[:-2], 'MNT_{}_resample.tif'.format(feuillet))
 
-        if approche == 'pixel':
+        if approche.lower() == 'pixel':
             # Intrants pour l'échantillonnage par pixel
             echant = os.path.join(root_dir, 'inputs/ech_entrainement_mod/pixel', feuillet[:-2],
                                   'ech_{}.shp'.format(feuillet))
@@ -111,7 +137,14 @@ def echant_main(liste_feuillet, creation, approche):
             # Échantillonnage par pixel
             echantillonnage_pix(path_depot=path_depot, path_mnt=path_mnt, path_metriques=rep_metriques,
                                 output=echant, nbPoints=2000, minDistance=500)
-        elif approche == 'objet':
+
+        elif approche.lower() in ['objet', 'objet_just_stats']:
+
+            # Si l'approche 'objet_just_stats' est choisie, seules les stats zonales sont produites, pas l'échantillonnage
+            # Ex: Utiliser pour prédire avec un modèle
+            if approche == 'objet_just_stats':
+                path_depot = None
+
             # Intrant pour l'échantillonnage par objet
             path_segmentation = os.path.join(root_dir, 'inputs/segmentations', 'seg_{}.shp'.format(feuillet))
             output = os.path.join(root_dir, 'inputs/ech_entrainement_mod/objet', feuillet[:-2],
@@ -122,18 +155,7 @@ def echant_main(liste_feuillet, creation, approche):
                                 path_segmentation=path_segmentation,
                                 output=output, path_depot=path_depot)
 
-        # Cette section n'inclut pas un "path_depot" quand on appelle la fonction "echantillonage_obj" ce qui ne crée
-        # pas de fichier d'entrainement.
-        elif approche == 'objet2':
-            # Intrant pour l'échantillonnage par objet
-            path_segmentation = os.path.join(root_dir, 'inputs/segmentations', 'seg_{}.shp'.format(feuillet))
-            output = os.path.join(root_dir, 'inputs/segmentations/stats_zonales', feuillet[:-2],
-                                  'seg_stats_{}.shp'.format(feuillet))
 
-            # Échantillonnage par objet
-            echantillonnage_obj(path_metriques=rep_metriques, path_met_cadre=path_mnt,
-                                path_segmentation=path_segmentation,
-                                output=output)
 
 #### SECTION 3 - (OPTIONNEL) Optimisation/recherche des hyperparamètres ####
 '''
@@ -338,6 +360,11 @@ def class_main(feuillet, num_mod):
     creation_output(prediction=classif, outputdir=outputdir, nom_fichier=nom_fichier,  # Appel de la fonction de création de fichier
                     inputMet=rep_metriques, tiff_path_list=tiff_path_list)             # (fonctions_modele.py)
 
+    # Clip final du fichier sortant
+    fichier_a_clipper = os.path.join(outputdir, nom_fichier)
+    fichier_final =  os.path.join(outputdir, '{}_final.tif'.format(nom_fichier[:-4]))
+    clip_final(fichier_a_clipper, fichier_final)
+
 
 #### SECTION 5b - Classification par objet####
 '''
@@ -387,7 +414,15 @@ def class_main_obj(seg_num, mod_num):
                        met_seg=met_seg, output_path=output_path)
 
 
-#### SECTION 6 - Exemple d'utilisation ####
+#### SECTION 6 - Clip final des raster classifiés
+'''
+Cette dernière étape est utilisée seulement pour l'approche par pixel, puisque l'approche par objet retourne seulement
+les polygones contenus dans le cadre d'échantillonnage, soit celui du MNT original.
+La fonction retire le buffer appliqué en prétraitements au raster classifié
+'''
+
+
+#### SECTION 7 - Exemple d'utilisation ####
 '''
 1. Fonction 'echant_main(liste_feuillet, creation)'
     - Création des métriques et de l'échantillonage pour entrainter le modèle
@@ -452,12 +487,17 @@ class_main(feuillet='31H02SO', num_mod='31H02') # Ici on classifie le feuillet 3
                                                 # 31H02. (Les métriques ont été faites auparavant pour le feuillet 31H02SO)
 
 
-#### SECTION 5a - Classification par pixel ####
+#### SECTION 5b - Classification par objet ####
 # Classification d'un feuillet
 class_main_obj(seg_num='seg_stats_31H02SE_v2', num_mod='31H02_obj_seg') # Ici on classifie le feuillet segmenté 31H02SE
                                                                         # avec le modèle par objet de la zone 31H02.
                                                                         # La segmentation et le calculs des faits
                                                                         #  auparavant pour le feuillet 31H02SO)
+
+
+#### SECTION 6 - Clip final du raster ####
+fichier_a_clipper = os.path.join(root_dir)
+clip_final(path_feuillet=, output)
 
 
 #### A REVOIR???? ####
