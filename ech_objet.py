@@ -3,6 +3,7 @@ from rasterstats import zonal_stats
 import os
 #from osgeo import osr
 from ech_pixel import creation_cadre, dissolve
+from Segmentation import segmentation_main
 
 
 def stats_zonales(path_metriques, path_segmentation):
@@ -94,7 +95,8 @@ def selection_poly_cadre(path_segmentation, path_met_cadre):
     return seg_cadre
 
 
-def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation,output, path_depot=None):
+def echantillonnage_obj(path_metriques, path_met_cadre, output, path_depot=None, path_segmentation=None,
+                        input_met=None, markers=None, compactness=None, output_segmentation=None):
     '''
     :param path_metriques: Chemin du répertoire contenant les métriques (.tif) pour calculer les statistiques (str)
     :param path_met_cadre: chemin du Raster de référence pour créer le cadre d'échantillonnage (str)
@@ -102,9 +104,18 @@ def echantillonnage_obj(path_metriques, path_met_cadre, path_segmentation,output
     :param output: Chemin du fichier de sortie (str)
     :param path_depot: Chemin de la couche de dépôts (.shp) pour identifier les polygones in/ext des dépôts
                        Si laissé par défaut, seules les statistiques de zones seront créées sans la colonne Zone.
+    :param input_met: Chemin du fichier .tif utilisé pour faire la segmentation (str)
+    :param markers: Nombre de polygone voulu dans la segmentation (int)
+    :param compactness: Influence la forme des polygones, ex: 0.02 (float)
+    :param output_segmentation: Chemin du fichier de sortie .shp de la segmentation à créer (str)
     :return: Couche polygonale de segmentation incluant les statistiques de zones pour chaque métriques contenues dans
              le répertoire 'path_métriques'.
     '''
+
+    # Si aucune segmentation n'est specifiée, on la crée
+    if path_segmentation is None:
+        segmentation_main(input_met, markers, compactness, output_segmentation)
+        path_segmentation = output_segmentation
 
     # Sélection des polygones à l'intérieur de la superficie d'échantillonnage
     print("Sélection des polygones à l'intérieur du cadre...")
