@@ -20,10 +20,11 @@ from osgeo.gdalnumeric import *
 import geopandas as gpd
 
 
-def segmentation(input_met, type_seg):
+def segmentation(input_met, markers, compactness):
     '''
     :param input_met: Raster 1 bande sur laquelle on veut faire la segmentation (.tif)
-    :param type_seg: Type de segmentation désirée (watershed, slic, quickshift, felzenszwalb)
+    :param markers: Nombre de polygone voulu dans la segmentation (int)
+    :param compactness: Influence la forme des polygones, ex: 0.02 (float)
     :return: Numpy array de la segmentation
 
     *** EDIT: Seul la segmentation watershed est implémentée***
@@ -35,29 +36,24 @@ def segmentation(input_met, type_seg):
     img3 = img_as_float64(io.imread(input_met))
     img = np.dstack([img1, img2, img3])
 
-    # Méthode de la conversion en double
-    # pil_im = Image.open(input_met, 'r')
-    # img = np.asarray(pil_im, dtype=np.double)
-
     # Segmentation
-    segments = None
-    if type_seg.lower() in ['watershed', 'ws']:
-        gradient = sobel(rgb2gray(img))
-        segments = watershed(gradient, markers=8000, connectivity=True, mask=None, compactness=0.0025, watershed_line=False) #selon la surface du feuillet, "markers" peut varier de 7000 à 8000
+    gradient = sobel(rgb2gray(img))
+    segments = watershed(gradient, markers=markers, connectivity=True, mask=None, compactness=compactness, watershed_line=False) #selon la surface du feuillet, "markers" peut varier de 7000 à 8000
     return segments
 
 
-def segmentation_main(input_met, type_seg, output):
+def segmentation_main(input_met, markers, compactness, output):
     '''
     :param input_met: Raster 1 bande sur laquelle on veut faire la segmentation (.tif)
-    :param type_seg: Type de segmentation désirée (watershed, slic, quickshift, felzenszwalb)
+    :param markers: Nombre de polygone voulu dans la segmentation (int)
+    :param compactness: Influence la forme des polygones, ex: 0.02 (float)
     :param output: Chemin du fichier de sortie (str)
     :return: Une couche polygonale de la segmentation sans les polygones à l'extérieur du cadre de l'image (.shp)
     '''
 
     # Segmentation
     print('Segmentation...')
-    seg = segmentation(input_met, type_seg)
+    seg = segmentation(input_met, markers, compactness)
 
     # Conversion du Numpy array en raster
     print('Création du raster...')
@@ -70,7 +66,7 @@ def segmentation_main(input_met, type_seg, output):
 
     # Création du cadre du raster input
     print('Création du cadre...')
-    cadre, epsg = creation_cadre(input_met)
+    cadre, epsg, nodata = creation_cadre(input_met)
 
 
     # Suppression des géométries invalides
@@ -108,4 +104,4 @@ if __name__ == "__main__":
     output = r"C:\Users\home\Documents\Documents\APP2\depot_surface_LiDAR\inputs\segmentations\segmentation_31H02SO.shp"
     type_seg = 'watershed'
 
-    segmentation_main(input_met=input_met, type_seg=type_seg,  output=output)
+    segmentation_main(input_met=input_met, markers=5000, compactness=0.02,  output=output)
