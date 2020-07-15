@@ -21,7 +21,7 @@ def creation_metriques(mnt, feuillet, rep_output, path_r, path_script):
 
     # Correction hydrologique, breach depressions pour le calcul du SCA
     MNTBreachDepression = os.path.join(temp, 'MNT_BD_{}.tif'.format(feuillet))
-    breachDepressionLeastCost(mnt, MNTBreachDepression, 40, True)
+    breachDepression(mnt, MNTBreachDepression)
 
     # Création du SCA
     sca = os.path.join(temp, 'SCA_{}.tif'.format(feuillet))
