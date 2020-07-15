@@ -414,15 +414,8 @@ def class_main_obj(seg_num, mod_num):
                        met_seg=met_seg, output_path=output_path)
 
 
-#### SECTION 6 - Clip final des raster classifiés
-'''
-Cette dernière étape est utilisée seulement pour l'approche par pixel, puisque l'approche par objet retourne seulement
-les polygones contenus dans le cadre d'échantillonnage, soit celui du MNT original.
-La fonction retire le buffer appliqué en prétraitements au raster classifié
-'''
 
-
-#### SECTION 7 - Exemple d'utilisation ####
+#### SECTION 6 - Exemple d'utilisation ####
 '''
 1. Fonction 'echant_main(liste_feuillet, creation)'
     - Création des métriques et de l'échantillonage pour entrainter le modèle
@@ -495,9 +488,7 @@ class_main_obj(seg_num='seg_stats_31H02SE_v2', num_mod='31H02_obj_seg') # Ici on
                                                                         #  auparavant pour le feuillet 31H02SO)
 
 
-#### SECTION 6 - Clip final du raster ####
-fichier_a_clipper = os.path.join(root_dir)
-clip_final(path_feuillet=, output)
+
 
 
 #### A REVOIR???? ####
