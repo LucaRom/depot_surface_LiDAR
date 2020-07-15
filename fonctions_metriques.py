@@ -61,7 +61,7 @@ def textures_glcm(path_r, path_script, input, output, metrique, kernel):
 #     print()
 
 
-def breachDepressionLeastCost(input, output, size, filling):
+def breachDepression(input, output):
 
     wbt = whitebox.WhiteboxTools()
     wbt.verbose = False
