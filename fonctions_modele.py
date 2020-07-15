@@ -16,7 +16,7 @@ from osgeo import gdal
 #import osr
 from gdalconst import *
 import pandas as pd
-from datetime import datetime
+#from datetime import datetime
 
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
