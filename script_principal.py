@@ -15,9 +15,9 @@ from fonctions_modele import entrainement_pix, entrainement_obj, entrainement_ob
     classification_obj, creation_output, HyperTuningGrid, plot_valid, clip_final
 from ech_objet import echantillonnage_obj
 import os
-import matplotlib.pyplot as plt
-from osgeo import gdal
-import statistics
+#import matplotlib.pyplot as plt
+#from osgeo import gdal
+#import statistics
 
 # Paramètres initiaux du script
 root_dir = os.path.abspath(os.path.dirname(__file__))   # Définition du chemin racine du dossier de travail

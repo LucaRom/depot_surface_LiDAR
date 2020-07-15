@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 from osgeo import gdal
-import osr
+#import osr
 from gdalconst import *
 import pandas as pd
 from datetime import datetime
@@ -22,11 +22,11 @@ from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.externals import joblib
 from sklearn import metrics
-from sklearn.metrics import confusion_matrix
-from sklearn.metrics import plot_confusion_matrix
+#from sklearn.metrics import confusion_matrix
+#from sklearn.metrics import plot_confusion_matrix
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import validation_curve # A mettre dans fonctions modele
-from sklearn.feature_selection import SelectFromModel
+#from sklearn.feature_selection import SelectFromModel
 from sklearn.utils import resample
 from ech_pixel import creation_cadre
 from pretraitements import clip_raster_to_polygon
@@ -38,25 +38,25 @@ def model_plots(test_y, clf, test_metriques, metriques):
     # Matrice de confusion
     #c_matrice = confusion_matrix(test_y, y_pred)
 
-    # disp = plot_confusion_matrix(clf, test_metriques, test_y,
-    #                              cmap=plt.cm.Blues,
-    #                              values_format='d')
-    # disp.ax_.set_title('Matrice de confusion à 12 métriques')
-    # plt.xlabel('Prédit')
-    # plt.ylabel('Réel')
+    disp = plot_confusion_matrix(clf, test_metriques, test_y,
+                                 cmap=plt.cm.Blues,
+                                 values_format='d')
+    disp.ax_.set_title('Matrice de confusion à 12 métriques')
+    plt.xlabel('Prédit')
+    plt.ylabel('Réel')
 
     # Importances des metriques
     importances = clf.feature_importances_
     indices = np.argsort(importances)
     indices_list = [metriques[i] for i in indices]
 
-    # plot them with a horizontal bar chart
-    # plt.figure()  # Crée une nouvelle instance de graphique
-    # plt.title('Importances des métriques')
-    # plt.barh(range(len(indices)), importances[indices], color='b', align='center')
-    # plt.yticks(range(len(indices)), [metriques[i] for i in indices])
-    # plt.xlabel('Importance relative (%)')
-    # plt.show(block=False)
+    plot them with a horizontal bar chart
+    plt.figure()  # Crée une nouvelle instance de graphique
+    plt.title('Importances des métriques')
+    plt.barh(range(len(indices)), importances[indices], color='b', align='center')
+    plt.yticks(range(len(indices)), [metriques[i] for i in indices])
+    plt.xlabel('Importance relative (%)')
+    plt.show(block=False)
 
     return indices_list
 

@@ -8,14 +8,14 @@ Created on Wed Jan 2020
 """
 
 from ech_pixel import creation_cadre, creation_raster, conversion_polygone, creation_buffer
-import osr
-import numpy as np
+#import osr
+#import numpy as np
 from skimage.color import rgb2gray
 from skimage.filters import sobel
 from skimage.segmentation import watershed
 from skimage.util import img_as_float64
 from skimage import io
-from osgeo import osr
+#from osgeo import osr
 from osgeo.gdalnumeric import *
 import geopandas as gpd
 
